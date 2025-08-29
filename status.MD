@@ -2,11 +2,12 @@
 
 ## ✅ CONCLUÍDO
 
-### Etapa 1: Configuração da Infraestrutura Básica
+### Etapa 1: Configuração da Infraestrutura Básica - COMPLETA ✅
 
 #### ✅ Passo 1: Conta no Supabase
 - [x] Projeto criado no Supabase
 - [x] Banco PostgreSQL configurado
+- [x] URL e chaves de acesso obtidas
 
 #### ✅ Passo 2: Configuração do Banco de Dados
 - [x] Tabela `normas` criada com colunas:
@@ -34,11 +35,31 @@
   - `data_criacao` (timestamptz, automático)
 
 - [x] Row Level Security (RLS) habilitado em todas as tabelas
-- [x] Realtime desabilitado (não necessário para MVP)
+
+#### ✅ Passo 3: Ambiente de Desenvolvimento
+- [x] Projeto Next.js criado com TypeScript
+- [x] Shadcn/ui instalado e configurado
+- [x] Cliente Supabase instalado (@supabase/supabase-js)
+- [x] Variáveis de ambiente configuradas (.env.local)
+- [x] Arquivo de configuração Supabase criado (src/lib/supabase.ts)
+- [x] Teste local funcionando (localhost:3001)
+- [x] Repositório Git configurado e sincronizado
+
+#### ✅ Passo 4: N8N
+- [x] N8N instalado localmente (versão gratuita)
+- [x] Servidor N8N funcionando (localhost:5678)
+- [x] Usuário inicial configurado
+- [x] Interface web acessível
 
 ## 📊 Progresso Geral
-- **Etapa 1**: 66% concluída (2 de 3 passos)
-- **Projeto total**: 16% concluído (2 de 12 tarefas principais)
+- **Etapa 1**: 100% concluída ✅
+- **Projeto total**: 25% concluído (4 de 16 tarefas principais)
+
+## 🎯 Próxima Etapa
+**Etapa 2: Automação da Coleta de Dados**
+- Desenvolver fluxos de scraping no N8N
+- Integrar N8N com Supabase
+- Configurar coleta automática de normas
 
 ## 📅 Última atualização
 Data: ${new Date().toLocaleDateString('pt-BR')}
