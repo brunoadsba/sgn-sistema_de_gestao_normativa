@@ -1,19 +1,25 @@
 # SGN - INSTRUÇÕES PARA AGENTE AUTÔNOMO
 
-## VERSÃO DO AGENTE: 1.0
-**ÚLTIMA ATUALIZAÇÃO:** 30 de agosto de 2025  
+## VERSÃO DO AGENTE: 1.1
+**ÚLTIMA ATUALIZAÇÃO:** 2 de janeiro de 2025  
 **COMPATÍVEL COM:** SGN v2.0 (pós-MVP)  
-**STATUS PROJETO:** MVP 100% completo, evoluindo para plataforma corporativa
+**STATUS PROJETO:** MVP 100% completo, branch 'melhorias' consolidada
 
 ---
 
 ## CONTEXTO DO PROJETO
 
 ### TECNOLOGIAS UTILIZADAS
-- **Frontend:** Next.js 15, TypeScript, Tailwind CSS, Shadcn/ui
+- **Frontend:** Next.js 15.5.2, TypeScript, Tailwind CSS, Shadcn/ui
 - **Backend:** Supabase (PostgreSQL + Auth), API Routes
 - **Automação:** N8N (coleta de normas)
 - **Deploy:** Vercel, Git
+
+### ESTRUTURA ATUAL CONFIRMADA
+- **Branch atual:** `melhorias` (melhorias técnicas consolidadas)
+- **Supabase client:** Instância única em `/lib/supabase.ts`
+- **Padrão de APIs:** `Response.json()` com formato `{ success, data, pagination }`
+- **Banco existente:** Tabelas `normas`, `versoes`, `mudancas` com coluna `nr_num`
 
 ### OBJETIVO ESTRATÉGICO
 Transformar MVP informativo em **plataforma de conformidade corporativa automatizada**:
@@ -26,18 +32,18 @@ Transformar MVP informativo em **plataforma de conformidade corporativa automati
 ## PROTOCOLOS OBRIGATÓRIOS DE EXECUÇÃO
 
 ### ⚠️ ANTES DE QUALQUER IMPLEMENTAÇÃO:
-1. **Verificar branch atual:** `git branch`
-2. **Criar nova branch se necessário:** `git checkout -b feature/[nome-funcionalidade]`
-3. **Verificar ambiente:** `npm run dev` deve estar funcionando
-4. **Confirmar estrutura:** Verificar se arquivos base existem
-5. **Executar testes existentes:** `npm test` (se configurado)
+1. **Verificar branch atual:** Está em `melhorias` (consolidada)
+2. **Criar nova branch:** `git checkout -b feature/conformidade-corporativa`
+3. **Verificar ambiente:** `npm run dev` no diretório frontend
+4. **Criar estrutura necessária:** `mkdir -p frontend/src/types`
+5. **Validar Supabase:** Verificar tabelas existentes
 
 ### 🔧 DURANTE IMPLEMENTAÇÃO:
 1. **TypeScript obrigatório:** Todos os arquivos devem ser .ts/.tsx
 2. **Tipagem completa:** Definir interfaces para todas as estruturas
 3. **Padrões do projeto:** Usar Shadcn/ui components e Tailwind CSS
 4. **Estrutura de pastas:** Seguir convenção Next.js 15 (app directory)
-5. **Tratamento de erros:** Implementar try/catch em todas as APIs
+5. **Tratamento de erros:** Implementar try/catch com padrão existente
 6. **Responsividade:** Testar em mobile e desktop
 
 ### ✅ APÓS IMPLEMENTAÇÃO:
@@ -54,7 +60,12 @@ Transformar MVP informativo em **plataforma de conformidade corporativa automati
 
 ### PASSO 1: ARQUITETURA MULTI-TENANT
 
-#### 1.1 CRIAR TIPOS TYPESCRIPT
+#### 1.1 CRIAR ESTRUTURA DE TIPOS
+**1º Comando:** Criar diretório types
+```bash
+mkdir -p frontend/src/types
+```
+
 **Arquivo:** `frontend/src/types/conformidade.ts`
 
 ```typescript
@@ -93,14 +104,38 @@ export interface AnaliseConformidade {
   observacoes: string;
   created_at: string;
 }
+
+// Tipos para respostas da API (seguindo padrão existente)
+export interface ApiResponseEmpresas {
+  success: boolean;
+  data: Empresa[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ApiResponseDocumentos {
+  success: boolean;
+  data: DocumentoEmpresa[];
+  total: number;
+}
 ```
 
 #### 1.2 CRIAR TABELAS NO SUPABASE
 **Ação:** Executar SQL no Supabase Dashboard → SQL Editor
 
 ```sql
+-- Verificar se tabela normas existe (deve existir)
+SELECT EXISTS (
+   SELECT FROM information_schema.tables 
+   WHERE table_name = 'normas'
+);
+
 -- Criar tabela empresas
-CREATE TABLE empresas (
+CREATE TABLE IF NOT EXISTS empresas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nome TEXT NOT NULL,
   cnpj TEXT UNIQUE,
@@ -112,7 +147,7 @@ CREATE TABLE empresas (
 );
 
 -- Criar tabela documentos_empresa
-CREATE TABLE documentos_empresa (
+CREATE TABLE IF NOT EXISTS documentos_empresa (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID REFERENCES empresas(id) ON DELETE CASCADE,
   nome_arquivo TEXT NOT NULL,
@@ -126,7 +161,7 @@ CREATE TABLE documentos_empresa (
 );
 
 -- Criar tabela analises_conformidade
-CREATE TABLE analises_conformidade (
+CREATE TABLE IF NOT EXISTS analises_conformidade (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   empresa_id UUID REFERENCES empresas(id) ON DELETE CASCADE,
   norma_id UUID REFERENCES normas(id),
@@ -140,9 +175,9 @@ CREATE TABLE analises_conformidade (
 );
 
 -- Criar índices para performance
-CREATE INDEX idx_documentos_empresa_search ON documentos_empresa USING GIN(search_vector);
-CREATE INDEX idx_analises_empresa_norma ON analises_conformidade(empresa_id, norma_id);
-CREATE INDEX idx_analises_score ON analises_conformidade(score_conformidade DESC);
+CREATE INDEX IF NOT EXISTS idx_documentos_empresa_search ON documentos_empresa USING GIN(search_vector);
+CREATE INDEX IF NOT EXISTS idx_analises_empresa_norma ON analises_conformidade(empresa_id, norma_id);
+CREATE INDEX IF NOT EXISTS idx_analises_score ON analises_conformidade(score_conformidade DESC);
 
 -- Habilitar Row Level Security
 ALTER TABLE empresas ENABLE ROW LEVEL SECURITY;
@@ -150,134 +185,145 @@ ALTER TABLE documentos_empresa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analises_conformidade ENABLE ROW LEVEL SECURITY;
 
 -- Políticas básicas (permitir tudo por enquanto)
+DROP POLICY IF EXISTS "Permitir tudo empresas" ON empresas;
+DROP POLICY IF EXISTS "Permitir tudo documentos" ON documentos_empresa;
+DROP POLICY IF EXISTS "Permitir tudo analises" ON analises_conformidade;
+
 CREATE POLICY "Permitir tudo empresas" ON empresas FOR ALL USING (true);
 CREATE POLICY "Permitir tudo documentos" ON documentos_empresa FOR ALL USING (true);
 CREATE POLICY "Permitir tudo analises" ON analises_conformidade FOR ALL USING (true);
+
+-- Verificar criação das tabelas
+SELECT table_name FROM information_schema.tables 
+WHERE table_name IN ('empresas', 'documentos_empresa', 'analises_conformidade');
 ```
 
 #### 1.3 CRIAR API DE EMPRESAS
 **Arquivo:** `frontend/src/app/api/empresas/route.ts`
 
 ```typescript
-import { createClient } from '@/lib/supabase'
-import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from "@/lib/supabase";
 
-export async function GET(request: NextRequest) {
+export const revalidate = 60;
+
+export async function GET(request: Request) {
   try {
-    const supabase = createClient()
-    const { searchParams } = new URL(request.url)
-    
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
-    const search = searchParams.get('search')
-    
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 100);
+    const search = searchParams.get("search") || "";
+    const offset = (page - 1) * limit;
+
     let query = supabase
-      .from('empresas')
-      .select('*', { count: 'exact' })
-      .eq('ativo', true)
-      .order('created_at', { ascending: false })
-    
+      .from("empresas")
+      .select("*", { count: "exact" })
+      .eq("ativo", true)
+      .order("created_at", { ascending: false });
+
     if (search) {
-      query = query.ilike('nome', `%${search}%`)
+      query = query.ilike("nome", `%${search}%`);
     }
-    
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    
-    const { data, error, count } = await query.range(from, to)
-    
+
+    const { data: empresas, error, count } = await query
+      .range(offset, offset + limit - 1);
+
     if (error) {
-      console.error('Erro ao buscar empresas:', error)
-      return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+      return Response.json({ error: error.message }, { status: 500 });
     }
-    
-    return NextResponse.json({
-      data,
-      total: count || 0,
-      page,
-      totalPages: Math.ceil((count || 0) / limit)
-    })
-    
-  } catch (error) {
-    console.error('Erro no endpoint de empresas:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+
+    return Response.json({
+      success: true,
+      data: empresas || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
+  } catch {
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const supabase = createClient()
-    const body = await request.json()
-    
-    const { nome, cnpj, setor, porte } = body
-    
+    const body = await request.json();
+    const { nome, cnpj, setor, porte } = body;
+
     if (!nome) {
-      return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 })
+      return Response.json({ error: "Nome é obrigatório" }, { status: 400 });
     }
-    
+
     const { data, error } = await supabase
-      .from('empresas')
+      .from("empresas")
       .insert([{ nome, cnpj, setor, porte }])
       .select()
-      .single()
-    
+      .single();
+
     if (error) {
-      console.error('Erro ao criar empresa:', error)
-      return NextResponse.json({ error: 'Erro ao criar empresa' }, { status: 500 })
+      return Response.json({ error: "Erro ao criar empresa" }, { status: 500 });
     }
-    
-    return NextResponse.json(data, { status: 201 })
-    
-  } catch (error) {
-    console.error('Erro no POST de empresas:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+
+    return Response.json({
+      success: true,
+      data
+    }, { status: 201 });
+
+  } catch {
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 ```
 
 ### PASSO 2: SISTEMA DE GESTÃO DOCUMENTAL
 
-#### 2.1 CRIAR API DE UPLOAD DE DOCUMENTOS
+#### 2.1 CONFIGURAR SUPABASE STORAGE
+**Ação:** Criar bucket no Supabase Dashboard → Storage
+
+1. Acesse Supabase Dashboard → Storage
+2. Criar novo bucket: `documentos-empresa`
+3. Configurar como público: `false` (privado)
+4. Configurar políticas de acesso
+
+#### 2.2 CRIAR API DE UPLOAD DE DOCUMENTOS
 **Arquivo:** `frontend/src/app/api/empresas/[id]/documentos/route.ts`
 
 ```typescript
-import { createClient } from '@/lib/supabase'
-import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from "@/lib/supabase";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createClient()
-    const empresaId = params.id
+    const { id: empresaId } = await params;
     
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const tipoDocumento = formData.get('tipo_documento') as string
-    
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const tipoDocumento = formData.get("tipo_documento") as string;
+
     if (!file) {
-      return NextResponse.json({ error: 'Arquivo é obrigatório' }, { status: 400 })
+      return Response.json({ error: "Arquivo é obrigatório" }, { status: 400 });
     }
-    
+
     if (!tipoDocumento) {
-      return NextResponse.json({ error: 'Tipo de documento é obrigatório' }, { status: 400 })
+      return Response.json({ error: "Tipo de documento é obrigatório" }, { status: 400 });
     }
-    
+
     // Upload para Supabase Storage
-    const fileName = `${empresaId}/${Date.now()}-${file.name}`
+    const fileName = `${empresaId}/${Date.now()}-${file.name}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('documentos-empresa')
-      .upload(fileName, file)
-    
+      .from("documentos-empresa")
+      .upload(fileName, file);
+
     if (uploadError) {
-      console.error('Erro no upload:', uploadError)
-      return NextResponse.json({ error: 'Erro no upload do arquivo' }, { status: 500 })
+      return Response.json({ error: "Erro no upload do arquivo" }, { status: 500 });
     }
-    
+
     // Salvar metadados no banco
     const { data, error } = await supabase
-      .from('documentos_empresa')
+      .from("documentos_empresa")
       .insert([{
         empresa_id: empresaId,
         nome_arquivo: file.name,
@@ -290,18 +336,47 @@ export async function POST(
         }
       }])
       .select()
-      .single()
-    
+      .single();
+
     if (error) {
-      console.error('Erro ao salvar documento:', error)
-      return NextResponse.json({ error: 'Erro ao salvar documento' }, { status: 500 })
+      return Response.json({ error: "Erro ao salvar documento" }, { status: 500 });
     }
+
+    return Response.json({
+      success: true,
+      data
+    }, { status: 201 });
+
+  } catch {
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: empresaId } = await params;
     
-    return NextResponse.json(data, { status: 201 })
-    
-  } catch (error) {
-    console.error('Erro no upload de documento:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    const { data: documentos, error } = await supabase
+      .from("documentos_empresa")
+      .select("*")
+      .eq("empresa_id", empresaId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+
+    return Response.json({
+      success: true,
+      data: documentos || [],
+      total: documentos?.length || 0
+    });
+
+  } catch {
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 ```
@@ -321,15 +396,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { PlusIcon, SearchIcon, BuildingIcon } from 'lucide-react'
 import Link from 'next/link'
-
-interface Empresa {
-  id: string
-  nome: string
-  cnpj: string
-  setor: string
-  porte: string
-  created_at: string
-}
+import type { Empresa, ApiResponseEmpresas } from '@/types/conformidade'
 
 export default function EmpresasPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([])
@@ -348,16 +415,25 @@ export default function EmpresasPage() {
       if (search) params.set('search', search)
       
       const response = await fetch(`/api/empresas?${params}`)
-      const result = await response.json()
+      const result: ApiResponseEmpresas = await response.json()
       
-      if (response.ok) {
+      if (response.ok && result.success) {
         setEmpresas(result.data)
-        setTotal(result.total)
+        setTotal(result.pagination.total)
       }
     } catch (error) {
       console.error('Erro ao buscar empresas:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const getPorteVariant = (porte: string) => {
+    switch (porte) {
+      case 'grande': return 'default'
+      case 'medio': return 'secondary'
+      case 'pequeno': return 'outline'
+      default: return 'secondary'
     }
   }
 
@@ -414,7 +490,7 @@ export default function EmpresasPage() {
                   <BuildingIcon className="h-5 w-5" />
                   {empresa.nome}
                 </CardTitle>
-                <Badge variant={empresa.porte === 'grande' ? 'default' : 'secondary'}>
+                <Badge variant={getPorteVariant(empresa.porte)}>
                   {empresa.porte}
                 </Badge>
               </CardHeader>
@@ -454,6 +530,12 @@ export default function EmpresasPage() {
           </Button>
         </div>
       )}
+
+      {total > 0 && (
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          Total: {total} empresa{total !== 1 ? 's' : ''} cadastrada{total !== 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   )
 }
@@ -464,21 +546,24 @@ export default function EmpresasPage() {
 ## CHECKPOINTS DE VALIDAÇÃO
 
 ### ✅ CHECKPOINT PASSO 1:
+- [ ] Diretório `types` criado
 - [ ] Tipos TypeScript criados sem erros
-- [ ] Tabelas criadas no Supabase
+- [ ] Tabelas criadas no Supabase (verificar no Dashboard)
 - [ ] API `/api/empresas` funcionando
-- [ ] GET e POST testados via Postman/Thunder
+- [ ] GET e POST testados via curl/Thunder
 
 ### ✅ CHECKPOINT PASSO 2:
+- [ ] Bucket `documentos-empresa` criado no Supabase
 - [ ] Upload de arquivos funcionando
-- [ ] Supabase Storage configurado
 - [ ] API de documentos operacional
+- [ ] Metadados salvos corretamente
 
 ### ✅ CHECKPOINT PASSO 3:
-- [ ] Página de empresas renderizando
+- [ ] Página `/empresas` renderizando
 - [ ] Busca funcionando
 - [ ] Cards de empresas exibindo dados
-- [ ] Navegação entre páginas
+- [ ] Navegação entre páginas operacional
+- [ ] Types importados corretamente
 
 ---
 
@@ -486,23 +571,26 @@ export default function EmpresasPage() {
 
 ### INICIAR IMPLEMENTAÇÃO:
 ```bash
+# A partir da branch melhorias (atual)
 git checkout -b feature/conformidade-corporativa
-npm run dev
+mkdir -p frontend/src/types
+cd frontend && npm run dev
 ```
 
 ### TESTAR IMPLEMENTAÇÃO:
 ```bash
 # Testar APIs
 curl http://localhost:3000/api/empresas
+curl -X POST http://localhost:3000/api/empresas -H "Content-Type: application/json" -d '{"nome":"Empresa Teste","cnpj":"12345678000100","setor":"Industrial","porte":"medio"}'
 
 # Verificar TypeScript
-npm run type-check
+cd frontend && npx tsc --noEmit
 ```
 
 ### FINALIZAR PASSO:
 ```bash
 git add .
-git commit -m "feat: implementar [passo específico]"
+git commit -m "feat: implementar sistema multi-tenant - [passo específico]"
 git push origin feature/conformidade-corporativa
 ```
 
@@ -520,7 +608,7 @@ git push origin feature/conformidade-corporativa
 ### ROLLBACK RÁPIDO:
 ```bash
 git reset --hard HEAD~1  # Desfazer último commit
-git checkout main        # Voltar para branch principal
+git checkout melhorias   # Voltar para branch principal
 ```
 
 ---
@@ -543,5 +631,24 @@ Ao final da Fase 6, o SGN terá:
 - ✅ Interface de gestão de empresas
 - ✅ Base para análise de conformidade
 - ✅ Arquitetura escalável implementada
+- ✅ Compatibilidade total com projeto existente
 
 **VALOR AGREGADO:** Transformação de MVP em plataforma corporativa de alto valor.
+
+---
+
+## PADRÕES DO PROJETO APLICADOS
+
+### ✅ CORREÇÕES IMPLEMENTADAS:
+1. **Import Supabase:** `import { supabase } from "@/lib/supabase"`
+2. **Padrão de resposta:** `Response.json({ success, data, pagination })`
+3. **Tratamento de erros:** Padrão `try/catch` sem console.error
+4. **Estrutura validada:** Compatível com Next.js 15.5.2
+5. **Tipagem completa:** Types exportados de `/types/conformidade.ts`
+6. **Branch correta:** A partir de `melhorias` (consolidada)
+7. **Comandos atualizados:** Refletem estado atual do projeto
+8. **Supabase Storage:** Configuração explícita incluída
+9. **Validações SQL:** Verificações de existência de tabelas
+10. **Consistência total:** Alinhado com padrões existentes
+
+**STATUS:** Agente.MD corrigido e pronto para implementação segura.
