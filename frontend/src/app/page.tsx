@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+export const revalidate = 60;
+
 async function getStats() {
   try {
-    const res = await fetch("http://localhost:3001/api/normas/stats", {
-      cache: "no-store"
+    const res = await fetch("/api/normas/stats", {
+      next: { revalidate: 60 }
     });
     return await res.json();
   } catch (error) {
@@ -14,8 +16,8 @@ async function getStats() {
 
 async function getNormas() {
   try {
-    const res = await fetch("http://localhost:3001/api/normas?limit=5", {
-      cache: "no-store"
+    const res = await fetch("/api/normas?limit=5", {
+      next: { revalidate: 60 }
     });
     return await res.json();
   } catch (error) {
