@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Toaster } from "@/components/ui/toaster";
 
-export const metadata: Metadata = {
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
   title: "SGN - Sistema de Gestão Normativa",
-  description: "Sistema de monitoramento de normas regulamentadoras",
+  description: "Sistema para monitoramento de normas regulamentadoras",
 };
 
 export default function RootLayout({
@@ -18,45 +19,31 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>
-        {/* Header Global */}
-        <header className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50">
-          <div className="container mx-auto px-4">
-            <div className="flex h-16 items-center justify-between">
-              {/* Logo e Navegação */}
+      <body className={inter.className}>
+        {/* Header */}
+        <header className="border-b bg-white sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
                 <Link href="/" className="flex items-center space-x-2">
-                  <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-sm">SGN</span>
                   </div>
-                  <span className="font-semibold text-lg">Sistema de Gestão Normativa</span>
+                  <div>
+                    <h1 className="font-bold text-lg">Sistema de Gestão Normativa</h1>
+                    <p className="text-xs text-muted-foreground">Monitoramento de Normas Regulamentadoras</p>
+                  </div>
                 </Link>
-                
-                <nav className="hidden md:flex items-center space-x-6">
-                  <Link href="/" className="text-sm font-medium hover:text-blue-600">
-                    Dashboard
-                  </Link>
-                  <Link href="/normas" className="text-sm font-medium hover:text-blue-600">
-                    Normas
-                  </Link>
-                  <Link href="/estatisticas" className="text-sm font-medium hover:text-blue-600">
-                    Relatórios
-                  </Link>
-                </nav>
               </div>
 
-              {/* Busca Global */}
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:flex">
-                  <Input 
-                    placeholder="Buscar normas..." 
-                    className="w-64"
-                  />
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  v1.0
-                </Badge>
-              </div>
+              <nav className="flex items-center space-x-4">
+                <Link href="/">
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+                <Link href="/normas">
+                  <Button variant="ghost">Normas</Button>
+                </Link>
+              </nav>
             </div>
           </div>
         </header>
@@ -105,6 +92,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        <Toaster />
       </body>
     </html>
   );
