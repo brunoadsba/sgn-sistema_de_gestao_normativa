@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       total_found: results.length
     });
 
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

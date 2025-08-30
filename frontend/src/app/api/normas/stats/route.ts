@@ -48,7 +48,7 @@ export async function GET() {
         ultima_atualizacao: new Date().toISOString()
       }
     });
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

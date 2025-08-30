@@ -1,11 +1,14 @@
+import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+
   try {
     const { data: norma, error } = await supabase
       .from("normas")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -13,7 +16,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     return Response.json({ success: true, data: norma });
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

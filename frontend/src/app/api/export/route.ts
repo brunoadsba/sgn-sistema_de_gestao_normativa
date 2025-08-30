@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       data: normas
     });
 
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

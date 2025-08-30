@@ -5,8 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { FileText, CheckCircle, Shield, HardHat } from "lucide-react";
 
+interface Norma {
+  id?: number | string;
+  codigo: string;
+  titulo: string;
+  orgao_publicador?: string;
+  created_at: string | Date;
+}
+
 interface BotoesSegurancaProps {
-  norma: any;
+  norma: Norma;
 }
 
 export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
@@ -307,7 +315,7 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
         title: "Relatório Técnico Gerado",
         description: "Use Ctrl+P ou Cmd+P para salvar como PDF na janela que se abriu.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro na Exportação",
         description: "Não foi possível gerar o relatório técnico.",
@@ -357,7 +365,7 @@ ${isRevogada ?
           description: "Dados técnicos da norma copiados para área de transferência.",
         });
       }
-    } catch (error) {
+    } catch {
       try {
         if (typeof navigator !== "undefined" && navigator.clipboard) {
           await navigator.clipboard.writeText(window.location.href);

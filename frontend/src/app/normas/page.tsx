@@ -1,21 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
+interface Norma {
+  id: string;
+  codigo: string;
+  titulo: string;
+  orgao_publicador: string;
+  created_at: string;
+}
+
 export default function NormasPage() {
-  const [normas, setNormas] = useState([]);
+  const [normas, setNormas] = useState<Norma[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchNormas = async () => {
+  const fetchNormas = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -32,22 +40,22 @@ export default function NormasPage() {
         setNormas(data.data);
         setTotalPages(data.pagination.totalPages);
       }
-    } catch (error) {
-      console.error("Erro ao buscar normas:", error);
+    } catch {
+      console.error("Erro ao buscar normas");
     }
     setLoading(false);
-  };
+  }, [page, search, status]);
 
   useEffect(() => {
     fetchNormas();
-  }, [page, search, status]);
+  }, [fetchNormas]);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setPage(1);
   };
 
-  const handleStatusFilter = (newStatus) => {
+  const handleStatusFilter = (newStatus: string) => {
     setStatus(newStatus === status ? "" : newStatus);
     setPage(1);
   };
@@ -60,7 +68,6 @@ export default function NormasPage() {
           <p className="text-muted-foreground mt-2">Explore e pesquise todas as normas disponíveis</p>
         </div>
 
-        {/* Filtros */}
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -89,7 +96,6 @@ export default function NormasPage() {
           </CardContent>
         </Card>
 
-        {/* Lista de Normas */}
         {loading ? (
           <div className="text-center py-8">Carregando normas...</div>
         ) : (
@@ -122,7 +128,6 @@ export default function NormasPage() {
               ))}
             </div>
 
-            {/* Paginação */}
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"

@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
+export const revalidate = 60;
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,17 +13,13 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("normas")
-      .select("*", { count: "exact" });
+      .select("*", { count: "exact" })
+      .like("codigo", "NR-%");
 
-    // Filtrar apenas registros válidos (que começam com NR-)
-    query = query.like("codigo", "NR-%");
-
-    // Busca por texto
     if (search) {
       query = query.or(`codigo.ilike.%${search}%,titulo.ilike.%${search}%`);
     }
 
-    // Filtro por status
     if (status === "ativa") {
       query = query.not("titulo", "ilike", "%REVOGADA%");
     } else if (status === "revogada") {
@@ -29,23 +27,16 @@ export async function GET(request: Request) {
     }
 
     const { data: normas, error, count } = await query
-      .order("created_at", { ascending: false }) // Ordenar por data de criação (mais recente primeiro)
+      .order("nr_num", { ascending: true, nullsFirst: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    // Ordenar numericamente pelo número da NR no frontend
-    const normasOrdenadas = normas?.sort((a, b) => {
-      const numA = parseInt(a.codigo.match(/NR-(\d+)/)?.[1] || "0");
-      const numB = parseInt(b.codigo.match(/NR-(\d+)/)?.[1] || "0");
-      return numA - numB;
-    }) || [];
-
-    return Response.json({ 
+    return Response.json({
       success: true,
-      data: normasOrdenadas,
+      data: normas || [],
       pagination: {
         page,
         limit,
@@ -54,7 +45,7 @@ export async function GET(request: Request) {
       },
       filters: { search, status }
     });
-  } catch (error) {
+  } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

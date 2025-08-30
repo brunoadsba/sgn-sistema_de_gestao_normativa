@@ -2,7 +2,56 @@
 
 Status atual: MVP completo e operacional (frontend Next.js 15 + Supabase + N8N). Documento para acompanhar execução das melhorias até nível produção-empresa com foco em performance, escala, confiabilidade, a11y/SEO e DX.
 
-## 1) Plano Prioritário (0–30 dias)
+**NOVA PRIORIDADE ESTRATÉGICA:** Análise de Conformidade Corporativa - transformação de MVP informativo para solução empresarial de alto valor.
+
+---
+
+## 🚀 PRIORIDADE MÁXIMA: Conformidade Corporativa (0-60 dias)
+
+### Sistema Multi-tenant e Gestão de Empresas
+- [ ] **Arquitetura Multi-tenant**
+  - [ ] Criar tabela `empresas` com isolamento de dados
+  - [ ] Implementar RLS (Row Level Security) por tenant
+  - [ ] Sistema de autenticação corporativa
+  - [ ] Middleware de identificação de tenant
+
+- [ ] **Gestão Documental Corporativa**
+  - [ ] Sistema de upload para Supabase Storage
+  - [ ] Integração OCR/parsing (PDF, DOC, DOCX)
+  - [ ] Extração de texto com bibliotecas especializadas
+  - [ ] Versionamento de documentos empresariais
+  - [ ] Metadados estruturados (JSONB)
+
+### Engine de Análise de Conformidade
+- [ ] **Processamento de Documentos**
+  - [ ] Worker/Queue para processamento assíncrono
+  - [ ] Chunking inteligente de documentos grandes
+  - [ ] Indexação para busca semântica
+  - [ ] Cache de análises para otimização
+
+- [ ] **IA para Análise de Conformidade**
+  - [ ] Integração LLM para comparação semântica
+  - [ ] Prompt engineering para análise normativa
+  - [ ] Sistema de scoring de conformidade (0-100)
+  - [ ] Identificação automática de gaps
+  - [ ] Geração de planos de ação
+
+### Performance para Escala Corporativa
+- [ ] **Otimizações de IA**
+  - [ ] Cache Redis para análises repetidas
+  - [ ] Processamento em lotes (batch processing)
+  - [ ] Rate limiting específico para análises
+  - [ ] Monitoramento de custos de LLM
+
+- [ ] **Storage e Backup**
+  - [ ] Estratégia de backup corporativo
+  - [ ] Compressão de documentos antigos
+  - [ ] CDN para assets corporativos
+  - [ ] Políticas de retenção de dados
+
+---
+
+## 1) Plano Prioritário Base (30-60 dias)
 - [ ] Ordenação e paginação no banco (evitar sort pós-paginação)
   - [ ] Criar coluna `nr_num` (inteiro) derivada de `codigo` (ex.: "NR-17" → 17)
   - [ ] Popular `nr_num` para registros existentes
@@ -15,143 +64,177 @@ Status atual: MVP completo e operacional (frontend Next.js 15 + Supabase + N8N).
 - [ ] Rate limiting distribuído
   - [ ] Migrar de Map em memória para Redis (ou Supabase KV)
   - [ ] Chavear por `X-Forwarded-For` com fallback controlado
-  - [ ] Aplicar em `search` e `export` com limites realistas
-- [ ] Tipagem e validação
-  - [ ] Criar tipos `Norma`, `NormaListResponse`, `StatsResponse`
-  - [ ] Validar query params com Zod (page, limit, search, status)
-- [ ] Modelo de dados mínimo
-  - [ ] Adicionar coluna `status` (`ativa` | `revogada`) e parar de inferir por título
+  - [ ] Aplicar em `search`, `export` e **análises de conformidade**
+- [ ] Tipagem e validação expandida
+  - [ ] Criar tipos `Empresa`, `DocumentoEmpresa`, `AnaliseConformidade`
+  - [ ] Validar upload de arquivos com Zod
+  - [ ] Tipos para respostas de conformidade
 
-## 2) Base de Escala e Confiabilidade (30–90 dias)
-- [ ] Busca escalável (Postgres FTS)
-  - [ ] Criar coluna `search_vector = to_tsvector('portuguese', codigo || ' ' || titulo)`
-  - [ ] Índice GIN em `search_vector`
-  - [ ] Reescrever `GET /api/search` com `to_tsquery`/`plainto_tsquery` e `ts_rank_cd`
-- [ ] Exportação robusta
-  - [ ] CSV via streaming (resposta incremental) + BOM quando necessário
-  - [ ] Sanitização forte (aspas, quebras de linha, separador)
-  - [ ] Rate limit + paginação/cursor em exportações grandes
-- [ ] Observabilidade e qualidade
-  - [ ] Logger estruturado nas APIs (request_id, ip, latency, outcome)
-  - [ ] Web Vitals em produção (LCP, INP, CLS) + alertas
-  - [ ] Testes: API (contratos/validações) e UI (lista, filtros, paginação)
+## 2) Segurança Corporativa (Crítico - 30-45 dias)
+- [ ] **Proteção de Dados Empresariais**
+  - [ ] Criptografia em repouso para documentos sensíveis
+  - [ ] Logs de auditoria para acessos a documentos
+  - [ ] Políticas de retenção por empresa
+  - [ ] Backup com criptografia end-to-end
 
-## 3) Experiência, Performance e “Mundo Aberto”
-- [ ] Lista virtualizada de normas (renderizar somente viewport)
-- [ ] Skeletons/Suspense em transições e carregamentos
-- [ ] Lazy-load de componentes pesados e imagens com blur
-- [ ] Prefetch preditivo (próximas páginas/rotas com maior probabilidade)
-- [ ] PWA: Service Worker, cache de rotas/dados, background sync
+- [ ] **Controle de Acesso Avançado**
+  - [ ] RBAC (Role-Based Access Control) corporativo
+  - [ ] Permissões granulares por documento
+  - [ ] Sessões seguras com refresh tokens
+  - [ ] Two-factor authentication para administradores
 
-## 4) SEO e Acessibilidade (a11y)
-- [ ] `metadata` por rota (title/description/OG/Twitter) e OG Image
-- [ ] Elementos com `aria-label` e estados não dependentes de cor
-- [ ] Hierarquia semântica de cabeçalhos consistente
+- [ ] **Compliance e Auditoria**
+  - [ ] Trail de auditoria completo
+  - [ ] LGPD compliance para dados empresariais
+  - [ ] Relatórios de acesso para compliance
+  - [ ] Políticas de privacidade por tenant
 
----
+## 3) Base de Escala e Confiabilidade (60-90 dias)
+- [ ] Busca escalável (Postgres FTS) + **Busca Corporativa**
+  - [ ] Criar coluna `search_vector` para normas e documentos
+  - [ ] Índice GIN em `search_vector` para ambas tabelas
+  - [ ] Busca semântica em documentos empresariais
+  - [ ] Ranking por relevância corporativa
+- [ ] Exportação robusta + **Relatórios Corporativos**
+  - [ ] CSV/Excel com dados de conformidade
+  - [ ] Relatórios executivos em PDF
+  - [ ] Agendamento de relatórios automáticos
+  - [ ] Templates personalizáveis por empresa
+- [ ] Observabilidade corporativa
+  - [ ] Métricas de uso por empresa
+  - [ ] Alertas de performance para análises
+  - [ ] Dashboard de health check por tenant
 
-## Detalhamento por Tema (com referências de arquivos)
+## 4) Experiência Corporativa e Performance
+- [ ] **Dashboard Executivo**
+  - [ ] Visualizações específicas para compliance
+  - [ ] Gráficos de evolução de conformidade
+  - [ ] Alertas visuais para prazos críticos
+  - [ ] Drill-down em análises detalhadas
 
-### A. Ordenação e Paginação
-- Problema: ordenação numérica é aplicada após `.range()` (inconsistência entre páginas).
-- Ações:
-  1. Banco (Supabase/Postgres)
-     - [ ] Coluna `nr_num int` derivada de `codigo`
-     - [ ] `UPDATE normas SET nr_num = CAST(regexp_replace(codigo, '^NR-(\\d+).*$', '\\1') AS int);`
-     - [ ] Índices: `CREATE INDEX ON normas(nr_num);` e `CREATE INDEX ON normas(created_at DESC);`
-  2. API `frontend/src/app/api/normas/route.ts`
-     - [ ] Substituir `.order("created_at", { ascending: false })` por `.order("nr_num")`
-     - [ ] Remover ordenação no servidor após o fetch do range
-  3. Testes:
-     - [ ] Garantir estabilidade de paginação com >100 registros
+- [ ] **Interface de Gestão Documental**
+  - [ ] Upload drag-and-drop com preview
+  - [ ] Categorização visual de documentos
+  - [ ] Timeline de análises realizadas
+  - [ ] Comparações side-by-side
 
-### B. Cache, Revalidação e Fetch
-- Ações:
-  - [ ] `frontend/src/app/page.tsx`: usar `/api/...` (URL relativa) e remover `{ cache: "no-store" }`
-  - [ ] Definir revalidação: `fetch(url, { next: { revalidate: 60 }})` ou `export const revalidate = 60` no handler
-  - [ ] Habilitar `prefetch` padrão em `Link` e revisar navegação crítica
-
-### C. Rate Limiting Distribuído
-- Ações:
-  - [ ] Introduzir Redis (`REDIS_URL`) e mover o controle para lá
-  - [ ] Identificar IP real via `X-Forwarded-For` com validação
-  - [ ] Aplicar nos endpoints: `search`, `export`, `normas` (se necessário)
-  - [ ] Respostas padronizadas (429) com `resetAfter`
-  - [ ] Monitorar contadores e acertos em logs
-
-### D. Tipagem e Validação
-- Ações:
-  - [ ] Criar `frontend/src/types/norma.ts` com tipos para entidades e respostas
-  - [ ] Zod para validar e normalizar query params (
-        `page`, `limit`, `search`, `status`, `categoria`)
-  - [ ] Tipar estados em `normas/page.tsx` e respostas em `page.tsx`
-
-### E. Modelo de Dados e Índices
-- Ações:
-  - [ ] Coluna `status` (`ativa`|`revogada`) e backfill por heurística inicial
-  - [ ] Corrigir filtros para usar `status` (não o título)
-  - [ ] Índices: `status`, `codigo`, `created_at`
-
-### F. Busca (FTS)
-- Ações:
-  - [ ] `search_vector` + índice GIN
-  - [ ] `ts_rank_cd(search_vector, query)` para ranking
-  - [ ] Prefix: `to_tsquery('portuguese', 'term:*')`
-  - [ ] Debounce no client e cache curto no server
-
-### G. Exportação
-- Ações:
-  - [ ] Streaming CSV (pipe) e limite de linhas por request
-  - [ ] Sanitização: aspas, separador, linhas
-  - [ ] BOM para compatibilidade Excel quando preciso
-  - [ ] Paginação/cursor em exportações grandes
-
-### H. UI/Performance
-- Ações:
-  - [ ] Virtualização de listas (ex.: `react-virtual`)
-  - [ ] Skeletons e `Suspense` para transições
-  - [ ] Lazy import de componentes pesados
-  - [ ] Intersection Observer para prefetch sob demanda
-
-### I. SEO e Acessibilidade
-- Ações:
-  - [ ] `metadata` por rota (`/`, `/normas`, `/normas/[id]`) com OG
-  - [ ] `aria-*` nos botões e ícones sem texto
-  - [ ] Estados com ícones/texto adicionais além de cor
-
-### J. Observabilidade e Testes
-- Ações:
-  - [ ] Logger estruturado e `request_id` por request
-  - [ ] Métricas de latência p50/p95 e taxa de erro por rota
-  - [ ] Testes de API (contrato) e UI (paginação/filtros) com mocks
-
-### K. PWA e "Mundo Aberto"
-- Ações:
-  - [ ] `next-pwa`/SW com estratégias por rota (stale-while-revalidate)
-  - [ ] Cache de dados frequentes e background sync
-  - [ ] Prefetch preditivo baseado em navegação
-
-### L. Segurança
-- Ações:
-  - [ ] Headers de segurança (CSP, X-Frame-Options, etc.)
-  - [ ] Limites de input e validação em todas as APIs
-  - [ ] Revisão de RLS no Supabase e uso de chaves/roles
+- [ ] **Performance para Volume Corporativo**
+  - [ ] Virtualização de listas de documentos
+  - [ ] Lazy loading de análises pesadas
+  - [ ] Prefetch inteligente baseado em padrões de uso
+  - [ ] Compression de responses para grandes datasets
 
 ---
 
-## Critérios de Aceite (KPIs)
+## Detalhamento Técnico para Conformidade Corporativa
+
+### A. Arquitetura Multi-tenant
+```sql
+-- Novas tabelas essenciais
+CREATE TABLE empresas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome TEXT NOT NULL,
+  cnpj TEXT UNIQUE,
+  setor TEXT,
+  porte TEXT CHECK (porte IN ('pequeno', 'medio', 'grande')),
+  configuracoes JSONB DEFAULT '{}',
+  ativo BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE documentos_empresa (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  empresa_id UUID REFERENCES empresas(id) ON DELETE CASCADE,
+  nome_arquivo TEXT NOT NULL,
+  tipo_documento TEXT CHECK (tipo_documento IN ('manual', 'procedimento', 'treinamento', 'politica')),
+  conteudo_extraido TEXT,
+  metadados JSONB DEFAULT '{}',
+  url_storage TEXT NOT NULL,
+  versao INTEGER DEFAULT 1,
+  search_vector tsvector GENERATED ALWAYS AS (to_tsvector('portuguese', nome_arquivo || ' ' || COALESCE(conteudo_extraido, ''))) STORED,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE analises_conformidade (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  empresa_id UUID REFERENCES empresas(id) ON DELETE CASCADE,
+  norma_id UUID REFERENCES normas(id),
+  documento_id UUID REFERENCES documentos_empresa(id),
+  status_conformidade TEXT CHECK (status_conformidade IN ('conforme', 'nao_conforme', 'parcial', 'nao_aplicavel')),
+  lacunas_identificadas TEXT[],
+  acoes_recomendadas TEXT[],
+  score_conformidade INTEGER CHECK (score_conformidade >= 0 AND score_conformidade <= 100),
+  observacoes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX idx_documentos_empresa_search ON documentos_empresa USING GIN(search_vector);
+CREATE INDEX idx_analises_empresa_norma ON analises_conformidade(empresa_id, norma_id);
+CREATE INDEX idx_analises_score ON analises_conformidade(score_conformidade DESC);
+```
+
+### B. APIs para Conformidade Corporativa
+- [ ] `POST /api/empresas` - Cadastro de empresas
+- [ ] `POST /api/empresas/[id]/documentos` - Upload de documentos
+- [ ] `POST /api/conformidade/analisar` - Trigger análise de conformidade
+- [ ] `GET /api/conformidade/dashboard/[empresaId]` - Dashboard executivo
+- [ ] `GET /api/conformidade/relatorios/[empresaId]` - Relatórios personalizados
+
+### C. Worker de Processamento
+```typescript
+// Worker para análise assíncrona
+interface ConformidadeJob {
+  empresaId: string;
+  documentoId: string;
+  normaIds: string[];
+  prioridade: 'alta' | 'media' | 'baixa';
+}
+
+// Queue Redis para processamento
+// Integração com LLM para análise semântica
+// Sistema de retry para falhas
+// Notificações de conclusão
+```
+
+---
+
+## Critérios de Aceite Expandidos (KPIs)
+
+### Performance Base
 - [ ] Lighthouse (mobile): Performance ≥ 95, Acessibilidade ≥ 95, SEO ≥ 95
 - [ ] API p95 < 300 ms nas principais rotas
 - [ ] Erros 5xx < 0,5% das requisições
-- [ ] CLS < 0,1 | INP < 200ms | LCP < 1,2s (p75)
 
-## Referências de Código
+### Performance Corporativa
+- [ ] Upload de documentos < 30s para arquivos até 10MB
+- [ ] Análise de conformidade < 2 minutos para documentos médios
+- [ ] Dashboard corporativo carrega < 1s
+- [ ] Suporte a 1000+ documentos por empresa
+
+### Segurança e Compliance
+- [ ] Isolamento 100% efetivo entre tenants
+- [ ] Logs de auditoria para 100% das operações sensíveis
+- [ ] Backup recovery time < 4 horas
+- [ ] Zero vazamentos de dados entre empresas
+
+---
+
+## Referências de Código Expandidas
+### Arquivos Existentes
 - `frontend/src/app/api/normas/route.ts`
 - `frontend/src/app/api/search/route.ts`
 - `frontend/src/app/api/export/route.ts`
-- `frontend/src/app/api/rate-limit/route.ts`
-- `frontend/src/app/page.tsx`
-- `frontend/src/app/normas/page.tsx`
-- `frontend/src/lib/supabase.ts`
+
+### Novos Arquivos para Implementar
+- `frontend/src/app/api/empresas/route.ts`
+- `frontend/src/app/api/empresas/[id]/documentos/route.ts`
+- `frontend/src/app/api/conformidade/analisar/route.ts`
+- `frontend/src/app/api/conformidade/dashboard/[empresaId]/route.ts`
+- `frontend/src/workers/conformidade-processor.ts`
+- `frontend/src/types/conformidade.ts`
+- `frontend/src/app/empresas/[id]/dashboard/page.tsx`
+
+**TRANSFORMAÇÃO ESTRATÉGICA COMPLETA:** De MVP informativo para plataforma corporativa de compliance automatizada.
 
 
