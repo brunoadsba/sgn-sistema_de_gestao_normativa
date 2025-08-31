@@ -1,9 +1,31 @@
 # SGN - INSTRUÇÕES PARA AGENTE AUTÔNOMO
 
-## VERSÃO DO AGENTE: 1.1
+## VERSÃO DO AGENTE: 1.2
 **ÚLTIMA ATUALIZAÇÃO:** 31 de agosto de 2025  
 **COMPATÍVEL COM:** SGN v2.0 (pós-MVP)  
-**STATUS PROJETO:** MVP 100% completo, branch 'melhorias' consolidada
+**STATUS PROJETO:** MVP funcional 90% + Gaps de qualidade profissional
+
+---
+
+## 🚨 PRIORIDADE CRÍTICA: QUALIDADE PROFISSIONAL
+
+### 📊 ANÁLISE CRÍTICA REALIZADA
+- **Status atual**: MVP funcional (70% profissional)
+- **Gap principal**: Falta de testes, validação e logging
+- **Ação requerida**: Implementar padrões enterprise-grade
+
+### ❌ GAPS CRÍTICOS IDENTIFICADOS
+1. **ZERO testes** unitários/integração
+2. **Validação inadequada** sem schemas
+3. **Logging básico** apenas console.log
+4. **Deploy sem Docker** containerização
+5. **Cache inexistente** otimização
+6. **Monitoramento ausente** métricas
+
+### 🎯 CHECKPOINT 6 - QUALIDADE PROFISSIONAL (OBRIGATÓRIO)
+- **Prioridade**: CRÍTICA antes de deploy produção
+- **Objetivo**: 70% → 100% profissional
+- **Duração estimada**: 1-2 semanas
 
 ---
 
@@ -21,42 +43,398 @@
 - **Padrão de APIs:** `Response.json()` com formato `{ success, data, pagination }`
 - **Banco existente:** Tabelas `normas`, `versoes`, `mudancas` com coluna `nr_num`
 
-### OBJETIVO ESTRATÉGICO
-Transformar MVP informativo em **plataforma de conformidade corporativa automatizada**:
-- **ANTES:** Sistema de consulta → R$ 200-500/mês
-- **DEPOIS:** Consultoria automatizada → R$ 2.000-10.000/mês
-- **MULTIPLICADOR:** 10x-20x no valor percebido
+### OBJETIVO ESTRATÉGICO ATUALIZADO
+Transformar MVP funcional em **plataforma profissional enterprise-grade**:
+- **ATUAL:** MVP funcional (70% profissional) → R$ 500-1.000/mês
+- **META:** MVP profissional (100% padrão indústria) → R$ 2.000-5.000/mês  
+- **FUTURO:** Plataforma enterprise com IA → R$ 5.000-20.000/mês
+- **MULTIPLICADOR:** 4x-10x no valor percebido
 
 ---
 
 ## PROTOCOLOS OBRIGATÓRIOS DE EXECUÇÃO
 
-### ⚠️ ANTES DE QUALQUER IMPLEMENTAÇÃO:
+### ⚠️ ANTES DE QUALQUER IMPLEMENTAÇÃO (CHECKPOINT 6):
 1. **Verificar branch atual:** Está em `melhorias` (consolidada)
-2. **Criar nova branch:** `git checkout -b feature/conformidade-corporativa`
+2. **Criar nova branch:** `git checkout -b feature/qualidade-profissional`
 3. **Verificar ambiente:** `npm run dev` no diretório frontend
-4. **Criar estrutura necessária:** `mkdir -p frontend/src/types`
-5. **Validar Supabase:** Verificar tabelas existentes
+4. **Instalar dependências de qualidade:** Jest, Zod, Winston
+5. **Criar estrutura de testes:** `mkdir -p frontend/__tests__`
 
-### 🔧 DURANTE IMPLEMENTAÇÃO:
-1. **TypeScript obrigatório:** Todos os arquivos devem ser .ts/.tsx
-2. **Tipagem completa:** Definir interfaces para todas as estruturas
-3. **Padrões do projeto:** Usar Shadcn/ui components e Tailwind CSS
-4. **Estrutura de pastas:** Seguir convenção Next.js 15 (app directory)
-5. **Tratamento de erros:** Implementar try/catch com padrão existente
-6. **Responsividade:** Testar em mobile e desktop
+### 🔧 DURANTE IMPLEMENTAÇÃO (QUALIDADE):
+1. **Testes obrigatórios:** TDD - escrever testes antes do código
+2. **Validação:** Zod schemas em todas as APIs
+3. **Logging:** Winston estruturado para todas as operações
+4. **Cobertura:** Manter >80% cobertura de testes
+5. **Quality gates:** Lint, type-check, test antes de commit
+6. **Docker:** Containerizar para deploy consistente
 
-### ✅ APÓS IMPLEMENTAÇÃO:
-1. **Testar funcionalidade completa** no navegador
-2. **Verificar console** para erros JavaScript/TypeScript
-3. **Commit descritivo:** `git commit -m "feat: [descrição clara]"`
-4. **Atualizar documentação** se necessário
-5. **Reportar conclusão** com detalhes do que foi implementado
+### ✅ APÓS IMPLEMENTAÇÃO (VALIDAÇÃO QUALIDADE):
+1. **Executar todos os testes:** `npm test` (cobertura >80%)
+2. **Validar tipos:** `npm run type-check`
+3. **Verificar lint:** `npm run lint`
+4. **Build produção:** `npm run build`
+5. **Commit com quality gates:** Todos os checks passando
+6. **Atualizar scorecard:** Recalcular score profissional
 
 ---
 
-## FASE 6: ANÁLISE DE CONFORMIDADE CORPORATIVA
-**PRIORIDADE MÁXIMA - 8 semanas**
+## FASE CRÍTICA: CHECKPOINT 6 - QUALIDADE PROFISSIONAL
+**PRIORIDADE MÁXIMA - 1-2 semanas**
+
+### PASSO 1: IMPLEMENTAR TESTES UNITÁRIOS ❌ **AUSENTE**
+
+#### 1.1 CONFIGURAR JEST E TESTING LIBRARY
+```bash
+cd frontend
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom @types/jest
+```
+
+**Arquivo:** `frontend/jest.config.js`
+```javascript
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
+  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+  ],
+}
+
+module.exports = createJestConfig(customJestConfig)
+```
+
+**Arquivo:** `frontend/jest.setup.js`
+```javascript
+import '@testing-library/jest-dom'
+```
+
+#### 1.2 CRIAR TESTES DE APIS
+**Arquivo:** `frontend/__tests__/api/empresas.test.ts`
+```typescript
+import { GET, POST } from '@/app/api/empresas/route'
+import { NextRequest } from 'next/server'
+
+describe('/api/empresas', () => {
+  test('GET retorna lista de empresas', async () => {
+    const request = new NextRequest('http://localhost:3000/api/empresas')
+    const response = await GET(request)
+    const data = await response.json()
+    
+    expect(response.status).toBe(200)
+    expect(data).toHaveProperty('success', true)
+    expect(data).toHaveProperty('data')
+    expect(Array.isArray(data.data)).toBe(true)
+  })
+
+  test('POST cria nova empresa', async () => {
+    const requestBody = {
+      nome: 'Empresa Teste',
+      cnpj: '12345678000100',
+      setor: 'Industrial',
+      porte: 'medio'
+    }
+    
+    const request = new NextRequest('http://localhost:3000/api/empresas', {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    
+    const response = await POST(request)
+    const data = await response.json()
+    
+    expect(response.status).toBe(201)
+    expect(data).toHaveProperty('success', true)
+    expect(data.data).toHaveProperty('nome', 'Empresa Teste')
+  })
+})
+```
+
+### PASSO 2: IMPLEMENTAR VALIDAÇÃO ZOD ❌ **AUSENTE**
+
+#### 2.1 INSTALAR E CONFIGURAR ZOD
+```bash
+npm install zod
+```
+
+**Arquivo:** `frontend/src/lib/validations.ts`
+```typescript
+import { z } from 'zod'
+
+export const EmpresaSchema = z.object({
+  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
+  cnpj: z.string().regex(/^\d{14}$/, 'CNPJ deve ter 14 dígitos').optional(),
+  setor: z.string().min(1, 'Setor é obrigatório'),
+  porte: z.enum(['pequeno', 'medio', 'grande'])
+})
+
+export const DocumentoSchema = z.object({
+  nome_arquivo: z.string().min(1, 'Nome do arquivo é obrigatório'),
+  tipo_documento: z.enum(['manual', 'procedimento', 'treinamento', 'politica']),
+  file: z.instanceof(File).refine(
+    file => file.size <= 10 * 1024 * 1024, 
+    'Arquivo deve ter no máximo 10MB'
+  )
+})
+
+export const ConformidadeSchema = z.object({
+  empresa_id: z.string().uuid('ID da empresa inválido'),
+  norma_id: z.string().uuid('ID da norma inválido').optional(),
+  tipo_analise: z.enum(['completa', 'pontual', 'auditoria']),
+  prioridade: z.enum(['baixa', 'media', 'alta', 'critica']).default('media')
+})
+```
+
+#### 2.2 APLICAR VALIDAÇÃO NAS APIS
+**Exemplo atualização:** `frontend/src/app/api/empresas/route.ts`
+```typescript
+import { EmpresaSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    
+    // Validação com Zod
+    const validatedData = EmpresaSchema.parse(body)
+    
+    const { data, error } = await supabase
+      .from("empresas")
+      .insert([validatedData])
+      .select()
+      .single()
+
+    if (error) {
+      logger.error('Erro ao criar empresa', { error, body })
+      return Response.json({ error: "Erro ao criar empresa" }, { status: 500 })
+    }
+
+    logger.info('Empresa criada', { empresaId: data.id })
+    return Response.json({ success: true, data }, { status: 201 })
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ 
+        error: "Dados inválidos", 
+        details: error.errors 
+      }, { status: 400 })
+    }
+    
+    logger.error('Erro interno', { error })
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 })
+  }
+}
+```
+
+### PASSO 3: IMPLEMENTAR LOGGING ESTRUTURADO ❌ **BÁSICO**
+
+#### 3.1 CONFIGURAR WINSTON
+```bash
+npm install winston
+mkdir -p logs
+```
+
+**Arquivo:** `frontend/src/lib/logger.ts`
+```typescript
+import winston from 'winston'
+
+const { combine, timestamp, errors, json, simple } = winston.format
+
+export const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: combine(
+    timestamp(),
+    errors({ stack: true }),
+    json()
+  ),
+  defaultMeta: { service: 'sgn-frontend' },
+  transports: [
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    }),
+    new winston.transports.File({ 
+      filename: 'logs/combined.log',
+      maxsize: 5242880,
+      maxFiles: 5
+    })
+  ]
+})
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: simple()
+  }))
+}
+
+// Middleware para APIs
+export const logRequest = (req: Request, context: any = {}) => {
+  logger.info('API Request', {
+    method: req.method,
+    url: req.url,
+    userAgent: req.headers.get('user-agent'),
+    ...context
+  })
+}
+
+export const logError = (error: any, context: any = {}) => {
+  logger.error('Application Error', {
+    message: error.message,
+    stack: error.stack,
+    ...context
+  })
+}
+```
+
+### PASSO 4: CONTAINERIZAÇÃO DOCKER ❌ **AUSENTE**
+
+#### 4.1 CRIAR DOCKERFILE
+**Arquivo:** `frontend/Dockerfile`
+```dockerfile
+FROM node:20-alpine AS base
+
+# Dependências
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+
+# Builder
+FROM base AS builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Runner
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT 3000
+
+CMD ["node", "server.js"]
+```
+
+**Arquivo:** `docker-compose.yml`
+```yaml
+version: '3.8'
+services:
+  sgn-frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+```
+
+---
+
+## COMANDOS DE QUALIDADE PROFISSIONAL
+
+### EXECUTAR TESTES:
+```bash
+cd frontend
+npm test              # Executar todos os testes
+npm run test:watch    # Modo watch para desenvolvimento
+npm run test:coverage # Relatório de cobertura
+```
+
+### VALIDAR QUALIDADE:
+```bash
+npm run lint          # ESLint
+npm run type-check    # Verificação TypeScript
+npm test              # Testes unitários
+npm run build         # Build de produção
+```
+
+### DEPLOYMENT PROFISSIONAL:
+```bash
+# Build e run com Docker
+docker build -t sgn-frontend ./frontend
+docker run -p 3000:3000 sgn-frontend
+
+# Ou com docker-compose
+docker-compose up --build
+```
+
+### MONITORAMENTO:
+```bash
+# Verificar logs
+tail -f logs/combined.log
+tail -f logs/error.log
+
+# Métricas de coverage
+npm run test:coverage && open coverage/lcov-report/index.html
+```
+
+---
+
+## VALIDAÇÃO CHECKPOINT 6
+
+### ✅ CRITÉRIOS DE ACEITAÇÃO:
+- [ ] Testes unitários com cobertura >80%
+- [ ] Validação Zod em todas as APIs
+- [ ] Logging estruturado implementado
+- [ ] Dockerfile funcional
+- [ ] Build de produção sem erros
+- [ ] Performance otimizada
+
+### ✅ COMANDOS DE VALIDAÇÃO:
+```bash
+# Executar validação completa
+cd frontend
+npm run lint && npm run type-check && npm test && npm run build
+
+# Verificar cobertura de testes
+npm run test:coverage
+```
+
+---
+
+## RESULTADO ESPERADO CHECKPOINT 6
+
+Ao final do Checkpoint 6, o SGN será um **MVP profissional padrão indústria**:
+- ✅ **Testes robustos** com cobertura >80%
+- ✅ **Validação completa** em todas as entradas
+- ✅ **Logging estruturado** para debugging/monitoramento
+- ✅ **Containerização** para deploy consistente
+- ✅ **Quality gates** implementados
+- ✅ **Score profissional** 90%+
+
+**VALOR AGREGADO:** MVP funcional (70%) → MVP profissional enterprise-grade (100%)
+
+---
+
+## FASE 6: ANÁLISE DE CONFORMIDADE CORPORATIVA (APÓS QUALIDADE)
+**PRIORIDADE SECUNDÁRIA - 8 semanas**
 
 ### PASSO 1: ARQUITETURA MULTI-TENANT
 
