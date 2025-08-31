@@ -580,8 +580,8 @@ cd frontend && npm run dev
 ### TESTAR IMPLEMENTAÇÃO:
 ```bash
 # Testar APIs
-curl http://localhost:3000/api/empresas
-curl -X POST http://localhost:3000/api/empresas -H "Content-Type: application/json" -d '{"nome":"Empresa Teste","cnpj":"12345678000100","setor":"Industrial","porte":"medio"}'
+curl http://localhost:3001/api/empresas
+curl -X POST http://localhost:3001/api/empresas -H "Content-Type: application/json" -d '{"nome":"Empresa Teste","cnpj":"12345678000100","setor":"Industrial","porte":"medio"}'
 
 # Verificar TypeScript
 cd frontend && npx tsc --noEmit
