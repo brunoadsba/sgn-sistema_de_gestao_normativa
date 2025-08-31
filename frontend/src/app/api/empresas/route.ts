@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
 
 export const revalidate = 60;
 
@@ -17,28 +18,51 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false });
 
     if (search) {
-      query = query.ilike("nome", `%${search}%`);
+      query = query.or(
+        `nome.ilike.%${search}%,cnpj.ilike.%${search}%,setor.ilike.%${search}%`
+      );
     }
 
-    const { data: empresas, error, count } = await query
-      .range(offset, offset + limit - 1);
+    const { data: empresas, error, count } = await query.range(
+      offset,
+      offset + limit - 1
+    );
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        {
+          status: 500,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
+      );
     }
 
-    return Response.json({
-      success: true,
-      data: empresas || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+    return NextResponse.json(
+      {
+        success: true,
+        data: empresas || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+      },
+      {
+        headers: {
+          // Cache público para CDNs e SW; mantém dados quentes e baratos
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
       }
-    });
+    );
   } catch {
-    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }
 
@@ -48,7 +72,10 @@ export async function POST(request: Request) {
     const { nome, cnpj, setor, porte } = body;
 
     if (!nome) {
-      return Response.json({ error: "Nome é obrigatório" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nome é obrigatório" },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
     }
 
     const { data, error } = await supabase
@@ -58,15 +85,23 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      return Response.json({ error: "Erro ao criar empresa" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Erro ao criar empresa" },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
     }
 
-    return Response.json({
-      success: true,
-      data
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+      },
+      { status: 201, headers: { "Cache-Control": "no-store" } }
+    );
   } catch {
-    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }

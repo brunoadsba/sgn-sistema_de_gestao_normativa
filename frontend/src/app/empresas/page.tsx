@@ -1,52 +1,161 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { PlusIcon, SearchIcon, BuildingIcon } from 'lucide-react'
+import React, { Suspense } from 'react'
+import { supabase } from '@/lib/supabase'
+import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
-import type { Empresa, ApiResponseEmpresas } from '@/types/conformidade'
 
-export default function EmpresasPage() {
-  const [empresas, setEmpresas] = useState<Empresa[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [total, setTotal] = useState(0)
+type SearchParams = {
+  search?: string
+  page?: string
+}
 
-  useEffect(() => {
-    fetchEmpresas()
-  }, [search])
+type Empresa = {
+  id: string
+  nome: string
+  porte: string | null
+  cnpj: string | null
+  setor: string | null
+  created_at: string
+}
 
-  const fetchEmpresas = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (search) params.set('search', search)
-      
-      const response = await fetch(`/api/empresas?${params}`)
-      const result: ApiResponseEmpresas = await response.json()
-      
-      if (response.ok && result.success) {
-        setEmpresas(result.data)
-        setTotal(result.pagination.total)
-      }
-    } catch (error) {
+const PAGE_SIZE = 12
+export const revalidate = 60
+
+const getEmpresasCached = unstable_cache(
+  async (page: number, search: string) => {
+    const from = (page - 1) * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
+
+    let query = supabase
+      .from('empresas')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (search) {
+      const term = `%${search}%`
+      query = query.or(`nome.ilike.${term},cnpj.ilike.${term},setor.ilike.${term}`)
+    }
+
+    const { data, count, error } = await query
+    if (error) {
       console.error('Erro ao buscar empresas:', error)
-    } finally {
-      setLoading(false)
+      return { data: [] as Empresa[], count: 0 }
     }
+
+    return { data: (data || []) as Empresa[], count: count || 0 }
+  },
+  ['empresas-rsc-list'],
+  { revalidate: 60, tags: ['empresas'] }
+)
+
+function ListFallback() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="border rounded-lg p-6 animate-pulse">
+          <div className="h-5 w-40 bg-gray-200 rounded mb-3" />
+          <div className="space-y-2">
+            <div className="h-4 w-2/3 bg-gray-200 rounded" />
+            <div className="h-4 w-1/2 bg-gray-200 rounded" />
+            <div className="h-4 w-1/3 bg-gray-200 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const porteBadge = (porte: string | null) => {
+  if (!porte) return 'bg-gray-200 text-gray-700'
+  if (porte === 'grande') return 'bg-gray-900 text-white'
+  if (porte === 'medio') return 'bg-gray-300 text-gray-900'
+  return 'bg-white text-gray-900 border'
+}
+
+async function EmpresasList({
+  page,
+  search
+}: {
+  page: number
+  search: string
+}) {
+  const { data: empresas, count } = await getEmpresasCached(page, search)
+
+  const urlFor = (params: Record<string, string | number | undefined>) => {
+    const sp = new URLSearchParams()
+    if (params.search ?? search) sp.set('search', String(params.search ?? search))
+    sp.set('page', String(params.page ?? page))
+    return `/empresas?${sp.toString()}`
   }
 
-  const getPorteVariant = (porte: string) => {
-    switch (porte) {
-      case 'grande': return 'default'
-      case 'medio': return 'secondary'  
-      case 'pequeno': return 'outline'
-      default: return 'secondary'
-    }
-  }
+  return (
+    <>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {empresas.map((empresa) => (
+          <div key={empresa.id} className="hover:shadow-lg transition-shadow border rounded-lg">
+            <div className="p-6">
+              <div className="flex items-start justify-between">
+                <h2 className="text-lg font-semibold">{empresa.nome}</h2>
+                <span className={`px-2 py-1 rounded text-xs ${porteBadge(empresa.porte)}`}>
+                  {empresa.porte || 'indefinido'}
+                </span>
+              </div>
+
+              <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                <p>CNPJ: {empresa.cnpj || 'Não informado'}</p>
+                <p>Setor: {empresa.setor || 'Não definido'}</p>
+                <p>Cadastro: {new Date(empresa.created_at).toLocaleDateString()}</p>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <Link
+                  href={`/empresas/${empresa.id}`}
+                  className="inline-flex items-center rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  Ver Detalhes
+                </Link>
+                <Link
+                  href={`/empresas/${empresa.id}/conformidade`}
+                  className="inline-flex items-center rounded-md border px-3 py-2 text-sm bg-gray-900 text-white hover:opacity-90"
+                >
+                  Conformidade
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {empresas.length === 0 && (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            Nenhuma empresa encontrada.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between">
+        <Link
+          href={urlFor({ page: Math.max(1, page - 1) })}
+          className={`border rounded px-3 py-2 text-sm ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
+        >
+          Anterior
+        </Link>
+        <span className="text-sm text-muted-foreground">
+          Página {page} — Total: {count}
+        </span>
+        <Link
+          href={urlFor({ page: page + 1 })}
+          className={`border rounded px-3 py-2 text-sm ${empresas.length < PAGE_SIZE ? 'pointer-events-none opacity-50' : ''}`}
+        >
+          Próxima
+        </Link>
+      </div>
+    </>
+  )
+}
+
+export default async function EmpresasPage({ searchParams }: { searchParams?: SearchParams }) {
+  const page = Number(searchParams?.page) || 1
+  const search = searchParams?.search || ''
 
   return (
     <div className="container mx-auto py-8">
@@ -57,96 +166,30 @@ export default function EmpresasPage() {
             Gerencie empresas clientes e suas análises de conformidade
           </p>
         </div>
-        <Button asChild>
-          <Link href="/empresas/nova">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Nova Empresa
-          </Link>
-        </Button>
+        <Link
+          href="/empresas/nova"
+          className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
+        >
+          Nova Empresa
+        </Link>
       </div>
 
-      <div className="mb-6">
-        <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar empresas..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+      <form method="get" className="mb-6">
+        <div className="relative max-w-xl">
+          <input
+            type="text"
+            name="search"
+            defaultValue={search}
+            placeholder="Buscar empresas (nome, CNPJ, setor)..."
+            className="w-full rounded-md border px-3 py-2 pl-10"
           />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔎</span>
         </div>
-      </div>
+      </form>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {loading ? (
-          Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-3">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          empresas.map((empresa) => (
-            <Card key={empresa.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
-                  <BuildingIcon className="h-5 w-5" />
-                  {empresa.nome}
-                </CardTitle>
-                <Badge variant={getPorteVariant(empresa.porte)}>
-                  {empresa.porte}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>CNPJ: {empresa.cnpj || 'Não informado'}</p>
-                  <p>Setor: {empresa.setor || 'Não definido'}</p>
-                  <p>Cadastro: {new Date(empresa.created_at).toLocaleDateString()}</p>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/empresas/${empresa.id}`}>
-                      Ver Detalhes
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm">
-                    <Link href={`/empresas/${empresa.id}/conformidade`}>
-                      Conformidade
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {!loading && empresas.length === 0 && (
-        <div className="text-center py-12">
-          <BuildingIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma empresa encontrada</h3>
-          <p className="text-muted-foreground mb-4">
-            {search ? 'Tente ajustar os filtros de busca' : 'Comece cadastrando sua primeira empresa'}
-          </p>
-          <Button asChild>
-            <Link href="/empresas/nova">Cadastrar Empresa</Link>
-          </Button>
-        </div>
-      )}
-
-      {total > 0 && (
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Total: {total} empresa{total !== 1 ? 's' : ''} cadastrada{total !== 1 ? 's' : ''}
-        </div>
-      )}
+      <Suspense fallback={<ListFallback />}>
+        <EmpresasList page={page} search={search} />
+      </Suspense>
     </div>
   )
 }

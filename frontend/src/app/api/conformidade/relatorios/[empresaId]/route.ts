@@ -2,6 +2,49 @@ import { supabase } from "@/lib/supabase";
 
 export const revalidate = 0; // Relatórios sempre fresh
 
+type EmpresaRow = {
+  id: string;
+  nome: string;
+  cnpj?: string | null;
+  setor?: string | null;
+  porte?: string | null;
+  ativo?: boolean | null;
+};
+
+type ResultadoRow = {
+  id: string;
+  score_geral?: number | null;
+  nivel_risco?: 'baixo' | 'medio' | 'alto' | 'critico' | null;
+  status_geral?: 'conforme' | 'nao_conforme' | 'parcial_conforme' | null;
+  created_at: string;
+};
+
+type DocRow = {
+  id: string;
+  nome_arquivo: string;
+  tipo_documento: string;
+  created_at: string;
+};
+
+type GapRow = {
+  id: string;
+  severidade: 'critica' | 'alta' | 'media' | 'baixa';
+  resolvido: boolean;
+  created_at: string;
+  descricao?: string | null;
+  recomendacao?: string | null;
+  prazo_sugerido?: string | null;
+  impacto?: string | null;
+  categoria?: string | null;
+};
+
+type JobRow = {
+  id: string;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+};
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ empresaId: string }> }
@@ -14,7 +57,6 @@ export async function GET(
     const formato = searchParams.get("formato") || "json"; // json, csv, pdf
     const periodo = searchParams.get("periodo") || "90"; // dias
     const incluirGraficos = searchParams.get("incluir_graficos") === "true";
-    const normasIds = searchParams.get("normas_ids"); // filtro opcional
     const severidade = searchParams.get("severidade"); // filtro gaps
 
     if (!empresaId) {
@@ -24,7 +66,6 @@ export async function GET(
       }, { status: 400 });
     }
 
-    // Verificar empresa
     const { data: empresa, error: empresaError } = await supabase
       .from("empresas")
       .select("*")
@@ -39,28 +80,27 @@ export async function GET(
       }, { status: 404 });
     }
 
-    // Data de filtro
     const dataInicio = new Date();
     dataInicio.setDate(dataInicio.getDate() - parseInt(periodo));
     const dataInicioISO = dataInicio.toISOString();
 
-    let relatorio: any = {};
+    let relatorio: { success: boolean; data?: unknown; error?: string } = { success: false };
 
     switch (tipo) {
       case "executivo":
-        relatorio = await gerarRelatorioExecutivo(empresaId, empresa, dataInicioISO, normasIds);
+        relatorio = await gerarRelatorioExecutivo(empresaId, empresa as EmpresaRow, dataInicioISO);
         break;
       
       case "detalhado":
-        relatorio = await gerarRelatorioDetalhado(empresaId, empresa, dataInicioISO, normasIds);
+        relatorio = await gerarRelatorioDetalhado(empresaId, empresa as EmpresaRow, dataInicioISO);
         break;
       
       case "gaps":
-        relatorio = await gerarRelatorioGaps(empresaId, empresa, dataInicioISO, severidade, normasIds);
+        relatorio = await gerarRelatorioGaps(empresaId, empresa as EmpresaRow, dataInicioISO, severidade);
         break;
       
       case "compliance":
-        relatorio = await gerarRelatorioCompliance(empresaId, empresa, dataInicioISO, normasIds);
+        relatorio = await gerarRelatorioCompliance(empresaId, empresa as EmpresaRow, dataInicioISO);
         break;
       
       default:
@@ -74,16 +114,14 @@ export async function GET(
       return Response.json(relatorio, { status: 500 });
     }
 
-    // Adicionar gráficos se solicitado
-    if (incluirGraficos) {
-      relatorio.data.graficos = await gerarDadosGraficos(empresaId, dataInicioISO);
+    if (incluirGraficos && relatorio.data && typeof relatorio.data === 'object') {
+      (relatorio.data as Record<string, unknown>)['graficos'] = await gerarDadosGraficos();
     }
 
-    // Formatar resposta baseado no formato solicitado
     if (formato === "csv") {
       return gerarCSV(relatorio.data, tipo);
     } else if (formato === "pdf") {
-      return gerarPDF(relatorio.data, tipo, empresa);
+      return gerarPDF();
     }
 
     return Response.json(relatorio);
@@ -97,7 +135,6 @@ export async function GET(
   }
 }
 
-// POST para gerar relatórios customizados
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ empresaId: string }> }
@@ -120,9 +157,6 @@ export async function POST(
         error: "nome_relatorio e configuracao são obrigatórios" 
       }, { status: 400 });
     }
-
-    // Aqui seria implementada a lógica para salvar configurações de relatórios customizados
-    // Por agora, retornamos um mock da funcionalidade
 
     const relatorioCustomizado = {
       id: `custom_${Date.now()}`,
@@ -151,13 +185,11 @@ export async function POST(
   }
 }
 
-// FUNÇÕES DE GERAÇÃO DE RELATÓRIOS
+// ====== FUNÇÕES DE GERAÇÃO ======
 
-async function gerarRelatorioExecutivo(empresaId: string, empresa: any, dataInicio: string, normasIds?: string | null) {
+async function gerarRelatorioExecutivo(empresaId: string, empresa: EmpresaRow, dataInicio: string) {
   try {
-    // Buscar dados consolidados
-    const [resultados, gaps, jobs] = await Promise.all([
-      // Resultados de análises
+    const [resultados, gaps] = await Promise.all([
       supabase
         .from("analise_resultados")
         .select("*")
@@ -165,30 +197,27 @@ async function gerarRelatorioExecutivo(empresaId: string, empresa: any, dataInic
         .gte("created_at", dataInicio)
         .order("created_at", { ascending: false }),
 
-      // Gaps críticos
       supabase
         .from("conformidade_gaps")
         .select(`
-          *,
+          id, severidade, resolvido, created_at, prazo_sugerido, impacto, descricao, recomendacao,
           normas(codigo, titulo),
           analise_resultados!inner(empresa_id)
         `)
         .eq("analise_resultados.empresa_id", empresaId)
         .gte("created_at", dataInicio)
-        .order("severidade", { ascending: false }),
-
-      // Jobs de análise
-      supabase
-        .from("analise_jobs")
-        .select("*")
-        .eq("empresa_id", empresaId)
-        .gte("created_at", dataInicio)
+        .order("severidade", { ascending: false })
     ]);
 
-    const scoreGeral = resultados.data?.length ? 
-      Math.round(resultados.data.reduce((acc, r) => acc + (r.score_geral || 0), 0) / resultados.data.length) : 0;
+    const resultadosRows = (resultados.data || []) as ResultadoRow[];
+    const gapsRows = (gaps.data || []) as GapRow[];
+    // Remover variável não usada: const jobsRows = (jobs.data || []) as JobRow[];
 
-    const gapsCriticos = gaps.data?.filter(g => g.severidade === 'critica' && !g.resolvido) || [];
+    const scoreGeral = resultadosRows.length
+      ? Math.round(resultadosRows.reduce((acc, r) => acc + (r.score_geral || 0), 0) / resultadosRows.length)
+      : 0;
+
+    const gapsCriticos = gapsRows.filter(g => g.severidade === 'critica' && !g.resolvido);
     const riscoGeral = scoreGeral >= 80 ? 'baixo' : scoreGeral >= 60 ? 'medio' : scoreGeral >= 40 ? 'alto' : 'critico';
 
     return {
@@ -204,20 +233,20 @@ async function gerarRelatorioExecutivo(empresaId: string, empresa: any, dataInic
         resumo: {
           score_geral: scoreGeral,
           nivel_risco: riscoGeral,
-          total_analises: resultados.data?.length || 0,
+          total_analises: resultadosRows.length,
           gaps_criticos: gapsCriticos.length,
           taxa_conformidade: scoreGeral
         },
         principais_achados: {
           gaps_criticos: gapsCriticos.slice(0, 10),
-          normas_maior_risco: await getNormasMaiorRisco(empresaId, dataInicio),
+          normas_maior_risco: await getNormasMaiorRisco(),
           recomendacoes_prioritarias: gerarRecomendacoesPrioritarias(gapsCriticos)
         },
         tendencias: {
-          evolucao_score: resultados.data?.slice(0, 10).map(r => ({
+          evolucao_score: resultadosRows.slice(0, 10).map(r => ({
             data: r.created_at,
-            score: r.score_geral
-          })) || []
+            score: r.score_geral || 0
+          }))
         },
         gerado_em: new Date().toISOString()
       }
@@ -229,14 +258,8 @@ async function gerarRelatorioExecutivo(empresaId: string, empresa: any, dataInic
   }
 }
 
-async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInicio: string, normasIds?: string | null) {
+async function gerarRelatorioDetalhado(empresaId: string, empresa: EmpresaRow, dataInicio: string) {
   try {
-    let normasFilter = "";
-    if (normasIds) {
-      normasFilter = normasIds.split(',').map(id => id.trim()).join(',');
-    }
-
-    // Dados completos
     const [resultados, gaps, documentos, jobs] = await Promise.all([
       supabase
         .from("analise_resultados")
@@ -247,7 +270,7 @@ async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInic
       supabase
         .from("conformidade_gaps")
         .select(`
-          *,
+          id, severidade, resolvido, created_at, prazo_sugerido, impacto, descricao, recomendacao,
           normas(id, codigo, titulo),
           analise_resultados!inner(empresa_id)
         `)
@@ -261,13 +284,17 @@ async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInic
 
       supabase
         .from("analise_jobs")
-        .select(`
-          *,
+        .select(`*,
           documentos_empresa(nome_arquivo, tipo_documento)
         `)
         .eq("empresa_id", empresaId)
         .gte("created_at", dataInicio)
     ]);
+
+    const resultadosRows = (resultados.data || []) as ResultadoRow[];
+    const gapsRows = (gaps.data || []) as GapRow[];
+    const documentosRows = (documentos.data || []) as DocRow[];
+    // Remover variável não usada: const jobsRows = (jobs.data || []) as JobRow[];
 
     return {
       success: true,
@@ -275,11 +302,11 @@ async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInic
         tipo: "detalhado",
         empresa,
         periodo: { inicio: dataInicio, fim: new Date().toISOString() },
-        analises_realizadas: resultados.data || [],
-        gaps_identificados: gaps.data || [],
-        documentos_analisados: documentos.data || [],
+        analises_realizadas: resultadosRows,
+        gaps_identificados: gapsRows,
+        documentos_analisados: documentosRows,
         historico_processamento: jobs.data || [],
-        estatisticas_detalhadas: calcularEstatisticasDetalhadas(resultados.data || [], gaps.data || [], jobs.data || []),
+        estatisticas_detalhadas: calcularEstatisticasDetalhadas(resultadosRows, gapsRows, jobs.data || []),
         gerado_em: new Date().toISOString()
       }
     };
@@ -290,12 +317,12 @@ async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInic
   }
 }
 
-async function gerarRelatorioGaps(empresaId: string, empresa: any, dataInicio: string, severidade?: string | null, normasIds?: string | null) {
+async function gerarRelatorioGaps(empresaId: string, empresa: EmpresaRow, dataInicio: string, severidade?: string | null) {
   try {
     let query = supabase
       .from("conformidade_gaps")
       .select(`
-        *,
+        id, severidade, resolvido, created_at, prazo_sugerido, impacto, descricao, recomendacao, categoria,
         normas(id, codigo, titulo),
         analise_resultados!inner(
           empresa_id,
@@ -314,22 +341,20 @@ async function gerarRelatorioGaps(empresaId: string, empresa: any, dataInicio: s
     }
 
     const { data: gaps, error } = await query;
-
     if (error) throw error;
 
-    // Agrupar gaps por severidade e categoria
-    const gapsPorSeveridade = gaps?.reduce((acc: any, gap) => {
-      acc[gap.severidade] = acc[gap.severidade] || [];
-      acc[gap.severidade].push(gap);
-      return acc;
-    }, {}) || {};
+    const gapsRows = (gaps || []) as GapRow[];
 
-    const gapsPorCategoria = gaps?.reduce((acc: any, gap) => {
-      const categoria = gap.categoria || 'Sem categoria';
-      acc[categoria] = acc[categoria] || [];
-      acc[categoria].push(gap);
+    const gapsPorSeveridade = gapsRows.reduce<Record<string, GapRow[]>>((acc, gap) => {
+      (acc[gap.severidade] = acc[gap.severidade] || []).push(gap);
       return acc;
-    }, {}) || {};
+    }, {});
+
+    const gapsPorCategoria = gapsRows.reduce<Record<string, GapRow[]>>((acc, gap) => {
+      const categoria = gap.categoria || 'Sem categoria';
+      (acc[categoria] = acc[categoria] || []).push(gap);
+      return acc;
+    }, {});
 
     return {
       success: true,
@@ -338,21 +363,21 @@ async function gerarRelatorioGaps(empresaId: string, empresa: any, dataInicio: s
         empresa,
         filtros: { severidade, periodo_inicio: dataInicio },
         resumo: {
-          total_gaps: gaps?.length || 0,
-          gaps_resolvidos: gaps?.filter(g => g.resolvido).length || 0,
-          gaps_pendentes: gaps?.filter(g => !g.resolvido).length || 0,
+          total_gaps: gapsRows.length,
+          gaps_resolvidos: gapsRows.filter(g => g.resolvido).length,
+          gaps_pendentes: gapsRows.filter(g => !g.resolvido).length,
           por_severidade: Object.keys(gapsPorSeveridade).map(sev => ({
             severidade: sev,
             total: gapsPorSeveridade[sev].length,
-            resolvidos: gapsPorSeveridade[sev].filter((g: any) => g.resolvido).length
+            resolvidos: gapsPorSeveridade[sev].filter(g => g.resolvido).length
           }))
         },
-        gaps_detalhados: gaps || [],
+        gaps_detalhados: gapsRows,
         agrupamentos: {
           por_severidade: gapsPorSeveridade,
           por_categoria: gapsPorCategoria
         },
-        plano_acao_sugerido: gerarPlanoAcaoGaps(gaps || []),
+        plano_acao_sugerido: gerarPlanoAcaoGaps(gapsRows),
         gerado_em: new Date().toISOString()
       }
     };
@@ -363,24 +388,19 @@ async function gerarRelatorioGaps(empresaId: string, empresa: any, dataInicio: s
   }
 }
 
-async function gerarRelatorioCompliance(empresaId: string, empresa: any, dataInicio: string, normasIds?: string | null) {
+async function gerarRelatorioCompliance(empresaId: string, empresa: EmpresaRow, dataInicio: string) {
   try {
-    // Dados para compliance
-    const [resultados, normasAnalisadas] = await Promise.all([
+    const [resultados] = await Promise.all([
       supabase
         .from("analise_resultados")
         .select("*")
         .eq("empresa_id", empresaId)
-        .gte("created_at", dataInicio),
-
-      supabase
-        .from("normas")
-        .select("id, codigo, titulo, orgao_publicador")
-        .order("codigo")
+        .gte("created_at", dataInicio)
     ]);
 
-    const scoresPorNorma = await calcularScoresPorNorma(empresaId, dataInicio);
-    const statusCompliance = calcularStatusCompliance(resultados.data || []);
+    const resultadosRows = (resultados.data || []) as ResultadoRow[];
+    const scoresPorNorma = await calcularScoresPorNorma();
+    const statusCompliance = calcularStatusCompliance(resultadosRows);
 
     return {
       success: true,
@@ -391,11 +411,11 @@ async function gerarRelatorioCompliance(empresaId: string, empresa: any, dataIni
         status_geral: statusCompliance,
         normas_analisadas: scoresPorNorma,
         certificacoes: {
-          iso_45001: avaliarISO45001(scoresPorNorma),
-          nr_compliance: avaliarNRCompliance(scoresPorNorma)
+          iso_45001: avaliarISO45001(),
+          nr_compliance: avaliarNRCompliance()
         },
-        recomendacoes_compliance: gerarRecomendacoesCompliance(scoresPorNorma),
-        proximas_acoes: gerarProximasAcoes(empresa, scoresPorNorma),
+        recomendacoes_compliance: gerarRecomendacoesCompliance(),
+        proximas_acoes: gerarProximasAcoes(),
         gerado_em: new Date().toISOString()
       }
     };
@@ -406,14 +426,13 @@ async function gerarRelatorioCompliance(empresaId: string, empresa: any, dataIni
   }
 }
 
-// FUNÇÕES UTILITÁRIAS
+// ====== UTILITÁRIOS ======
 
-async function getNormasMaiorRisco(empresaId: string, dataInicio: string) {
-  // Implementar lógica para identificar normas com maior risco
+async function getNormasMaiorRisco() {
   return [];
 }
 
-function gerarRecomendacoesPrioritarias(gapsCriticos: any[]) {
+function gerarRecomendacoesPrioritarias(gapsCriticos: GapRow[]) {
   return gapsCriticos.slice(0, 5).map(gap => ({
     descricao: gap.descricao,
     recomendacao: gap.recomendacao,
@@ -422,26 +441,33 @@ function gerarRecomendacoesPrioritarias(gapsCriticos: any[]) {
   }));
 }
 
-function calcularEstatisticasDetalhadas(resultados: any[], gaps: any[], jobs: any[]) {
-  return {
-    media_score: resultados.length ? resultados.reduce((acc, r) => acc + r.score_geral, 0) / resultados.length : 0,
-    total_gaps_por_severidade: gaps.reduce((acc: any, gap) => {
-      acc[gap.severidade] = (acc[gap.severidade] || 0) + 1;
-      return acc;
-    }, {}),
-    tempo_medio_processamento: jobs.length ? 
-      jobs.filter(j => j.completed_at && j.started_at)
-           .reduce((acc, j) => acc + (new Date(j.completed_at).getTime() - new Date(j.started_at).getTime()), 0) / jobs.length / 1000
-      : 0
-  };
+function calcularEstatisticasDetalhadas(resultados: ResultadoRow[], gaps: GapRow[], jobs: JobRow[]) {
+  const media_score = resultados.length
+    ? resultados.reduce((acc, r) => acc + (r.score_geral || 0), 0) / resultados.length
+    : 0;
+
+  const total_gaps_por_severidade = gaps.reduce<Record<string, number>>((acc, gap) => {
+    acc[gap.severidade] = (acc[gap.severidade] || 0) + 1;
+    return acc;
+  }, {});
+
+  const tempo_medio_processamento = jobs.length
+    ? jobs
+        .filter(j => j.completed_at && j.started_at)
+        .reduce((acc, j) => acc + (new Date(j.completed_at as string).getTime() - new Date(j.started_at as string).getTime()), 0) /
+      jobs.length /
+      1000
+    : 0;
+
+  return { media_score, total_gaps_por_severidade, tempo_medio_processamento };
 }
 
-function gerarPlanoAcaoGaps(gaps: any[]) {
+function gerarPlanoAcaoGaps(gaps: GapRow[]) {
   const gapsCriticos = gaps.filter(g => g.severidade === 'critica' && !g.resolvido);
   return {
     acoes_imediatas: gapsCriticos.slice(0, 5).map(gap => ({
       gap_id: gap.id,
-      acao: gap.recomendacao,
+      acao: gap.recomendacao || 'Avaliar e implementar correção',
       prazo: "30 dias",
       prioridade: "crítica"
     })),
@@ -449,14 +475,14 @@ function gerarPlanoAcaoGaps(gaps: any[]) {
   };
 }
 
-async function calcularScoresPorNorma(empresaId: string, dataInicio: string) {
-  // Implementar cálculo de scores por norma
-  return [];
+async function calcularScoresPorNorma() {
+  return [] as unknown[];
 }
 
-function calcularStatusCompliance(resultados: any[]) {
-  const scoreGeral = resultados.length ? 
-    resultados.reduce((acc, r) => acc + r.score_geral, 0) / resultados.length : 0;
+function calcularStatusCompliance(resultados: ResultadoRow[]): string {
+  const scoreGeral = resultados.length
+    ? resultados.reduce((acc, r) => acc + (r.score_geral || 0), 0) / resultados.length
+    : 0;
   
   if (scoreGeral >= 90) return "Excelente";
   if (scoreGeral >= 80) return "Bom";
@@ -465,33 +491,31 @@ function calcularStatusCompliance(resultados: any[]) {
   return "Crítico";
 }
 
-function avaliarISO45001(scoresPorNorma: any[]) {
+function avaliarISO45001() {
   return { elegivel: false, score_necessario: 85, score_atual: 0 };
 }
 
-function avaliarNRCompliance(scoresPorNorma: any[]) {
+function avaliarNRCompliance() {
   return { percentual_conformidade: 0, normas_conformes: 0, total_normas: 0 };
 }
 
-function gerarRecomendacoesCompliance(scoresPorNorma: any[]) {
-  return [];
+function gerarRecomendacoesCompliance() {
+  return [] as unknown[];
 }
 
-function gerarProximasAcoes(empresa: any, scoresPorNorma: any[]) {
-  return [];
+function gerarProximasAcoes() {
+  return [] as unknown[];
 }
 
-async function gerarDadosGraficos(empresaId: string, dataInicio: string) {
-  // Implementar geração de dados para gráficos
+async function gerarDadosGraficos() {
   return {
-    evolucao_score: [],
-    distribuicao_gaps: [],
-    compliance_por_norma: []
+    evolucao_score: [] as unknown[],
+    distribuicao_gaps: [] as unknown[],
+    compliance_por_norma: [] as unknown[]
   };
 }
 
-function gerarCSV(data: any, tipo: string) {
-  // Implementar geração de CSV
+function gerarCSV(data: unknown, tipo: string) {
   const csv = "CSV não implementado ainda";
   return new Response(csv, {
     headers: {
@@ -501,8 +525,7 @@ function gerarCSV(data: any, tipo: string) {
   });
 }
 
-function gerarPDF(data: any, tipo: string, empresa: any) {
-  // Implementar geração de PDF
+function gerarPDF() {
   return Response.json({ 
     success: false, 
     error: "Geração de PDF não implementada ainda" 

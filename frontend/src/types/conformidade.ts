@@ -4,7 +4,7 @@ export interface Empresa {
   cnpj: string;
   setor: string;
   porte: 'pequeno' | 'medio' | 'grande';
-  configuracoes: Record<string, any>;
+  configuracoes: Record<string, unknown>;
   ativo: boolean;
   created_at: string;
 }
@@ -15,7 +15,7 @@ export interface DocumentoEmpresa {
   nome_arquivo: string;
   tipo_documento: 'manual' | 'procedimento' | 'treinamento' | 'politica';
   conteudo_extraido: string;
-  metadados: Record<string, any>;
+  metadados: Record<string, unknown>;
   url_storage: string;
   versao: number;
   created_at: string;
@@ -36,7 +36,6 @@ export interface AnaliseConformidade {
 
 // ========== ENTERPRISE ENGINE DE CONFORMIDADE ==========
 
-// Job System Enterprise-Grade
 export interface AnaliseJob {
   id: string;
   empresa_id: string;
@@ -66,10 +65,8 @@ export interface AnaliseResult {
   nivel_risco: 'baixo' | 'medio' | 'alto' | 'critico';
   status_geral: 'conforme' | 'nao_conforme' | 'parcial_conforme';
   
-  // Análises por norma
   analises_detalhadas: AnaliseDetalhada[];
   
-  // Resumo executivo
   resumo_executivo: {
     total_normas_analisadas: number;
     normas_conformes: number;
@@ -80,10 +77,8 @@ export interface AnaliseResult {
     gaps_menores: number;
   };
   
-  // Plano de ação gerado
   plano_acao: PlanoAcao;
   
-  // Metadados da análise
   metadata: {
     versao_engine: string;
     tempo_processamento_segundos: number;
@@ -101,16 +96,9 @@ export interface AnaliseDetalhada {
   norma_titulo: string;
   score_conformidade: number; // 0-100
   status: 'conforme' | 'nao_conforme' | 'parcial' | 'nao_aplicavel';
-  
-  // Gaps identificados
   gaps_identificados: Gap[];
-  
-  // Trechos relevantes do documento
   trechos_analisados: TrechoAnalise[];
-  
-  // Recomendações específicas
   recomendacoes: Recomendacao[];
-  
   confidence_score: number; // 0-100
 }
 
@@ -155,19 +143,14 @@ export interface PlanoAcao {
   id: string;
   titulo: string;
   descricao: string;
-  
-  // Ações categorizadas por prioridade
-  acoes_imediatas: AcaoPlano[]; // até 30 dias
-  acoes_curto_prazo: AcaoPlano[]; // 30-90 dias
-  acoes_medio_prazo: AcaoPlano[]; // 90-180 dias
-  acoes_longo_prazo: AcaoPlano[]; // +180 dias
-  
-  // Métricas do plano
+  acoes_imediatas: AcaoPlano[];
+  acoes_curto_prazo: AcaoPlano[];
+  acoes_medio_prazo: AcaoPlano[];
+  acoes_longo_prazo: AcaoPlano[];
   total_acoes: number;
   tempo_total_estimado: string;
   investimento_estimado: 'baixo' | 'medio' | 'alto';
   impacto_compliance_esperado: number; // 0-100
-  
   created_at: string;
 }
 
@@ -183,7 +166,7 @@ export interface AcaoPlano {
   recursos_necessarios: string[];
   criterios_conclusao: string[];
   impacto_compliance: number; // 0-100
-  dependencias: string[]; // IDs de outras ações
+  dependencias: string[];
 }
 
 // ========== API RESPONSES ENTERPRISE ==========

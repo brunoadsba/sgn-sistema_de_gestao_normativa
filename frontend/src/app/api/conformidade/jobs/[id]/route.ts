@@ -2,6 +2,11 @@ import { supabase } from "@/lib/supabase";
 
 export const revalidate = 0; // Jobs podem mudar status rapidamente
 
+type GapLite = {
+  severidade: 'critica' | 'alta' | 'media' | 'baixa';
+  resolvido: boolean;
+};
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -41,34 +46,32 @@ export async function GET(
     }
 
     // Buscar resultado se o job estiver completo
-    let analiseResultado = null;
-    let gaps = [];
+    let analiseResultado: unknown = null;
+    let gaps: GapLite[] = [];
     
     if (job.status === 'completed') {
       // Buscar resultado da análise
-      const { data: resultado, error: resultadoError } = await supabase
+      const { data: resultado } = await supabase
         .from("analise_resultados")
         .select("*")
         .eq("job_id", jobId)
         .single();
       
-      if (!resultadoError && resultado) {
+      if (resultado) {
         analiseResultado = resultado;
 
         // Buscar gaps identificados
-        const { data: gapsData, error: gapsError } = await supabase
+        const { data: gapsData } = await supabase
           .from("conformidade_gaps")
           .select(`
-            *,
+            id, severidade, resolvido, created_at,
             normas(id, codigo, titulo)
           `)
-          .eq("analise_resultado_id", resultado.id)
+          .eq("analise_resultado_id", (resultado as { id: string }).id)
           .order("severidade", { ascending: false })
           .order("created_at", { ascending: false });
 
-        if (!gapsError && gapsData) {
-          gaps = gapsData;
-        }
+        if (gapsData) gaps = gapsData as unknown as GapLite[];
       }
     }
 
@@ -121,7 +124,7 @@ export async function GET(
         resultado: analiseResultado,
 
         // Gaps identificados (se disponível)
-        gaps: gaps,
+        gaps,
 
         // Estatísticas dos gaps
         estatisticas_gaps: gaps.length > 0 ? {
@@ -165,7 +168,7 @@ export async function PUT(
     }
 
     // Validar status permitidos
-    const statusPermitidos = ['pending', 'running', 'completed', 'failed', 'cancelled'];
+    const statusPermitidos = ['pending', 'running', 'completed', 'failed', 'cancelled'] as const;
     if (status && !statusPermitidos.includes(status)) {
       return Response.json({ 
         success: false, 
@@ -182,7 +185,13 @@ export async function PUT(
     }
 
     // Preparar dados para atualização
-    const updateData: any = {};
+    const updateData: Partial<{
+      status: string;
+      progresso: number;
+      erro_detalhes: string;
+      started_at: string;
+      completed_at: string;
+    }> = {};
     
     if (status) updateData.status = status;
     if (progresso !== undefined) updateData.progresso = progresso;

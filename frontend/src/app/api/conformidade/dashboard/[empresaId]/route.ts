@@ -2,6 +2,46 @@ import { supabase } from "@/lib/supabase";
 
 export const revalidate = 300; // Cache por 5 minutos para dashboards
 
+type JobRow = {
+  id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  created_at: string;
+  completed_at: string | null;
+  progresso: number | null;
+  tipo_analise?: string | null;
+};
+
+type ResultadoRow = {
+  id: string;
+  score_geral?: number | null;
+  nivel_risco?: 'baixo' | 'medio' | 'alto' | 'critico' | null;
+  status_geral?: 'conforme' | 'nao_conforme' | 'parcial_conforme' | null;
+  created_at: string;
+  metadata?: unknown;
+};
+
+type DocumentoRow = {
+  id: string;
+  nome_arquivo: string;
+  tipo_documento: string;
+  created_at: string;
+};
+
+type NormaRef = { id: string; codigo: string; titulo: string };
+
+type GapRow = {
+  id: string;
+  severidade: 'baixa' | 'media' | 'alta' | 'critica';
+  resolvido: boolean;
+  created_at: string;
+  data_resolucao: string | null;
+  prazo_sugerido: string | null;
+  analise_resultado_id: string;
+  norma_id: string | null;
+  categoria?: string | null;
+  norma?: NormaRef | null;
+};
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ empresaId: string }> }
@@ -16,7 +56,7 @@ export async function GET(
       return Response.json({ 
         success: false, 
         error: "ID da empresa é obrigatório" 
-      }, { status: 400 });
+      }, { status: 400, headers: { "Cache-Control": "no-store" } });
     }
 
     // Verificar se empresa existe
@@ -31,7 +71,7 @@ export async function GET(
       return Response.json({ 
         success: false, 
         error: "Empresa não encontrada ou inativa" 
-      }, { status: 404 });
+      }, { status: 404, headers: { "Cache-Control": "no-store" } });
     }
 
     // Data de início para filtros
@@ -51,7 +91,7 @@ export async function GET(
       return Response.json({ 
         success: false, 
         error: "Erro ao buscar jobs" 
-      }, { status: 500 });
+      }, { status: 500, headers: { "Cache-Control": "no-store" } });
     }
 
     // 2. ESTATÍSTICAS DE RESULTADOS
@@ -66,15 +106,13 @@ export async function GET(
       return Response.json({ 
         success: false, 
         error: "Erro ao buscar resultados" 
-      }, { status: 500 });
+      }, { status: 500, headers: { "Cache-Control": "no-store" } });
     }
 
     // 3. GAPS DE CONFORMIDADE (Enterprise Defensive Query)
-    let gaps: any[] = [];
-    let gapsError = null;
+    let gaps: GapRow[] = [];
 
     try {
-      // Primeiro tentar query completa com JOINs
       const { data: gapsData, error: gapsQueryError } = await supabase
         .from("conformidade_gaps")
         .select(`
@@ -93,40 +131,31 @@ export async function GET(
 
       if (gapsQueryError) {
         console.warn('Aviso: Gaps query failed, continuando sem dados de gaps:', gapsQueryError);
-        gaps = []; // Graceful degradation
+        gaps = [];
       } else {
-        gaps = gapsData || [];
+        gaps = (gapsData || []) as GapRow[];
       }
 
-      // Se temos gaps, enriquecer com dados das normas (query separada defensiva)
+      // Enriquecer com dados das normas (defensivo)
       if (gaps.length > 0) {
-        const normaIds = [...new Set(gaps.map(g => g.norma_id).filter(Boolean))];
+        const normaIds = [...new Set(gaps.map(g => g.norma_id).filter((v): v is string => Boolean(v)))];
         if (normaIds.length > 0) {
           const { data: normasData } = await supabase
             .from("normas")
             .select("id, codigo, titulo")
             .in("id", normaIds);
 
-          // Enriquecer gaps com dados das normas
+          const normas = (normasData || []) as NormaRef[];
           gaps = gaps.map(gap => ({
             ...gap,
-            norma: normasData?.find(n => n.id === gap.norma_id) || null
+            norma: gap.norma_id ? normas.find(n => n.id === gap.norma_id) || null : null
           }));
         }
       }
 
-    } catch (error) {
-      console.warn('Aviso: Erro ao buscar gaps, continuando sem estes dados:', error);
-      gaps = []; // Sistema continua funcionando
-      gapsError = null; // Não quebrar o dashboard
-    }
-
-    // Dashboard nunca falha - princípio enterprise de resiliência
-    if (false) { // Remover o if (gapsError) que quebrava o sistema
-      return Response.json({ 
-        success: false, 
-        error: "Erro ao buscar gaps" 
-      }, { status: 500 });
+    } catch (err) {
+      console.warn('Aviso: Erro ao buscar gaps, continuando sem estes dados:', err);
+      gaps = [];
     }
 
     // 4. DOCUMENTOS DA EMPRESA
@@ -140,94 +169,93 @@ export async function GET(
       return Response.json({ 
         success: false, 
         error: "Erro ao buscar documentos" 
-      }, { status: 500 });
+      }, { status: 500, headers: { "Cache-Control": "no-store" } });
     }
 
     // CÁLCULOS DO DASHBOARD
 
-    // Estatísticas de Jobs
-    const totalJobs = jobs?.length || 0;
-    const jobsPendentes = jobs?.filter(j => j.status === 'pending').length || 0;
-    const jobsProcessando = jobs?.filter(j => j.status === 'running').length || 0;
-    const jobsCompletos = jobs?.filter(j => j.status === 'completed').length || 0;
-    const jobsFalharam = jobs?.filter(j => j.status === 'failed').length || 0;
-    const jobsCancelados = jobs?.filter(j => j.status === 'cancelled').length || 0;
+    const jobsRows = (jobs || []) as JobRow[];
+    const resultadosRows = (resultados || []) as ResultadoRow[];
+    const documentosRows = (documentos || []) as DocumentoRow[];
 
-    // Taxa de sucesso
+    // Estatísticas de Jobs
+    const totalJobs = jobsRows.length;
+    const jobsPendentes = jobsRows.filter(j => j.status === 'pending').length;
+    const jobsProcessando = jobsRows.filter(j => j.status === 'running').length;
+    const jobsCompletos = jobsRows.filter(j => j.status === 'completed').length;
+    const jobsFalharam = jobsRows.filter(j => j.status === 'failed').length;
+    const jobsCancelados = jobsRows.filter(j => j.status === 'cancelled').length;
+
     const taxaSucesso = totalJobs > 0 ? Math.round((jobsCompletos / totalJobs) * 100) : 0;
 
-    // Tempo médio de processamento
-    const jobsComTempo = jobs?.filter(j => j.completed_at && j.created_at) || [];
+    const jobsComTempo = jobsRows.filter(j => j.completed_at && j.created_at);
     const tempoMedio = jobsComTempo.length > 0 
       ? Math.round(jobsComTempo.reduce((acc, job) => {
           const inicio = new Date(job.created_at).getTime();
-          const fim = new Date(job.completed_at!).getTime();
-          return acc + (fim - inicio) / 1000; // segundos
+          const fim = new Date(job.completed_at as string).getTime();
+          return acc + (fim - inicio) / 1000;
         }, 0) / jobsComTempo.length)
       : 0;
 
     // Estatísticas de Conformidade
-    const totalAnalises = resultados?.length || 0;
+    const totalAnalises = resultadosRows.length;
     const scoreGeral = totalAnalises > 0 
-      ? Math.round(resultados!.reduce((acc, r) => acc + (r.score_geral || 0), 0) / totalAnalises)
+      ? Math.round(resultadosRows.reduce((acc, r) => acc + (r.score_geral || 0), 0) / totalAnalises)
       : 0;
 
-    const conformes = resultados?.filter(r => r.status_geral === 'conforme').length || 0;
-    const naoConformes = resultados?.filter(r => r.status_geral === 'nao_conforme').length || 0;
-    const parcialConformes = resultados?.filter(r => r.status_geral === 'parcial_conforme').length || 0;
+    const conformes = resultadosRows.filter(r => r.status_geral === 'conforme').length;
+    const naoConformes = resultadosRows.filter(r => r.status_geral === 'nao_conforme').length;
+    const parcialConformes = resultadosRows.filter(r => r.status_geral === 'parcial_conforme').length;
 
-    // Distribuição de riscos
-    const riscoBaixo = resultados?.filter(r => r.nivel_risco === 'baixo').length || 0;
-    const riscoMedio = resultados?.filter(r => r.nivel_risco === 'medio').length || 0;
-    const riscoAlto = resultados?.filter(r => r.nivel_risco === 'alto').length || 0;
-    const riscoCritico = resultados?.filter(r => r.nivel_risco === 'critico').length || 0;
+    const riscoBaixo = resultadosRows.filter(r => r.nivel_risco === 'baixo').length;
+    const riscoMedio = resultadosRows.filter(r => r.nivel_risco === 'medio').length;
+    const riscoAlto = resultadosRows.filter(r => r.nivel_risco === 'alto').length;
+    const riscoCritico = resultadosRows.filter(r => r.nivel_risco === 'critico').length;
 
     // Estatísticas de Gaps
-    const totalGaps = gaps?.length || 0;
-    const gapsResolvidos = gaps?.filter(g => g.resolvido).length || 0;
+    const totalGaps = gaps.length;
+    const gapsResolvidos = gaps.filter(g => g.resolvido).length;
     const gapsPendentes = totalGaps - gapsResolvidos;
 
-    const gapsCriticos = gaps?.filter(g => g.severidade === 'critica').length || 0;
-    const gapsAltos = gaps?.filter(g => g.severidade === 'alta').length || 0;
-    const gapsMedios = gaps?.filter(g => g.severidade === 'media').length || 0;
-    const gapsBaixos = gaps?.filter(g => g.severidade === 'baixa').length || 0;
+    const gapsCriticos = gaps.filter(g => g.severidade === 'critica').length;
+    const gapsAltos = gaps.filter(g => g.severidade === 'alta').length;
+    const gapsMedios = gaps.filter(g => g.severidade === 'media').length;
+    const gapsBaixos = gaps.filter(g => g.severidade === 'baixa').length;
 
-    // Gaps por categoria
-    const gapsPorCategoria = gaps?.reduce((acc: any, gap) => {
+    const gapsPorCategoria: Record<string, number> = gaps.reduce((acc, gap) => {
       const categoria = gap.categoria || 'Sem categoria';
       acc[categoria] = (acc[categoria] || 0) + 1;
       return acc;
-    }, {}) || {};
+    }, {} as Record<string, number>);
 
-    // Tendência de score (últimos 30 dias)
-    const ultimosResultados = resultados?.slice(0, 10) || [];
+    const ultimosResultados = resultadosRows.slice(0, 10);
     const tendenciaScore = ultimosResultados.map(r => ({
       data: r.created_at,
       score: r.score_geral || 0,
       nivel_risco: r.nivel_risco
     }));
 
+    const documentosPorTipo: Record<string, number> = documentosRows.reduce((acc, doc) => {
+      acc[doc.tipo_documento] = (acc[doc.tipo_documento] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     // Dashboard consolidado
     const dashboard = {
-      // Informações da empresa
-      empresa: empresa,
-      
-      // Período de análise
+      empresa,
       periodo_dias: parseInt(periodo),
       data_inicio: dataInicioISO,
       ultima_atualizacao: new Date().toISOString(),
 
-      // Resumo executivo
       resumo_executivo: {
         score_geral_medio: scoreGeral,
         total_analises: totalAnalises,
         total_gaps: totalGaps,
-        gaps_criticos_pendentes: gaps?.filter(g => g.severidade === 'critica' && !g.resolvido).length || 0,
+        gaps_criticos_pendentes: gaps.filter(g => g.severidade === 'critica' && !g.resolvido).length,
         taxa_resolucao_gaps: totalGaps > 0 ? Math.round((gapsResolvidos / totalGaps) * 100) : 0,
         risco_predominante: getRiscoPredominante(riscoBaixo, riscoMedio, riscoAlto, riscoCritico)
       },
 
-      // Estatísticas de jobs/processamento
       processamento: {
         total_jobs: totalJobs,
         jobs_pendentes: jobsPendentes,
@@ -240,7 +268,6 @@ export async function GET(
         tempo_medio_formatado: formatarTempo(tempoMedio)
       },
 
-      // Estatísticas de conformidade
       conformidade: {
         total_analises: totalAnalises,
         score_medio: scoreGeral,
@@ -258,7 +285,6 @@ export async function GET(
         tendencia_score: tendenciaScore
       },
 
-      // Estatísticas de gaps
       gaps: {
         total: totalGaps,
         resolvidos: gapsResolvidos,
@@ -273,39 +299,39 @@ export async function GET(
         por_categoria: gapsPorCategoria
       },
 
-      // Gestão documental
       documentos: {
-        total: documentos?.length || 0,
-        por_tipo: documentos?.reduce((acc: any, doc) => {
-          acc[doc.tipo_documento] = (acc[doc.tipo_documento] || 0) + 1;
-          return acc;
-        }, {}) || {}
+        total: documentosRows.length,
+        por_tipo: documentosPorTipo
       }
     };
 
-    // Adicionar detalhes se solicitado
-    const response: any = {
-      success: true,
-      data: dashboard
+    const payload = {
+      success: true as const,
+      data: {
+        ...dashboard,
+        ...(incluirDetalhes
+          ? {
+              detalhes: {
+                jobs_recentes: jobsRows.slice(0, 10),
+                resultados_recentes: resultadosRows.slice(0, 10),
+                gaps_criticos_pendentes: gaps.filter(g => g.severidade === 'critica' && !g.resolvido).slice(0, 20),
+                documentos_recentes: documentosRows.slice(0, 10)
+              }
+            }
+          : {})
+      }
     };
 
-    if (incluirDetalhes) {
-      response.data.detalhes = {
-        jobs_recentes: jobs?.slice(0, 10) || [],
-        resultados_recentes: resultados?.slice(0, 10) || [],
-        gaps_criticos_pendentes: gaps?.filter(g => g.severidade === 'critica' && !g.resolvido).slice(0, 20) || [],
-        documentos_recentes: documentos?.slice(0, 10) || []
-      };
-    }
-
-    return Response.json(response);
+    return Response.json(payload, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" }
+    });
 
   } catch (error) {
     console.error('Erro no dashboard de conformidade:', error);
     return Response.json({ 
       success: false, 
       error: "Erro interno do servidor" 
-    }, { status: 500 });
+    }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
 }
 

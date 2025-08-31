@@ -6,6 +6,16 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // 🚀 OTIMIZAÇÃO: Purge mais agressivo
+  safelist: [
+    // Manter apenas classes críticas
+    'bg-green-500',
+    'bg-red-500', 
+    'bg-yellow-500',
+    'text-green-600',
+    'text-red-600',
+    'text-yellow-600'
+  ],
   theme: {
     extend: {
       colors: {
@@ -51,5 +61,18 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  // 🚀 OTIMIZAÇÃO: Configurações de performance
+  corePlugins: {
+    // Desabilitar plugins não utilizados
+    backdropBlur: false,
+    backdropBrightness: false,
+    backdropContrast: false,
+    backdropFilter: false,
+    backdropGrayscale: false,
+    backdropHueRotate: false,
+    backdropInvert: false,
+    backdropSaturate: false,
+    backdropSepia: false,
+  }
 }
 export default config
