@@ -19,10 +19,8 @@ npm run dev
 - `docs/runbooks/agente.md` (runbook obrigatório)
 
 ## Roadmap e Status
-- Roadmap: `docs/roadmap.md`
-- Status: `status_implementacao.MD` (mantido como fonte de status)
+- Roadmap: `docs/roadmap.md` (consolidado)
+- Status: `status-implementacao.md` (fonte única de status)
 
 ## Segurança
-Consulte `SECURITY.md`.
-
-
+Consulte `
