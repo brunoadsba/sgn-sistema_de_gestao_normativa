@@ -34,7 +34,225 @@ export interface AnaliseConformidade {
   created_at: string;
 }
 
-// Tipos para respostas da API (seguindo padrão existente)
+// ========== ENTERPRISE ENGINE DE CONFORMIDADE ==========
+
+// Job System Enterprise-Grade
+export interface AnaliseJob {
+  id: string;
+  empresa_id: string;
+  documento_id: string;
+  norma_ids: string[];
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  priority: 'high' | 'medium' | 'low';
+  progress: number; // 0-100
+  error_message?: string;
+  metadata: {
+    total_normas: number;
+    normas_processadas: number;
+    tempo_estimado_segundos?: number;
+    initiated_by: string;
+  };
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+// Resultado da Análise Enterprise
+export interface AnaliseResult {
+  job_id: string;
+  empresa_id: string;
+  documento_id: string;
+  score_geral: number; // 0-100
+  nivel_risco: 'baixo' | 'medio' | 'alto' | 'critico';
+  status_geral: 'conforme' | 'nao_conforme' | 'parcial_conforme';
+  
+  // Análises por norma
+  analises_detalhadas: AnaliseDetalhada[];
+  
+  // Resumo executivo
+  resumo_executivo: {
+    total_normas_analisadas: number;
+    normas_conformes: number;
+    normas_nao_conformes: number;
+    normas_parciais: number;
+    gaps_criticos: number;
+    gaps_importantes: number;
+    gaps_menores: number;
+  };
+  
+  // Plano de ação gerado
+  plano_acao: PlanoAcao;
+  
+  // Metadados da análise
+  metadata: {
+    versao_engine: string;
+    tempo_processamento_segundos: number;
+    modelo_llm_utilizado: string;
+    confidence_score: number; // 0-100
+  };
+  
+  created_at: string;
+}
+
+// Análise detalhada por norma
+export interface AnaliseDetalhada {
+  norma_id: string;
+  norma_codigo: string;
+  norma_titulo: string;
+  score_conformidade: number; // 0-100
+  status: 'conforme' | 'nao_conforme' | 'parcial' | 'nao_aplicavel';
+  
+  // Gaps identificados
+  gaps_identificados: Gap[];
+  
+  // Trechos relevantes do documento
+  trechos_analisados: TrechoAnalise[];
+  
+  // Recomendações específicas
+  recomendacoes: Recomendacao[];
+  
+  confidence_score: number; // 0-100
+}
+
+// Gap de conformidade
+export interface Gap {
+  id: string;
+  tipo: 'ausencia_total' | 'inadequacao_parcial' | 'desatualizacao' | 'incompleto';
+  severidade: 'critica' | 'importante' | 'menor';
+  descricao: string;
+  requisito_norma: string;
+  impacto_estimado: string;
+  acao_recomendada: string;
+  prazo_sugerido: 'imediato' | '30_dias' | '90_dias' | '180_dias';
+  custo_estimado?: 'baixo' | 'medio' | 'alto';
+}
+
+// Trecho de análise
+export interface TrechoAnalise {
+  trecho_documento: string;
+  posicao_inicio: number;
+  posicao_fim: number;
+  relevancia_score: number; // 0-100
+  compliance_status: 'atende' | 'atende_parcial' | 'nao_atende';
+  observacoes: string;
+}
+
+// Recomendação específica
+export interface Recomendacao {
+  id: string;
+  categoria: 'documentacao' | 'processo' | 'treinamento' | 'infraestrutura' | 'politica';
+  prioridade: 'alta' | 'media' | 'baixa';
+  descricao: string;
+  justificativa: string;
+  passos_implementacao: string[];
+  recursos_necessarios: string[];
+  prazo_estimado: string;
+  impacto_compliance: number; // 0-100
+}
+
+// Plano de ação gerado
+export interface PlanoAcao {
+  id: string;
+  titulo: string;
+  descricao: string;
+  
+  // Ações categorizadas por prioridade
+  acoes_imediatas: AcaoPlano[]; // até 30 dias
+  acoes_curto_prazo: AcaoPlano[]; // 30-90 dias
+  acoes_medio_prazo: AcaoPlano[]; // 90-180 dias
+  acoes_longo_prazo: AcaoPlano[]; // +180 dias
+  
+  // Métricas do plano
+  total_acoes: number;
+  tempo_total_estimado: string;
+  investimento_estimado: 'baixo' | 'medio' | 'alto';
+  impacto_compliance_esperado: number; // 0-100
+  
+  created_at: string;
+}
+
+// Ação específica do plano
+export interface AcaoPlano {
+  id: string;
+  titulo: string;
+  descricao: string;
+  categoria: 'documentacao' | 'processo' | 'treinamento' | 'infraestrutura' | 'politica';
+  prioridade: 'critica' | 'alta' | 'media' | 'baixa';
+  responsavel_sugerido: string;
+  prazo_estimado: string;
+  recursos_necessarios: string[];
+  criterios_conclusao: string[];
+  impacto_compliance: number; // 0-100
+  dependencias: string[]; // IDs de outras ações
+}
+
+// ========== API RESPONSES ENTERPRISE ==========
+
+export interface ApiResponseAnaliseJob {
+  success: boolean;
+  data: {
+    job_id: string;
+    status: string;
+    message: string;
+    estimated_completion: string;
+  };
+  error?: string;
+}
+
+export interface ApiResponseJobStatus {
+  success: boolean;
+  data: AnaliseJob;
+  error?: string;
+}
+
+export interface ApiResponseAnaliseResult {
+  success: boolean;
+  data: AnaliseResult;
+  error?: string;
+}
+
+export interface ApiResponseAnalisesList {
+  success: boolean;
+  data: AnaliseResult[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  filters?: {
+    empresa_id?: string;
+    status?: string;
+    data_inicio?: string;
+    data_fim?: string;
+  };
+}
+
+// ========== CONFIGURAÇÕES ENTERPRISE ==========
+
+export interface EngineConfig {
+  llm_provider: 'openai' | 'anthropic' | 'azure' | 'custom';
+  model_name: string;
+  max_tokens: number;
+  temperature: number;
+  timeout_seconds: number;
+  retry_attempts: number;
+  batch_size: number;
+  enable_caching: boolean;
+  cache_ttl_seconds: number;
+}
+
+export interface NotificationConfig {
+  email_enabled: boolean;
+  webhook_enabled: boolean;
+  webhook_url?: string;
+  notify_on_completion: boolean;
+  notify_on_failure: boolean;
+  notify_on_high_risk: boolean;
+}
+
+// ========== TIPOS LEGADOS (mantidos para compatibilidade) ==========
+
 export interface ApiResponseEmpresas {
   success: boolean;
   data: Empresa[];
