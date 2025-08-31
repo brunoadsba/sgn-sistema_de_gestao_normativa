@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
 
 export const revalidate = 60;
 
@@ -34,17 +35,21 @@ export async function GET(request: Request) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
-    return Response.json({
-      success: true,
-      data: normas || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
-      },
-      filters: { search, status }
-    });
+    const pagination = {
+      page,
+      limit,
+      total: count || 0,
+      totalPages: Math.ceil((count || 0) / limit)
+    };
+
+    return NextResponse.json(
+      { success: true, data: normas, pagination, filters: { search, status } },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+        }
+      }
+    );
   } catch {
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }

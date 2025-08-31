@@ -12,6 +12,8 @@ export const metadata = {
   description: "Sistema para monitoramento de normas regulamentadoras",
 };
 
+export const revalidate = 60; // Cache por 60 segundos
+
 export default function RootLayout({
   children,
 }: {
