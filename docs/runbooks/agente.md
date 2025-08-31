@@ -583,6 +583,12 @@ cd frontend && npm run dev
 curl http://localhost:3001/api/empresas
 curl -X POST http://localhost:3001/api/empresas -H "Content-Type: application/json" -d '{"nome":"Empresa Teste","cnpj":"12345678000100","setor":"Industrial","porte":"medio"}'
 
+# Testar conformidade (APIs + UI)
+EMPRESA_ID=$(curl -s "http://localhost:3001/api/empresas?limit=1" | jq -r '.data[0].id')
+curl "http://localhost:3001/api/conformidade/dashboard/$EMPRESA_ID"
+curl "http://localhost:3001/api/conformidade/analisar?empresa_id=$EMPRESA_ID"
+xdg-open "http://localhost:3001/empresas/$EMPRESA_ID/conformidade"
+
 # Verificar TypeScript
 cd frontend && npx tsc --noEmit
 ```

@@ -381,11 +381,15 @@
   - [x] Relacionamentos com empresas, documentos e normas
   - [x] **TESTADO**: Jobs criados, consultados e cancelados com sucesso
 
+#### ✅ Checkpoints Concluídos Recentemente
+- [x] **Checkpoint 5**: Interface de Conformidade Executiva (100%)
+  - [x] Página executiva: `frontend/src/app/empresas/[id]/conformidade/page.tsx`
+  - [x] Componentes: `Kpis.tsx`, `GapsTable.tsx`, `JobsList.tsx`
+  - [x] Integração com APIs: dashboard e análise de conformidade
+  - [x] Componente Progress acessível e responsivo
+  - [x] Correções de APIs: campos inexistentes e null safety
+
 #### 🚧 Próximos Checkpoints (Pendentes)
-- [ ] **Checkpoint 5**: Interface de Conformidade Executiva (0%)
-  - [ ] Páginas de dashboard de conformidade
-  - [ ] Interface de visualização de gaps
-  - [ ] Gráficos e métricas visuais
   
 - [ ] **Checkpoint 6**: Worker de Processamento Real (0%)
   - [ ] Integração LLM para análise semântica

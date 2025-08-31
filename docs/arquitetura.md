@@ -144,8 +144,16 @@ N8N_API_KEY=sua_chave_n8n
 │   │   │   ├── normas/           # APIs MVP
 │   │   │   ├── empresas/         # APIs Multi-tenant
 │   │   │   └── conformidade/     # APIs Enterprise ✨
-│   │   ├── empresas/             # Interface corporativa
+│   │   ├── empresas/
+│   │   │   └── [id]/conformidade/page.tsx  # UI Executiva ✨
 │   │   └── normas/               # Interface MVP
+│   ├── components/
+│   │   ├── ui/
+│   │   │   └── progress.tsx      # Componente Progress acessível ✨
+│   │   └── conformidade/         # Componentes Enterprise ✨
+│   │       ├── Kpis.tsx          # KPIs executivos
+│   │       ├── GapsTable.tsx     # Tabela de gaps
+│   │       └── JobsList.tsx      # Lista de jobs
 │   ├── types/
 │   │   └── conformidade.ts       # Tipos Enterprise ✨
 │   └── lib/

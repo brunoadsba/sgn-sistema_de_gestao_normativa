@@ -279,7 +279,7 @@ async function gerarRelatorioDetalhado(empresaId: string, empresa: any, dataInic
         gaps_identificados: gaps.data || [],
         documentos_analisados: documentos.data || [],
         historico_processamento: jobs.data || [],
-        estatisticas_detalhadas: calcularEstatisticasDetalhadas(resultados.data, gaps.data, jobs.data),
+        estatisticas_detalhadas: calcularEstatisticasDetalhadas(resultados.data || [], gaps.data || [], jobs.data || []),
         gerado_em: new Date().toISOString()
       }
     };

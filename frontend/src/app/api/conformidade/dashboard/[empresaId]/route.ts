@@ -80,7 +80,6 @@ export async function GET(
         .select(`
           id, 
           severidade, 
-          categoria, 
           resolvido, 
           created_at,
           data_resolucao,
