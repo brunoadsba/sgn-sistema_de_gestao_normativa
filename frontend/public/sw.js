@@ -1,40 +1,18 @@
-// 🚀 SERVICE WORKER EMPRESARIAL - CACHE AGRESSIVO
-const CACHE_NAME = 'sgn-v1.0.0'
-const STATIC_CACHE = 'sgn-static-v1'
-const API_CACHE = 'sgn-api-v1'
+// 🚀 SERVICE WORKER SIMPLIFICADO - CACHE BÁSICO
+const CACHE_NAME = 'sgn-v1.0.1'
 
-// Assets críticos para cache imediato (apenas URLs válidas)
-const CRITICAL_ASSETS = [
-  '/',
-  '/normas',
-  '/empresas'
-]
-
-// APIs para cache com estratégia
-const API_ROUTES = [
-  '/api/normas',
-  '/api/empresas',
-  '/api/conformidade/dashboard'
-]
-
-// 🚀 INSTALAÇÃO - CACHE CRÍTICO COM VALIDAÇÃO
+// 🚀 INSTALAÇÃO - CACHE SIMPLES
 self.addEventListener('install', (event) => {
+  console.log('🔧 Service Worker: Instalando...')
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      // Validar URLs antes de cachear
-      const validUrls = CRITICAL_ASSETS.filter(url => {
-        try {
-          new URL(url, self.location.origin)
-          return true
-        } catch (error) {
-          console.warn(`URL inválida ignorada: ${url}`)
-          return false
-        }
-      })
-      
-      return cache.addAll(validUrls).catch(error => {
-        console.warn('Erro ao cachear assets:', error)
-        // Continuar mesmo com erro
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('✅ Service Worker: Cache aberto')
+      return cache.addAll([
+        '/',
+        '/normas',
+        '/empresas'
+      ]).catch(error => {
+        console.warn('⚠️ Service Worker: Erro ao cachear assets:', error)
         return Promise.resolve()
       })
     })
@@ -44,11 +22,13 @@ self.addEventListener('install', (event) => {
 
 // 🚀 ATIVAÇÃO - LIMPEZA DE CACHE ANTIGO
 self.addEventListener('activate', (event) => {
+  console.log('🔄 Service Worker: Ativando...')
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE && cacheName !== API_CACHE) {
+          if (cacheName !== CACHE_NAME) {
+            console.log('🗑️ Service Worker: Removendo cache antigo:', cacheName)
             return caches.delete(cacheName)
           }
         })
@@ -56,42 +36,31 @@ self.addEventListener('activate', (event) => {
     })
   )
   self.clients.claim()
+  console.log('✅ Service Worker: Ativado e controlando clientes')
 })
 
-// 🚀 FETCH - ESTRATÉGIAS DE CACHE CORRIGIDAS
+// 🚀 FETCH - ESTRATÉGIA SIMPLES
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Cache First para assets estáticos
-  if (request.destination === 'script' || request.destination === 'style') {
-    event.respondWith(
-      caches.match(request).then((response) => {
-        return response || fetch(request).then((fetchResponse) => {
-          // Clonar ANTES de usar
-          const responseClone = fetchResponse.clone()
-          caches.open(STATIC_CACHE).then((cache) => {
-            cache.put(request, responseClone)
-          })
-          return fetchResponse
-        })
-      })
-    )
+  // Apenas para requisições GET
+  if (request.method !== 'GET') {
     return
   }
 
-  // Network First para APIs (com fallback)
+  // Network First para APIs
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).then((fetchResponse) => {
-        // Clonar ANTES de usar
-        if (fetchResponse.status === 200) {
-          const responseClone = fetchResponse.clone()
-          caches.open(API_CACHE).then((cache) => {
+      fetch(request).then((response) => {
+        // Cache apenas respostas bem-sucedidas
+        if (response.status === 200) {
+          const responseClone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone)
           })
         }
-        return fetchResponse
+        return response
       }).catch(() => {
         // Fallback para cache se network falhar
         return caches.match(request)
@@ -100,18 +69,23 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Stale While Revalidate para páginas
+  // Cache First para páginas e assets
   event.respondWith(
     caches.match(request).then((response) => {
-      const fetchPromise = fetch(request).then((fetchResponse) => {
-        // Clonar ANTES de usar
-        const responseClone = fetchResponse.clone()
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone)
-        })
+      if (response) {
+        return response
+      }
+      
+      return fetch(request).then((fetchResponse) => {
+        // Cache apenas respostas bem-sucedidas
+        if (fetchResponse.status === 200) {
+          const responseClone = fetchResponse.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone)
+          })
+        }
         return fetchResponse
       })
-      return response || fetchPromise
     })
   )
 })
