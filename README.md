@@ -41,3 +41,29 @@ curl -s "http://localhost:3001/api/conformidade/analisar?empresa_id=$EMPRESA_ID"
 
 ## Segurança
 Consulte `docs/environment.md` e políticas RLS em `docs/arquitetura.md`.
+
+## Solução de Problemas Comuns
+
+### Erro: `ECONNREFUSED` durante o Build
+
+Se você encontrar um erro `ECONNREFUSED` (Connection Refused) durante o processo de build (ex: `npm run build` ou `yarn build`), isso geralmente significa que o seu aplicativo frontend (Next.js, por exemplo) está tentando se conectar a um servidor de API local que não está em execução.
+
+**Causa:**
+
+Alguns frameworks de frontend, como o Next.js, podem realizar requisições de dados para APIs durante o processo de build estático (Server-Side Rendering - SSR ou Static Site Generation - SSG). Se a API que ele tenta acessar não estiver disponível (ou seja, o servidor da API não está rodando), a conexão será recusada, resultando no erro `ECONNREFUSED`.
+
+**Solução:**
+
+Para resolver este problema, certifique-se de que o servidor de desenvolvimento da API esteja em execução **antes** de iniciar o processo de build do frontend.
+
+1. **Inicie o servidor da API:** Navegue até o diretório do seu projeto de backend (se for separado) e inicie-o. Por exemplo:
+   ```bash
+   cd ../backend # Ou o caminho para o seu backend
+   npm run dev   # Ou o comando para iniciar sua API
+   ```
+2. **Inicie o build do Frontend:** Após confirmar que a API está rodando, inicie o build do seu projeto frontend:
+   ```bash
+   npm run build # Ou yarn build
+   ```
+
+**Observação:** Este erro é comum em ambientes de desenvolvimento local. Em ambientes de CI/CD ou produção, a API geralmente já estará disponível e acessível, então este problema não deve ocorrer.
