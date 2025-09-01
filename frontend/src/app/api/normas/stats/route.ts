@@ -7,7 +7,7 @@ export async function GET() {
       .from("normas")
       .select("*", { count: "exact", head: true });
 
-    // Normas ativas vs revogadas
+    // Normas ativas (todas que não são revogadas)
     const { count: revogadas } = await supabase
       .from("normas")
       .select("*", { count: "exact", head: true })
@@ -33,11 +33,14 @@ export async function GET() {
       .select("*", { count: "exact", head: true })
       .gte("created_at", thirtyDaysAgo.toISOString());
 
+    // Cálculo correto: ativas = total - revogadas
+    const ativas = (total || 0) - (revogadas || 0);
+
     return Response.json({
       success: true,
       data: {
         total: total || 0,
-        ativas: (total || 0) - (revogadas || 0),
+        ativas: ativas,
         revogadas: revogadas || 0,
         categorias: {
           seguranca: seguranca || 0,

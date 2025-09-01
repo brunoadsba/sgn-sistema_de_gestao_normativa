@@ -1,194 +1,256 @@
-import React, { Suspense } from 'react'
-import { supabase } from '@/lib/supabase'
+import { Suspense } from 'react'
 import { unstable_cache } from 'next/cache'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Search, Building2, Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 
-type SearchParams = {
-  search?: string
-  page?: string
-}
-
-type Empresa = {
-  id: string
-  nome: string
-  porte: string | null
-  cnpj: string | null
-  setor: string | null
-  created_at: string
-}
-
-const PAGE_SIZE = 12
-export const revalidate = 60
-
-const getEmpresasCached = unstable_cache(
-  async (page: number, search: string) => {
-    const from = (page - 1) * PAGE_SIZE
-    const to = from + PAGE_SIZE - 1
-
+// Cache para buscar empresas
+const getEmpresas = unstable_cache(
+  async (page: number, limit: number, search: string) => {
     let query = supabase
       .from('empresas')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
+    
     if (search) {
-      const term = `%${search}%`
-      query = query.or(`nome.ilike.${term},cnpj.ilike.${term},setor.ilike.${term}`)
+      query = query.ilike('nome', `%${search}%`)
     }
-
-    const { data, count, error } = await query
-    if (error) {
-      console.error('Erro ao buscar empresas:', error)
-      return { data: [] as Empresa[], count: 0 }
-    }
-
-    return { data: (data || []) as Empresa[], count: count || 0 }
+    
+    const offset = (page - 1) * limit
+    const { data, error, count } = await query
+      .range(offset, offset + limit - 1)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    
+    return { empresas: data || [], total: count || 0 }
   },
-  ['empresas-rsc-list'],
-  { revalidate: 60, tags: ['empresas'] }
+  ['empresas-list'],
+  { revalidate: 300 }
 )
 
-function ListFallback() {
+// Cache para estatísticas
+const getEmpresasStats = unstable_cache(
+  async () => {
+    const { count: total } = await supabase
+      .from('empresas')
+      .select('*', { count: 'exact', head: true })
+    
+    const { count: ativas } = await supabase
+      .from('empresas')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'ativa')
+    
+    return {
+      total: total || 0,
+      ativas: ativas || 0,
+      inativas: (total || 0) - (ativas || 0)
+    }
+  },
+  ['empresas-stats'],
+  { revalidate: 300 }
+)
+
+function EmpresasList({ empresas, total, page, limit, search }: {
+  empresas: Array<{
+    id: string
+    nome: string
+    status: string
+    data_fundacao: string
+    cnpj: string
+    setor: string
+    descricao?: string
+  }>
+  total: number
+  page: number
+  limit: number
+  search: string
+}) {
+  const totalPages = Math.ceil(total / limit)
+  
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="border rounded-lg p-6 animate-pulse">
-          <div className="h-5 w-40 bg-gray-200 rounded mb-3" />
-          <div className="space-y-2">
-            <div className="h-4 w-2/3 bg-gray-200 rounded" />
-            <div className="h-4 w-1/2 bg-gray-200 rounded" />
-            <div className="h-4 w-1/3 bg-gray-200 rounded" />
+    <div className="space-y-6">
+      {/* Lista de empresas */}
+      <div className="grid gap-4">
+        {empresas.map((empresa) => (
+          <Card key={empresa.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Building2 className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold">{empresa.nome}</h3>
+                    <Badge variant={empresa.status === 'ativa' ? 'default' : 'secondary'}>
+                      {empresa.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>Fundada: {new Date(empresa.data_fundacao).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span>CNPJ: {empresa.cnpj}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Setor: {empresa.setor}</span>
+                    </div>
+                  </div>
+                  
+                  {empresa.descricao && (
+                    <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                      {empresa.descricao}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Button asChild size="sm">
+                    <Link href={`/empresas/${empresa.id}`}>
+                      Ver Detalhes
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/empresas/${empresa.id}/conformidade`}>
+                      Conformidade
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {((page - 1) * limit) + 1} a {Math.min(page * limit, total)} de {total} empresas
+          </p>
+          
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/empresas?page=${page - 1}${search ? `&search=${search}` : ''}`}>
+                  Anterior
+                </Link>
+              </Button>
+            )}
+            
+            {page < totalPages && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/empresas?page=${page + 1}${search ? `&search=${search}` : ''}`}>
+                  Próxima
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
-      ))}
+      )}
     </div>
   )
 }
 
-const porteBadge = (porte: string | null) => {
-  if (!porte) return 'bg-gray-200 text-gray-700'
-  if (porte === 'grande') return 'bg-gray-900 text-white'
-  if (porte === 'medio') return 'bg-gray-300 text-gray-900'
-  return 'bg-white text-gray-900 border'
-}
-
-async function EmpresasList({
-  page,
-  search
-}: {
-  page: number
-  search: string
+export default async function EmpresasPage({ 
+  searchParams 
+}: { 
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> 
 }) {
-  const { data: empresas, count } = await getEmpresasCached(page, search)
-
-  const urlFor = (params: Record<string, string | number | undefined>) => {
-    const sp = new URLSearchParams()
-    if (params.search ?? search) sp.set('search', String(params.search ?? search))
-    sp.set('page', String(params.page ?? page))
-    return `/empresas?${sp.toString()}`
-  }
-
-  return (
-    <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {empresas.map((empresa) => (
-          <div key={empresa.id} className="hover:shadow-lg transition-shadow border rounded-lg">
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <h2 className="text-lg font-semibold">{empresa.nome}</h2>
-                <span className={`px-2 py-1 rounded text-xs ${porteBadge(empresa.porte)}`}>
-                  {empresa.porte || 'indefinido'}
-                </span>
-              </div>
-
-              <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                <p>CNPJ: {empresa.cnpj || 'Não informado'}</p>
-                <p>Setor: {empresa.setor || 'Não definido'}</p>
-                <p>Cadastro: {new Date(empresa.created_at).toLocaleDateString()}</p>
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <Link
-                  href={`/empresas/${empresa.id}`}
-                  className="inline-flex items-center rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
-                >
-                  Ver Detalhes
-                </Link>
-                <Link
-                  href={`/empresas/${empresa.id}/conformidade`}
-                  className="inline-flex items-center rounded-md border px-3 py-2 text-sm bg-gray-900 text-white hover:opacity-90"
-                >
-                  Conformidade
-                </Link>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {empresas.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            Nenhuma empresa encontrada.
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center justify-between">
-        <Link
-          href={urlFor({ page: Math.max(1, page - 1) })}
-          className={`border rounded px-3 py-2 text-sm ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
-        >
-          Anterior
-        </Link>
-        <span className="text-sm text-muted-foreground">
-          Página {page} — Total: {count}
-        </span>
-        <Link
-          href={urlFor({ page: page + 1 })}
-          className={`border rounded px-3 py-2 text-sm ${empresas.length < PAGE_SIZE ? 'pointer-events-none opacity-50' : ''}`}
-        >
-          Próxima
-        </Link>
-      </div>
-    </>
-  )
-}
-
-export default async function EmpresasPage({ searchParams }: { searchParams?: SearchParams }) {
-  const page = Number(searchParams?.page) || 1
-  const search = searchParams?.search || ''
-
+  const params = await searchParams
+  const page = Number(params?.page) || 1
+  const search = (params?.search as string) || ''
+  
+  const { empresas, total } = await getEmpresas(page, 10, search)
+  const stats = await getEmpresasStats()
+  
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Gestão de Empresas</h1>
-          <p className="text-muted-foreground">
-            Gerencie empresas clientes e suas análises de conformidade
-          </p>
-        </div>
-        <Link
-          href="/empresas/nova"
-          className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
-        >
-          Nova Empresa
-        </Link>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Empresas</h1>
+        <p className="text-muted-foreground">
+          Gerencie e monitore as empresas cadastradas no sistema
+        </p>
       </div>
-
-      <form method="get" className="mb-6">
-        <div className="relative max-w-xl">
-          <input
-            type="text"
-            name="search"
-            defaultValue={search}
-            placeholder="Buscar empresas (nome, CNPJ, setor)..."
-            className="w-full rounded-md border px-3 py-2 pl-10"
-          />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔎</span>
-        </div>
-      </form>
-
-      <Suspense fallback={<ListFallback />}>
-        <EmpresasList page={page} search={search} />
+      
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Empresas Ativas</CardTitle>
+            <Badge variant="default" className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.ativas}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Empresas Inativas</CardTitle>
+            <Badge variant="secondary" className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.inativas}</div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Filtros */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <form method="get" className="flex gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  name="search"
+                  placeholder="Buscar empresas..."
+                  defaultValue={search}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Button type="submit">
+              <Search className="h-4 w-4 mr-2" />
+              Buscar
+            </Button>
+            {search && (
+              <Button type="button" variant="outline" asChild>
+                <Link href="/empresas">Limpar</Link>
+              </Button>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+      
+      <Separator className="mb-6" />
+      
+      {/* Lista de empresas */}
+      <Suspense fallback={<div>Carregando empresas...</div>}>
+        <EmpresasList 
+          empresas={empresas} 
+          total={total} 
+          page={page} 
+          limit={10} 
+          search={search} 
+        />
       </Suspense>
     </div>
   )

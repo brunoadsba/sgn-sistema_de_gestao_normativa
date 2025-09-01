@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-scroll-behavior="smooth">
       <head>
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="preconnect" href="//fonts.gstatic.com" crossOrigin="" />
@@ -98,53 +98,20 @@ export default function RootLayout({
         </header>
 
         {/* Main */}
-        <main className="min-h-screen bg-gray-50/50">
+        <main className="min-h-screen bg-gray-50">
           {children}
         </main>
 
-        {/* Footer (sem componentes client) */}
-        <footer className="border-t bg-white mt-12">
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <h3 className="font-semibold mb-3">SGN</h3>
-                <p className="text-sm text-muted-foreground">
-                  Sistema de Gestão Normativa para monitoramento de regulamentações.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-3">Recursos</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li><Link href="/normas">Explorar Normas</Link></li>
-                  <li><Link href="/api/export?format=csv">Exportar Dados</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-3">Suporte</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Documentação</li>
-                  <li>API</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-3">Status</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Sistema Operacional</span>
-                </div>
-              </div>
-            </div>
-
-            <hr className="my-6 border-gray-200" />
-
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <p>© 2025 SGN. Todos os direitos reservados.</p>
-              <p>Última atualização: {new Date().toLocaleDateString("pt-BR")}</p>
+        {/* Footer */}
+        <footer className="bg-white border-t py-8">
+          <div className="container mx-auto px-4">
+            <div className="text-center text-sm text-muted-foreground">
+              <p>&copy; 2024 SGN - Sistema de Gestão Normativa. Todos os direitos reservados.</p>
             </div>
           </div>
         </footer>
 
-        {/* Toaster carregado sob demanda (mantido) */}
+        {/* Toaster dinâmico */}
         <DynamicToaster />
       </body>
     </html>
