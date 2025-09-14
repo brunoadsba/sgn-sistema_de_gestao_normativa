@@ -5,3 +5,8 @@
 *.old
 *.orig
 obsoleto/
+
+# Arquivos de ambiente
+.env-n8n
+.env.local
+.env
