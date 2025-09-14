@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sgn-n8n
+    env: node
+    buildCommand: npm install -g n8n
+    startCommand: n8n start
+    envVars:
+      - key: N8N_TIMEZONE
+        value: America/Sao_Paulo
+      - key: DB_TYPE
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        value: db.kqdilsmgjlgmqcoubpel.supabase.co
+      - key: DB_POSTGRESDB_PORT
+        value: 5432
+      - key: DB_POSTGRESDB_DATABASE
+        value: postgres
+      - key: DB_POSTGRESDB_USER
+        value: postgres
+      - key: DB_POSTGRESDB_PASSWORD
+        value: 0PbwjUiioRFjcYLm
