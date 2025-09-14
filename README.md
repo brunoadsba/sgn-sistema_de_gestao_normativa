@@ -4,32 +4,43 @@
 Plataforma de compliance automatizada: coleta, análise de conformidade e relatórios executivos.
 
 ## Como rodar
-1) Pré-requisitos: Node 20, Supabase, N8N.
-2) Desenvolvimento:
+1) **Pré-requisitos:** Node 20, Supabase, N8N, SQLite3
+2) **Desenvolvimento:**
 ```bash
+# Frontend
 cd /home/brunoadsba/sgn/frontend
 npm install
-PORT=3001 npm run dev
+npm run dev
+
+# N8N (em terminal separado)
+cd /home/brunoadsba/sgn
+n8n start
 ```
-3) Variáveis de ambiente: veja `docs/arquitetura.md` e `docs/environment.md`.
+3) **Acesso:**
+   - Frontend: http://localhost:3001
+   - N8N: http://localhost:5678
+4) **Variáveis de ambiente:** veja `docs/arquitetura.md` e `docs/environment.md`
 
 ## Teste rápido (API)
 ```bash
-# Empresa (pegar um id existente)
-EMPRESA_ID=$(curl -s "http://localhost:3001/api/empresas?limit=1" | jq -r '.data[0].id')
+# Estatísticas das normas
+curl -s "http://localhost:3001/api/normas/stats" | jq .
 
-# Dashboard de conformidade
-curl -s "http://localhost:3001/api/conformidade/dashboard/$EMPRESA_ID" | jq .
+# Lista de normas (primeiras 5)
+curl -s "http://localhost:3001/api/normas?limit=5" | jq .
 
-# Jobs de conformidade (param correto: empresa_id)
-curl -s "http://localhost:3001/api/conformidade/analisar?empresa_id=$EMPRESA_ID" | jq .
+# Detalhes de uma norma específica
+curl -s "http://localhost:3001/api/normas/56" | jq .
 ```
 
 ## Estrutura
 - `frontend/` (Next.js 15 + TypeScript)
-  - `src/app/empresas/[id]/conformidade/page.tsx` (Página executiva de conformidade)
-  - `src/components/conformidade/` (Kpis, GapsTable, JobsList)
+  - `src/app/page.tsx` (Dashboard principal)
+  - `src/app/normas/` (Páginas de normas)
+  - `src/app/api/normas/` (APIs de normas)
+  - `src/components/conformidade/` (Componentes de conformidade)
 - `docs/` (arquitetura, roadmap, runbooks, API)
+- `.env-n8n` (Configuração do N8N)
 - `status-implementacao.md` (fonte única de status)
 
 ## Status Atual
@@ -41,6 +52,26 @@ curl -s "http://localhost:3001/api/conformidade/analisar?empresa_id=$EMPRESA_ID"
 - **UI Executiva**: Implementada (KPIs, gaps, jobs, componentes React)
 - Roadmap: `docs/roadmap.md` (consolidado)
 - Status detalhado: `status-implementacao.md`
+
+### 🔧 Correções Recentes (14/09/2025)
+- ✅ **n8n configurado para Supabase** (PostgreSQL)
+- ✅ **Dados duplicados limpos** (380 → 38 registros)
+- ✅ **Interface corrigida** (sem repetições de texto)
+- ✅ **Sincronização funcionando** (n8n ↔ frontend)
+- ✅ **Footer atualizado** (2025 + créditos do desenvolvedor)
+
+## Configuração do N8N
+O sistema usa N8N conectado ao Supabase (PostgreSQL). Configuração em `.env-n8n`:
+
+```bash
+N8N_TIMEZONE=America/Sao_Paulo
+DB_TYPE=postgresdb
+DB_POSTGRESDB_HOST=db.kqdilsmgjlgmqcoubpel.supabase.co
+DB_POSTGRESDB_PORT=5432
+DB_POSTGRESDB_DATABASE=postgres
+DB_POSTGRESDB_USER=postgres
+DB_POSTGRESDB_PASSWORD=sua_senha_aqui
+```
 
 ## Segurança
 Consulte `docs/environment.md` e políticas RLS em `docs/arquitetura.md`.
