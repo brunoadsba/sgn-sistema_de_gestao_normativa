@@ -106,7 +106,10 @@ export default function RootLayout({
         <footer className="bg-white border-t py-8">
           <div className="container mx-auto px-4">
             <div className="text-center text-sm text-muted-foreground">
-              <p>&copy; 2024 SGN - Sistema de Gestão Normativa. Todos os direitos reservados.</p>
+              <p>&copy; 2025 SGN - Sistema de Gestão Normativa. Todos os direitos reservados.</p>
+              <p className="mt-2 text-xs">
+                Desenvolvido por <span className="font-medium text-blue-600">Bruno Almeida</span>
+              </p>
             </div>
           </div>
         </footer>

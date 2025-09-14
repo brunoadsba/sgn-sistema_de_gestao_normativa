@@ -196,10 +196,10 @@ export default async function DashboardPage() {
                           <FileText className="h-sgn-sm w-sgn-sm text-muted-foreground" />
                           <div>
                             <p className="text-sgn-sm font-sgn-medium text-foreground">
-                              {norma.codigo}
+                              {norma.codigo.split(' - ')[0]}
                             </p>
                             <p className="text-sgn-xs text-muted-foreground">
-                              {norma.titulo}
+                              {norma.titulo.split(' - ').slice(1).join(' - ')}
                             </p>
                           </div>
                         </div>

@@ -14,8 +14,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("normas")
-      .select("*", { count: "exact" })
-      .like("codigo", "NR-%");
+      .select("*", { count: "exact" });
 
     if (search) {
       query = query.or(`codigo.ilike.%${search}%,titulo.ilike.%${search}%`);

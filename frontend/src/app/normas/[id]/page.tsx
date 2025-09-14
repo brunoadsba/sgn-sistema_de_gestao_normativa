@@ -65,7 +65,7 @@ export default async function NormaDetalhes({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <h1 className="text-3xl font-bold text-gray-900">{norma.codigo}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">{norma.codigo.split(' - ')[0]}</h1>
                     {isRevogada ? (
                       <Badge variant="destructive" className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3" />

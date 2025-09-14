@@ -11,8 +11,8 @@ self.addEventListener('install', (event) => {
         '/',
         '/normas',
         '/empresas'
-      ]).catch(error => {
-        console.warn('⚠️ Service Worker: Erro ao cachear assets:', error)
+      ]).catch(() => {
+        console.warn('⚠️ Service Worker: Erro ao cachear assets')
         return Promise.resolve()
       })
     })
@@ -31,6 +31,7 @@ self.addEventListener('activate', (event) => {
             console.log('🗑️ Service Worker: Removendo cache antigo:', cacheName)
             return caches.delete(cacheName)
           }
+          return Promise.resolve()
         })
       )
     })

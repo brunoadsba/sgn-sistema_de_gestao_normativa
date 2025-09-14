@@ -108,10 +108,10 @@ function NormasList({ normas }: { normas: Norma[] }) {
               <div className="flex items-start justify-between">
                 <div className="space-y-sgn-xs">
                   <CardTitle className="text-sgn-lg font-sgn-semibold text-sgn-gray-900">
-                    {norma.codigo}
+                    {norma.codigo.split(' - ')[0]}
                   </CardTitle>
                   <CardDescription className="text-sgn-sm text-sgn-gray-600">
-                    {norma.titulo}
+                    {norma.titulo.split(' - ').slice(1).join(' - ')}
                   </CardDescription>
                 </div>
                 <Badge 
@@ -148,7 +148,7 @@ export default async function NormasPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
 }) {
   const { data } = await getNormas(searchParams)
-  const { normas, total } = data
+  const { normas } = data
 
   return (
     <div className="container mx-auto px-sgn-md py-sgn-lg">
@@ -160,7 +160,7 @@ export default async function NormasPage({
               Normas Regulamentadoras
             </h1>
             <p className="text-sgn-lg text-sgn-gray-600 mt-sgn-xs">
-              {total} normas encontradas
+              {normas.length} normas encontradas
             </p>
           </div>
         </div>
