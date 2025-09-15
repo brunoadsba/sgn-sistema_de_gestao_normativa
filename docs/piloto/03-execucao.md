@@ -5,6 +5,7 @@
 Executar o piloto com 3-5 empresas selecionadas, coletando feedback e métricas.  
 **Prazo**: Semanas 5-12  
 **Meta**: Empresas ativas com resultados mensuráveis  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

@@ -5,6 +5,7 @@
 Documentar e analisar os resultados do projeto piloto para tomar decisões estratégicas.  
 **Prazo**: Semana 12 (final do piloto)  
 **Meta**: Relatório completo com insights acionáveis  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

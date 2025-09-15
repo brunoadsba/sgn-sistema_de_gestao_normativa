@@ -3,25 +3,45 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 type DashboardKpis = {
-  totalJobs: number
-  runningJobs: number
-  completedJobs: number
-  failedJobs: number
-  totalGaps: number
+  totalAnalises: number
+  analisesProcessando: number
+  analisesCompletas: number
+  analisesFalharam: number
+  analisesPendentes: number
+  totalLacunas: number
   documentos: number
-  complianceScore: number
-  lastUpdated?: string
+  pontuacaoConformidade: number
+  ultimaAtualizacao?: string
 }
 
 export function Kpis({ data }: { data: DashboardKpis }) {
+  // Verificação de segurança para dados undefined
+  if (!data) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">Carregando...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">-</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
   const items = [
-    { label: 'Jobs (total)', value: data.totalJobs },
-    { label: 'Em processamento', value: data.runningJobs },
-    { label: 'Concluídos', value: data.completedJobs },
-    { label: 'Falhados', value: data.failedJobs },
-    { label: 'Gaps', value: data.totalGaps },
-    { label: 'Documentos', value: data.documentos },
-    { label: 'Score (%)', value: Math.round(data.complianceScore ?? 0) },
+    { label: 'Total de Avaliações Realizadas', value: data.totalAnalises ?? 0 },
+    { label: 'Em Andamento', value: data.analisesProcessando ?? 0 },
+    { label: 'Concluídas', value: data.analisesCompletas ?? 0 },
+    { label: 'Não Conformes', value: data.analisesFalharam ?? 0 },
+    { label: 'Pendentes', value: data.analisesPendentes ?? 0 },
+    { label: 'Oportunidades de Melhoria', value: data.totalLacunas ?? 0 },
+    { label: 'Documentos Avaliados', value: data.documentos ?? 0 },
+    { label: 'Índice de Conformidade (%)', value: Math.round(data.pontuacaoConformidade ?? 0) },
   ]
 
   return (

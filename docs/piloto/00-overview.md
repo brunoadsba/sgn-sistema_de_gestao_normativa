@@ -6,6 +6,7 @@
 **Prazo**: 2-3 meses  
 **Investimento**: R$ 0 (apenas seu tempo)  
 **Meta**: 3-5 empresas piloto ativas com resultados mensuráveis  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

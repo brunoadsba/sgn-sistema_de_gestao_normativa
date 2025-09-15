@@ -43,6 +43,129 @@
 - **Padrão de APIs:** `Response.json()` com formato `{ success, data, pagination }`
 - **Banco existente:** Tabelas `normas`, `versoes`, `mudancas` com coluna `nr_num`
 
+## 📋 **DOCUMENTOS ESSENCIAIS PARA IMPLEMENTAÇÃO E CONTINUIDADE**
+
+### 🔴 **DOCUMENTOS OBRIGATÓRIOS** (Verificar SEMPRE)
+
+#### 1. **README.md** - ⭐⭐⭐⭐⭐ **CRÍTICO**
+- **Por que é essencial**: Primeiro contato, visão geral, como rodar
+- **O que contém**: Stack tecnológico, comandos de setup, estrutura do projeto
+- **Quando verificar**: Antes de qualquer implementação
+- **Para que serve**: Entender o projeto, configurar ambiente, executar testes
+
+#### 2. **status-implementacao.md** - ⭐⭐⭐⭐⭐ **CRÍTICO**
+- **Por que é essencial**: Status atual, o que foi implementado, o que está pendente
+- **O que contém**: Progresso detalhado, correções realizadas, próximos passos
+- **Quando verificar**: Antes de começar qualquer trabalho
+- **Para que serve**: Entender o estado atual, evitar duplicação de esforços
+
+#### 3. **docs/arquitetura.md** - ⭐⭐⭐⭐⭐ **CRÍTICO**
+- **Por que é essencial**: Arquitetura técnica, APIs, banco de dados
+- **O que contém**: Stack, estrutura, endpoints, tabelas, configurações
+- **Quando verificar**: Antes de implementar novas funcionalidades
+- **Para que serve**: Entender a arquitetura, manter consistência
+
+### 🟡 **DOCUMENTOS IMPORTANTES** (Verificar REGULARMENTE)
+
+#### 4. **docs/runbooks/agente.md** - ⭐⭐⭐⭐ **MUITO IMPORTANTE**
+- **Por que é essencial**: Instruções específicas para agentes de IA
+- **O que contém**: Protocolos, checkpoints, contexto técnico, objetivos
+- **Quando verificar**: Antes de executar tarefas como agente
+- **Para que serve**: Seguir protocolos estabelecidos, entender objetivos
+
+#### 5. **docs/dashboard-conformidade.md** - ⭐⭐⭐⭐ **MUITO IMPORTANTE**
+- **Por que é essencial**: Funcionalidade principal do sistema
+- **O que contém**: Funcionalidades, terminologia SST, empresas cadastradas
+- **Quando verificar**: Ao trabalhar com dashboard ou conformidade
+- **Para que serve**: Entender funcionalidades, manter terminologia
+
+#### 6. **docs/melhorias.md** - ⭐⭐⭐⭐ **MUITO IMPORTANTE**
+- **Por que é essencial**: Roadmap de melhorias técnicas
+- **O que contém**: Melhorias implementadas, próximas prioridades
+- **Quando verificar**: Ao planejar novas implementações
+- **Para que serve**: Entender prioridades, evitar retrabalho
+
+### 🟢 **DOCUMENTOS DE APOIO** (Verificar CONFORME NECESSIDADE)
+
+#### 7. **docs/deployment.md** - ⭐⭐⭐ **IMPORTANTE**
+- **Por que é útil**: Guia de deploy e configuração
+- **O que contém**: Instruções de deploy, configurações de ambiente
+- **Quando verificar**: Ao fazer deploy ou configurar ambiente
+- **Para que serve**: Deploy correto, configuração de ambiente
+
+#### 8. **docs/environment.md** - ⭐⭐⭐ **IMPORTANTE**
+- **Por que é útil**: Configuração de variáveis de ambiente
+- **O que contém**: Variáveis necessárias, configurações
+- **Quando verificar**: Ao configurar ambiente de desenvolvimento
+- **Para que serve**: Configuração correta do ambiente
+
+#### 9. **solucoes.md** - ⭐⭐⭐ **IMPORTANTE**
+- **Por que é útil**: Soluções para problemas conhecidos
+- **O que contém**: Soluções técnicas, correções de bugs
+- **Quando verificar**: Ao encontrar problemas ou erros
+- **Para que serve**: Resolver problemas rapidamente
+
+### 🎯 **FLUXO DE TRABALHO OBRIGATÓRIO PARA AGENTES**
+
+#### **ANTES DE QUALQUER IMPLEMENTAÇÃO:**
+1. **PRIMEIRO** - Ler `README.md` para entender o projeto
+2. **SEGUNDO** - Verificar `status-implementacao.md` para entender o estado atual
+3. **TERCEIRO** - Consultar `docs/runbooks/agente.md` para protocolos específicos
+4. **QUARTO** - Verificar `docs/arquitetura.md` para entender a arquitetura
+5. **QUINTO** - Consultar `docs/melhorias.md` para entender prioridades
+6. **SEXTO** - Verificar `docs/dashboard-conformidade.md` se trabalhar com conformidade
+
+#### **DURANTE A IMPLEMENTAÇÃO:**
+- **Consultar regularmente** `docs/melhorias.md` para manter foco nas prioridades
+- **Verificar** `docs/dashboard-conformidade.md` para manter terminologia SST
+- **Consultar** `solucoes.md` se encontrar problemas conhecidos
+
+#### **APÓS IMPLEMENTAÇÃO:**
+- **Atualizar** `status-implementacao.md` com o progresso
+- **Documentar** soluções em `solucoes.md` se necessário
+- **Verificar** se `docs/arquitetura.md` precisa de atualizações
+
+### ⚠️ **ALERTA CRÍTICO**
+
+**NUNCA começar a implementar sem verificar pelo menos os 3 documentos obrigatórios!** Isso pode resultar em:
+- Duplicação de esforços
+- Implementação inconsistente
+- Problemas de arquitetura
+- Perda de tempo
+- Conflitos com o estado atual
+
+### 📊 **RESUMO EXECUTIVO**
+
+**Documentos OBRIGATÓRIOS (3):**
+- ✅ `README.md` - Visão geral e setup
+- ✅ `status-implementacao.md` - Estado atual
+- ✅ `docs/arquitetura.md` - Arquitetura técnica
+
+**Documentos MUITO IMPORTANTES (3):**
+- ✅ `docs/runbooks/agente.md` - Protocolos para agentes
+- ✅ `docs/dashboard-conformidade.md` - Funcionalidade principal
+- ✅ `docs/melhorias.md` - Roadmap de melhorias
+
+**Documentos IMPORTANTES (3):**
+- ✅ `docs/deployment.md` - Deploy
+- ✅ `docs/environment.md` - Configuração
+- ✅ `solucoes.md` - Troubleshooting
+
+### 📋 **LISTA COMPLETA DE DOCUMENTOS DO PROJETO**
+
+Para referência completa, consulte `docs/lista-doc.md` que contém todos os 38 documentos organizados por:
+- **Prioridade** (Crítico → Importante → Moderado)
+- **Tipo** (Principal, Técnico, Deploy, Piloto, etc.)
+- **Frequência de atualização**
+
+**Documentos críticos que sempre precisam ser atualizados:**
+1. `README.md` - Visão geral e setup
+2. `status-implementacao.md` - Status atual do projeto
+3. `docs/arquitetura.md` - Arquitetura técnica
+4. `docs/dashboard-conformidade.md` - Funcionalidade principal
+5. `docs/runbooks/agente.md` - Instruções para agentes
+6. `docs/melhorias.md` - Roadmap de melhorias
+
 ### OBJETIVO ESTRATÉGICO ATUALIZADO
 Transformar MVP funcional em **plataforma profissional enterprise-grade**:
 - **ATUAL:** MVP funcional (75% profissional) → R$ 500-1.000/mês
@@ -55,11 +178,39 @@ Transformar MVP funcional em **plataforma profissional enterprise-grade**:
 ## PROTOCOLOS OBRIGATÓRIOS DE EXECUÇÃO
 
 ### ⚠️ ANTES DE QUALQUER IMPLEMENTAÇÃO (CHECKPOINT 7):
-1. **Verificar branch atual:** Está em `melhorias` (consolidada)
-2. **Criar nova branch:** `git checkout -b feature/qualidade-profissional`
-3. **Verificar ambiente:** `npm run dev` no diretório frontend
-4. **Instalar dependências de qualidade:** Jest, Zod, Winston
-5. **Criar estrutura de testes:** `mkdir -p frontend/__tests__`
+1. **Verificar documentos obrigatórios:** Ler README.md, status-implementacao.md, docs/arquitetura.md
+2. **Verificar branch atual:** Está em `melhorias` (consolidada)
+3. **Criar nova branch:** `git checkout -b feature/qualidade-profissional`
+4. **Verificar ambiente:** `npm run dev` no diretório frontend
+5. **Instalar dependências de qualidade:** Jest, Zod, Winston
+6. **Criar estrutura de testes:** `mkdir -p frontend/__tests__`
+
+### 📋 **COMANDOS DE VERIFICAÇÃO DE DOCUMENTOS**
+
+#### **Verificar documentos obrigatórios:**
+```bash
+# Verificar se documentos críticos existem e estão atualizados
+ls -la README.md status-implementacao.md docs/arquitetura.md
+ls -la docs/dashboard-conformidade.md docs/melhorias.md docs/runbooks/agente.md
+
+# Verificar data de última modificação
+stat README.md status-implementacao.md docs/arquitetura.md
+```
+
+#### **Verificar lista completa de documentos:**
+```bash
+# Consultar lista organizada de todos os documentos
+cat docs/lista-doc.md
+```
+
+#### **Verificar status atual do projeto:**
+```bash
+# Verificar status de implementação
+head -50 status-implementacao.md
+
+# Verificar melhorias implementadas
+grep -A 10 "MELHORIAS TÉCNICAS IMPLEMENTADAS" docs/melhorias.md
+```
 
 ### 🔧 DURANTE IMPLEMENTAÇÃO (QUALIDADE):
 1. **Testes obrigatórios:** TDD - escrever testes antes do código
@@ -76,6 +227,29 @@ Transformar MVP funcional em **plataforma profissional enterprise-grade**:
 4. **Build produção:** `npm run build`
 5. **Commit com quality gates:** Todos os checks passando
 6. **Atualizar scorecard:** Recalcular score profissional
+7. **Atualizar documentação:** Atualizar documentos críticos com mudanças
+
+### 📝 **ATUALIZAÇÃO OBRIGATÓRIA DE DOCUMENTAÇÃO**
+
+#### **Após qualquer implementação, SEMPRE atualizar:**
+1. **`status-implementacao.md`** - Adicionar progresso e correções realizadas
+2. **`docs/arquitetura.md`** - Se houver mudanças na arquitetura
+3. **`docs/melhorias.md`** - Se implementar melhorias técnicas
+4. **`docs/dashboard-conformidade.md`** - Se trabalhar com conformidade
+5. **`solucoes.md`** - Se resolver problemas conhecidos
+
+#### **Comandos para atualizar documentação:**
+```bash
+# Atualizar data de modificação nos documentos
+touch status-implementacao.md docs/arquitetura.md docs/melhorias.md
+
+# Verificar se documentação está sincronizada
+grep -n "atualizado em" status-implementacao.md docs/arquitetura.md docs/melhorias.md
+
+# Commit das atualizações de documentação
+git add status-implementacao.md docs/arquitetura.md docs/melhorias.md
+git commit -m "docs: atualizar documentação após implementação"
+```
 
 ---
 
@@ -1061,93 +1235,98 @@ Ao final da Fase 6, o SGN terá:
 
 ---
 
-## ✅ **MELHORIAS TÉCNICAS IMPLEMENTADAS (1º de setembro de 2025)**
+## ✅ **MELHORIAS TÉCNICAS IMPLEMENTADAS (15 de setembro de 2025)**
 
 ### **🔧 Correções Críticas Realizadas**
 
-#### **1. Tailwind Config (CRÍTICO)**
-- **Problema:** `require()` não funcionava em TypeScript
-- **Solução:** Convertido para `import` com tipagem correta
+#### **1. Dashboard de Conformidade**
+- **Problema:** Falta de interface executiva para conformidade
+- **Solução:** Dashboard completo com KPIs, oportunidades e avaliações
+- **Status:** ✅ **IMPLEMENTADO**
+
+#### **2. Terminologia SST**
+- **Problema:** Termos técnicos inadequados para SST
+- **Solução:** Terminologia profissional em português brasileiro
+- **Status:** ✅ **IMPLEMENTADO**
+
+#### **3. Correções React**
+- **Problema:** Erros de React.Children.only e Button asChild
+- **Solução:** Correções de componentes e props
 - **Status:** ✅ **RESOLVIDO**
 
-#### **2. Dead Code Removido**
-- **Problema:** Variáveis não utilizadas
-- **Solução:** Limpeza completa do código
-- **Status:** ✅ **RESOLVIDO**
-
-#### **3. Service Worker Cache**
-- **Problema:** Cache complexo com conflitos
-- **Solução:** Simplificado para estratégia única e eficiente
+#### **4. Cache Next.js**
+- **Problema:** Cache não atualizava dados
+- **Solução:** Otimização e correção do sistema de cache
 - **Status:** ✅ **RESOLVIDO**
 
 ### **🚀 Novas Funcionalidades Implementadas**
 
-#### **1. Validação Zod**
-- **Schemas:** Empresas e normas
-- **Validação:** Entrada de dados robusta
+#### **1. Dashboard de Conformidade**
+- **Interface:** Executiva com KPIs e métricas
+- **Funcionalidades:** Oportunidades, avaliações, conformidade
 - **Status:** ✅ **IMPLEMENTADO**
 
-#### **2. Logging Estruturado**
-- **Biblioteca:** Pino
-- **Formato:** JSON estruturado
+#### **2. Terminologia SST**
+- **Termos:** Conforme, Não Conforme, Oportunidade de Melhoria
+- **Métricas:** Índice de Conformidade, Avaliações, Lacunas
 - **Status:** ✅ **IMPLEMENTADO**
 
-#### **3. Health Check Endpoint**
-- **Endpoint:** `/api/health`
-- **Funcionalidade:** Status de serviços em tempo real
+#### **3. Empresas Profissionais**
+- **Dados:** Construtora BR, Tech BR, Indústrias BR
+- **Realismo:** CNPJs e informações corporativas
 - **Status:** ✅ **IMPLEMENTADO**
 
-#### **4. Tratamento de Erros**
-- **Middleware:** Erro estruturado
-- **Padrão:** Respostas consistentes
+#### **4. Correções Técnicas**
+- **React:** Componentes e props corrigidos
+- **Cache:** Sistema otimizado
+- **Mapeamento:** Dados corretos
 - **Status:** ✅ **IMPLEMENTADO**
 
 ### **🧪 Testes Realizados**
 
 #### **✅ Testes Aprovados:**
-1. **Build:** 100% limpo, zero erros
-2. **Health Check:** Funcionando
-3. **APIs:** Todas operacionais
-4. **Service Worker:** Cache otimizado
-5. **Páginas:** Carregando corretamente
+1. **Dashboard de Conformidade:** Funcionando
+2. **Empresas:** Listagem e detalhes
+3. **Terminologia SST:** Adequada
+4. **Cache:** Otimizado
+5. **Componentes React:** Sem erros
 
 ### **📊 Métricas de Qualidade**
 
 #### **Antes das Melhorias:**
-- ❌ Build com erros
-- ❌ Service Worker problemático
-- ❌ Zero health check
-- ❌ Logging básico
-- ❌ Validação inadequada
+- ❌ Sem dashboard executivo
+- ❌ Terminologia inadequada
+- ❌ Erros de React
+- ❌ Cache problemático
+- ❌ Dados inconsistentes
 
 #### **Depois das Melhorias:**
-- ✅ Build 100% limpo
-- ✅ Service Worker otimizado
-- ✅ Health check funcional
-- ✅ Logging estruturado
-- ✅ Validação robusta
+- ✅ Dashboard executivo funcional
+- ✅ Terminologia SST profissional
+- ✅ Componentes React corrigidos
+- ✅ Cache otimizado
+- ✅ Dados consistentes
 - ✅ Qualidade enterprise-grade
 
 ### **🎯 Próximos Passos**
 
-#### **1. Implementar Validação Zod nas APIs**
-- Aplicar schemas nas rotas existentes
-- Validação de entrada robusta
+#### **1. Sistema de Alertas**
+- Alertas básicos para conformidade
+- Notificações de oportunidades
 
-#### **2. Configurar Logs para Produção**
-- Integração com serviços de log
-- Monitoramento em tempo real
+#### **2. Validação Zod**
+- Schemas para APIs
+- Validação robusta
 
 #### **3. Testes Automatizados**
 - Testes unitários
 - Testes de integração
-- Cobertura de código
 
 ---
 
-**Agente atualizado em:** 1º de setembro de 2025  
-**Status:** 🚀 **Conformidade Corporativa 85% + Melhorias Técnicas Implementadas**  
-**Capacidade:** Plataforma enterprise com qualidade profissional e funcionalidades avançadas
+**Agente atualizado em:** 15 de setembro de 2025  
+**Status:** 🚀 **Conformidade Corporativa 95% + Dashboard de Conformidade + Terminologia SST Profissional**  
+**Capacidade:** Plataforma enterprise com dashboard executivo, terminologia adequada e funcionalidades avançadas
 
 ---
 

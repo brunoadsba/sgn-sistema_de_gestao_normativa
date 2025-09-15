@@ -7,6 +7,8 @@
 
 **Objetivo**: Criar cases de sucesso e validar mercado em 2-3 meses, gerando base para decisão de investimento futuro.
 
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional
+
 ---
 
 ## 💼 **OPORTUNIDADE DE NEGÓCIO**

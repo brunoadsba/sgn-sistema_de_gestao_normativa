@@ -27,7 +27,7 @@ export const viewport = {
   themeColor: '#1e40af'
 }
 
-export const revalidate = 300;
+export const revalidate = 60; // Cache reduzido para melhor responsividade
 
 export default function RootLayout({
   children,
@@ -91,6 +91,12 @@ export default function RootLayout({
                   className="px-3 py-2 text-sm rounded-md border hover:bg-gray-50"
                 >
                   Normas
+                </Link>
+                <Link
+                  href="/empresas"
+                  className="px-3 py-2 text-sm rounded-md border hover:bg-gray-50"
+                >
+                  Empresas
                 </Link>
               </nav>
             </div>

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export const revalidate = 300; // Cache por 5 minutos para dashboards
+export const revalidate = 60; // Cache por 1 minuto para dashboards (reduzido para melhor responsividade)
 
 type JobRow = {
   id: string;
@@ -34,7 +34,6 @@ type GapRow = {
   severidade: 'baixa' | 'media' | 'alta' | 'critica';
   resolvido: boolean;
   created_at: string;
-  data_resolucao: string | null;
   prazo_sugerido: string | null;
   analise_resultado_id: string;
   norma_id: string | null;
@@ -46,6 +45,8 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ empresaId: string }> }
 ) {
+  const startTime = Date.now();
+  
   try {
     const { empresaId } = await params;
     const { searchParams } = new URL(request.url);
@@ -120,7 +121,6 @@ export async function GET(
           severidade, 
           resolvido, 
           created_at,
-          data_resolucao,
           prazo_sugerido,
           analise_resultado_id,
           norma_id
@@ -322,8 +322,14 @@ export async function GET(
       }
     };
 
+    const responseTime = Date.now() - startTime;
+    console.log(`Dashboard API response time: ${responseTime}ms for empresa ${empresaId}`);
+    
     return Response.json(payload, {
-      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" }
+      headers: { 
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        "X-Response-Time": `${responseTime}ms`
+      }
     });
 
   } catch (error) {

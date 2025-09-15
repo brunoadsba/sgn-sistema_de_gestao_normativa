@@ -5,6 +5,7 @@
 Documentar e monitorar todas as métricas e feedbacks do projeto piloto.  
 **Prazo**: Durante todo o piloto  
 **Meta**: Dados completos para tomada de decisão  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

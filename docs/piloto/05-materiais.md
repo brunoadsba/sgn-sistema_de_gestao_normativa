@@ -5,6 +5,7 @@
 Templates e materiais prontos para usar no projeto piloto.  
 **Uso**: Copiar, adaptar e usar diretamente  
 **Atualização**: Conforme necessário durante o piloto  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

@@ -4,6 +4,7 @@
 - **Origem**: Cliente do SESI/FIEB solicitou produto de análise automática de conformidade NR
 - **Realidade**: SESI concorreu com outras 2 empresas para atender demanda
 - **Oportunidade**: Mercado validado, mas falta solução SaaS acessível
+- **Status**: Dashboard de Conformidade implementado + Terminologia SST profissional
 
 ## **2. TAMANHO DE MERCADO**
 - **Empresas com responsável técnico**: Técnico/Engenheiro de Segurança do Trabalho, SESMT ou responsável técnico

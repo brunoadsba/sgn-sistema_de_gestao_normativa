@@ -1,5 +1,4 @@
-import { Suspense } from 'react'
-import { unstable_cache } from 'next/cache'
+// import { unstable_cache } from 'next/cache' // Removido - não utilizado
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,60 +8,52 @@ import { Separator } from '@/components/ui/separator'
 import { Search, Building2, Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 
-// Cache para buscar empresas
-const getEmpresas = unstable_cache(
-  async (page: number, limit: number, search: string) => {
-    let query = supabase
-      .from('empresas')
-      .select('*', { count: 'exact' })
-    
-    if (search) {
-      query = query.ilike('nome', `%${search}%`)
-    }
-    
-    const offset = (page - 1) * limit
-    const { data, error, count } = await query
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    
-    return { empresas: data || [], total: count || 0 }
-  },
-  ['empresas-list'],
-  { revalidate: 300 }
-)
+// Função para buscar empresas (sem cache)
+async function getEmpresas(page: number, limit: number, search: string) {
+  let query = supabase
+    .from('empresas')
+    .select('*', { count: 'exact' })
+  
+  if (search) {
+    query = query.ilike('nome', `%${search}%`)
+  }
+  
+  const offset = (page - 1) * limit
+  const { data, error, count } = await query
+    .range(offset, offset + limit - 1)
+    .order('created_at', { ascending: false })
+  
+  if (error) throw error
+  
+  return { empresas: data || [], total: count || 0 }
+}
 
-// Cache para estatísticas
-const getEmpresasStats = unstable_cache(
-  async () => {
-    const { count: total } = await supabase
-      .from('empresas')
-      .select('*', { count: 'exact', head: true })
-    
-    const { count: ativas } = await supabase
-      .from('empresas')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'ativa')
-    
-    return {
-      total: total || 0,
-      ativas: ativas || 0,
-      inativas: (total || 0) - (ativas || 0)
-    }
-  },
-  ['empresas-stats'],
-  { revalidate: 300 }
-)
+// Função para estatísticas (sem cache)
+async function getEmpresasStats() {
+  const { count: total } = await supabase
+    .from('empresas')
+    .select('*', { count: 'exact', head: true })
+  
+  const { count: ativas } = await supabase
+    .from('empresas')
+    .select('*', { count: 'exact', head: true })
+    .eq('ativo', true)
+  
+  return {
+    total: total || 0,
+    ativas: ativas || 0,
+    inativas: (total || 0) - (ativas || 0)
+  }
+}
 
 function EmpresasList({ empresas, total, page, limit, search }: {
   empresas: Array<{
     id: string
     nome: string
-    status: string
-    data_fundacao: string
+    ativo: boolean
+    created_at: string
     cnpj: string
-    setor: string
+    setor: string | null
     descricao?: string
   }>
   total: number
@@ -84,22 +75,22 @@ function EmpresasList({ empresas, total, page, limit, search }: {
                   <div className="flex items-center gap-3 mb-2">
                     <Building2 className="h-5 w-5 text-blue-600" />
                     <h3 className="text-lg font-semibold">{empresa.nome}</h3>
-                    <Badge variant={empresa.status === 'ativa' ? 'default' : 'secondary'}>
-                      {empresa.status}
+                    <Badge variant={empresa.ativo ? 'default' : 'secondary'}>
+                      {empresa.ativo ? 'Ativa' : 'Inativa'}
                     </Badge>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>Fundada: {new Date(empresa.data_fundacao).toLocaleDateString('pt-BR')}</span>
+                      <span>Fundada: {new Date(empresa.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       <span>CNPJ: {empresa.cnpj}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span>Setor: {empresa.setor}</span>
+                      <span>Setor: {empresa.setor || 'Não informado'}</span>
                     </div>
                   </div>
                   
@@ -111,16 +102,16 @@ function EmpresasList({ empresas, total, page, limit, search }: {
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <Button asChild size="sm">
-                    <Link href={`/empresas/${empresa.id}`}>
+                  <Link href={`/empresas/${empresa.id}`}>
+                    <Button size="sm">
                       Ver Detalhes
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/empresas/${empresa.id}/conformidade`}>
+                    </Button>
+                  </Link>
+                  <Link href={`/empresas/${empresa.id}/conformidade`}>
+                    <Button variant="outline" size="sm">
                       Conformidade
-                    </Link>
-                  </Button>
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
@@ -137,19 +128,19 @@ function EmpresasList({ empresas, total, page, limit, search }: {
           
           <div className="flex gap-2">
             {page > 1 && (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/empresas?page=${page - 1}${search ? `&search=${search}` : ''}`}>
+              <Link href={`/empresas?page=${page - 1}${search ? `&search=${search}` : ''}`}>
+                <Button variant="outline" size="sm">
                   Anterior
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             )}
             
             {page < totalPages && (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/empresas?page=${page + 1}${search ? `&search=${search}` : ''}`}>
+              <Link href={`/empresas?page=${page + 1}${search ? `&search=${search}` : ''}`}>
+                <Button variant="outline" size="sm">
                   Próxima
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -232,9 +223,11 @@ export default async function EmpresasPage({
               Buscar
             </Button>
             {search && (
-              <Button type="button" variant="outline" asChild>
-                <Link href="/empresas">Limpar</Link>
-              </Button>
+              <Link href="/empresas">
+                <Button type="button" variant="outline">
+                  Limpar
+                </Button>
+              </Link>
             )}
           </form>
         </CardContent>
@@ -243,15 +236,13 @@ export default async function EmpresasPage({
       <Separator className="mb-6" />
       
       {/* Lista de empresas */}
-      <Suspense fallback={<div>Carregando empresas...</div>}>
-        <EmpresasList 
-          empresas={empresas} 
-          total={total} 
-          page={page} 
-          limit={10} 
-          search={search} 
-        />
-      </Suspense>
+      <EmpresasList 
+        empresas={empresas} 
+        total={total} 
+        page={page} 
+        limit={10} 
+        search={search} 
+      />
     </div>
   )
 }

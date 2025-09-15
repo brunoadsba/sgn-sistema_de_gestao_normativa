@@ -5,6 +5,7 @@
 Estabilizar o sistema SGN para suportar o projeto piloto sem custos adicionais.  
 **Prazo**: Semanas 1-2  
 **Tempo estimado**: 20-30 horas  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

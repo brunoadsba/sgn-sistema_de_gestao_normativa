@@ -83,5 +83,7 @@ As 5 pessoas selecionadas terão a oportunidade de:
 - ✅ Proposta SGN desenvolvida em português
 - ✅ Proposta SGN traduzida para inglês
 - ✅ Arquivos .md criados
+- ✅ Dashboard de Conformidade implementado
+- ✅ Terminologia SST profissional aplicada
 - ⏳ Aguardando templates do Miro e Notion
 - ⏳ Criação dos materiais de entrega

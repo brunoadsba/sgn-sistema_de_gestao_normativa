@@ -5,6 +5,7 @@
 Encontrar e recrutar 3-5 empresas para participar do piloto gratuito.  
 **Prazo**: Semanas 3-4  
 **Meta**: 5-8 empresas interessadas → 3-5 selecionadas  
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional  
 
 ---
 

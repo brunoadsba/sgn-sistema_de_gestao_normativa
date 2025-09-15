@@ -9,6 +9,8 @@
 
 **Objetivo**: Automatizar análise de documentos de segurança, identificando gaps de conformidade e gerando relatórios padronizados
 
+**Status**: Dashboard de Conformidade implementado + Terminologia SST profissional
+
 ---
 
 ## ⚙️ **FUNCIONALIDADES TÉCNICAS**

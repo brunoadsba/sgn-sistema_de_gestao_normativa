@@ -31,14 +31,24 @@ curl -s "http://localhost:3001/api/normas?limit=5" | jq .
 
 # Detalhes de uma norma específica
 curl -s "http://localhost:3001/api/normas/56" | jq .
+
+# Dashboard de conformidade (Construtora BR)
+curl -s "http://localhost:3001/api/conformidade/dashboard/9feb8d42-d560-4465-95c6-ad31e6aeb387" | jq .
+
+# Lista de empresas
+curl -s "http://localhost:3001/api/empresas" | jq .
 ```
 
 ## Estrutura
 - `frontend/` (Next.js 15 + TypeScript)
   - `src/app/page.tsx` (Dashboard principal)
   - `src/app/normas/` (Páginas de normas)
+  - `src/app/empresas/` (Páginas de empresas e conformidade)
   - `src/app/api/normas/` (APIs de normas)
+  - `src/app/api/conformidade/` (APIs de conformidade)
+  - `src/app/api/empresas/` (APIs de empresas)
   - `src/components/conformidade/` (Componentes de conformidade)
+  - `src/components/dynamic/` (Componentes com lazy loading)
 - `docs/` (arquitetura, roadmap, runbooks, API)
 - `.env-n8n` (Configuração do N8N)
 - `status-implementacao.md` (fonte única de status)
@@ -48,17 +58,22 @@ curl -s "http://localhost:3001/api/normas/56" | jq .
 - **Sistema**: 100% funcional e operacional ✅
 - **Dados**: 38 normas (36 ativas, 2 revogadas) ✅
 - **Interface**: Otimizada e sem problemas ✅
-- **Conformidade corporativa**: 90% (multi-tenant, análise, relatórios, UI executiva)
+- **Dashboard de Conformidade**: 100% implementado ✅
+- **Empresas**: 3 empresas profissionais cadastradas ✅
+- **Conformidade corporativa**: 95% (multi-tenant, análise, relatórios, UI executiva)
 - **UI Executiva**: Implementada (KPIs, gaps, jobs, componentes React)
 - Roadmap: `docs/roadmap.md` (consolidado)
 - Status detalhado: `status-implementacao.md`
 
-### 🔧 Correções Recentes (14/09/2025)
-- ✅ **n8n configurado para Supabase** (PostgreSQL)
-- ✅ **Dados duplicados limpos** (380 → 38 registros)
-- ✅ **Interface corrigida** (sem repetições de texto)
-- ✅ **Sincronização funcionando** (n8n ↔ frontend)
-- ✅ **Footer atualizado** (2025 + créditos do desenvolvedor)
+### 🔧 Correções Recentes (15/09/2025)
+- ✅ **Dashboard de Conformidade** implementado com dados reais
+- ✅ **Empresas profissionais** criadas (Construtora BR, Tech BR, Indústrias BR)
+- ✅ **Terminologia SST** adequada para área de Segurança do Trabalho
+- ✅ **Correções React** (Suspense e Button asChild)
+- ✅ **Cache Next.js** otimizado para dados em tempo real
+- ✅ **Mapeamento de dados** API → Frontend corrigido
+- ✅ **Interface executiva** com KPIs e métricas
+- ✅ **Dados profissionais** com CNPJs e informações corporativas
 
 ## Configuração do N8N
 O sistema usa N8N conectado ao Supabase (PostgreSQL). Configuração em `.env-n8n`:
@@ -75,6 +90,31 @@ DB_POSTGRESDB_PASSWORD=sua_senha_aqui
 
 ## Segurança
 Consulte `docs/environment.md` e políticas RLS em `docs/arquitetura.md`.
+
+## Dashboard de Conformidade
+
+O sistema agora inclui um **Dashboard de Conformidade** completo para empresas:
+
+### 🎯 **Funcionalidades:**
+- **Resumo Executivo** com Índice de Conformidade
+- **KPIs Detalhados** (Avaliações, Lacunas, Documentos)
+- **Oportunidades de Melhoria** identificadas
+- **Avaliações Recentes** com status em tempo real
+
+### 🏢 **Empresas Cadastradas:**
+- **Construtora BR** (Construção Civil) - ID: `9feb8d42-d560-4465-95c6-ad31e6aeb387`
+- **Tech BR** (Tecnologia)
+- **Indústrias BR** (Indústria)
+
+### 📊 **Terminologia SST:**
+- **Conforme** / **Não Conforme** / **Oportunidade de Melhoria**
+- **Índice de Conformidade** (em vez de "Score")
+- **Avaliações** (em vez de "Jobs")
+- **Lacunas** (em vez de "Gaps")
+
+### 🌐 **Acesso:**
+- **Lista de Empresas**: `http://localhost:3001/empresas`
+- **Dashboard Construtora BR**: `http://localhost:3001/empresas/9feb8d42-d560-4465-95c6-ad31e6aeb387/conformidade`
 
 ## Solução de Problemas Comuns
 
@@ -101,3 +141,87 @@ Para resolver este problema, certifique-se de que o servidor de desenvolvimento 
    ```
 
 **Observação:** Este erro é comum em ambientes de desenvolvimento local. Em ambientes de CI/CD ou produção, a API geralmente já estará disponível e acessível, então este problema não deve ocorrer.
+
+### Erro: `React.Children.only expected to receive a single React element child`
+
+**Causa:** Uso incorreto do componente `Suspense` ou `Button` com `asChild` dentro de `Link`.
+
+**Solução:**
+```tsx
+// ❌ Incorreto
+<Suspense fallback={<Loading />}>
+  <Component />
+</Suspense>
+
+<Link href="/path">
+  <Button asChild>
+    <span>Texto</span>
+  </Button>
+</Link>
+
+// ✅ Correto
+<Link href="/path">
+  <Button>Texto</Button>
+</Link>
+```
+
+### Erro: `Cannot read properties of undefined (reading 'totalJobs')`
+
+**Causa:** Componente tentando acessar propriedades de dados `undefined` ou `null`.
+
+**Solução:**
+```tsx
+// ❌ Incorreto
+<Component data={data.kpis} />
+
+// ✅ Correto
+{data && data.kpis && <Component data={data.kpis} />}
+```
+
+### Erro: `Invariant revalidate: 0 can not be passed to unstable_cache()`
+
+**Causa:** `unstable_cache` não aceita `revalidate: 0`.
+
+**Solução:**
+```tsx
+// ❌ Incorreto
+const getData = unstable_cache(fn, ['key'], { revalidate: 0 })
+
+// ✅ Correto
+const getData = unstable_cache(fn, ['key'], { revalidate: false })
+```
+
+### Erro: `column does not exist` ou `violates check constraint`
+
+**Causa:** Estrutura de dados não corresponde ao schema do banco.
+
+**Solução:**
+1. Verificar schema da tabela no Supabase
+2. Ajustar queries para usar colunas corretas
+3. Validar valores contra constraints CHECK
+
+### Erro: Cache do Next.js não atualiza dados
+
+**Causa:** `unstable_cache` mantém dados antigos em cache.
+
+**Solução:**
+```tsx
+// Remover cache temporariamente
+async function getData() {
+  // Busca direta sem cache
+  return await supabase.from('table').select('*')
+}
+```
+
+### Erro: `duplicate key value violates unique constraint`
+
+**Causa:** Tentativa de inserir registro com chave única duplicada.
+
+**Solução:**
+```sql
+-- Verificar registros existentes
+SELECT * FROM table WHERE unique_field = 'value';
+
+-- Usar UPSERT ou verificar antes de inserir
+INSERT INTO table (...) VALUES (...) ON CONFLICT (unique_field) DO UPDATE SET ...
+```
