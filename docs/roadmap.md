@@ -48,11 +48,12 @@
   - [x] Graceful degradation implementado
   - [x] Relacionamentos robustos
 
-- [ ] **IA para Análise de Conformidade** (Preparado para implementação)
-  - [ ] Integração LLM para comparação semântica
-  - [ ] Sistema de scoring de conformidade (0-100)
-  - [ ] Identificação automática de gaps
+- [ ] **IA para Análise de Conformidade** 🚀 **PRÓXIMA PRIORIDADE**
+  - [ ] Integração LLM (OpenAI/Claude) para comparação semântica
+  - [ ] Sistema de scoring automático de conformidade (0-100%)
+  - [ ] Identificação automática de gaps de conformidade
   - [ ] Geração de planos de ação personalizados
+  - [ ] Worker assíncrono para processamento de documentos
 
 ### ✅ Dashboard de Conformidade Executiva (COMPLETO) ✨ **IMPLEMENTADO - 31 de agosto de 2025**
 
@@ -69,11 +70,17 @@
   - [x] Suporte para JSON, CSV, PDF (estrutura preparada)
   - [x] Relatórios personalizados por empresa
 
-### 🚧 Interface de Conformidade (PRÓXIMO)
-- [ ] Páginas de dashboard visual
-- [ ] Gráficos e visualizações interativas
-- [ ] Interface de gestão de gaps
-- [ ] Timeline de ações prioritárias
+### 🚧 Sistema de Alertas (EM ANDAMENTO)
+- [x] Tabela `alertas_conformidade` criada
+- [x] APIs básicas implementadas
+- [x] Componente `AlertasList` criado
+- [ ] Finalizar integração e testar funcionalidades
+
+### 🚀 IA para Análise de Conformidade (PRÓXIMA PRIORIDADE)
+- [ ] Integração LLM para comparação semântica
+- [ ] Worker assíncrono para processamento
+- [ ] Dashboard atualizado com resultados de IA
+- [ ] Assistente virtual de compliance
 
 ---
 
@@ -186,20 +193,30 @@ O SGN já é uma **plataforma avançada de automação de compliance**, oferecen
 
 ### **🎯 Próximos Passos**
 
-#### **1. Sistema de Alertas**
-- Alertas básicos para conformidade
-- Notificações de oportunidades
+#### **1. Sistema de Alertas** ✅ **EM ANDAMENTO**
+- ✅ Tabela `alertas_conformidade` criada
+- ✅ APIs básicas implementadas
+- ✅ Componente `AlertasList` criado
+- 🔄 **PRÓXIMO:** Finalizar integração e testar funcionalidades
 
-#### **2. Validação Zod**
+#### **2. IA para Análise de Conformidade** 🚀 **PRIORIDADE MÁXIMA**
+- 🔄 Integração LLM (OpenAI/Claude) para comparação semântica
+- 🔄 Sistema de scoring automático (0-100%)
+- 🔄 Identificação automática de gaps
+- 🔄 Geração de planos de ação personalizados
+- 🔄 Worker assíncrono para processamento
+
+#### **3. Validação Zod**
 - Schemas para APIs
 - Validação robusta
 
-#### **3. Testes Automatizados**
+#### **4. Testes Automatizados**
 - Testes unitários
 - Testes de integração
 
 ---
 
 **Roadmap atualizado em:** 15 de setembro de 2025  
-**Status:** 🚀 **MVP completo + 95% transformação corporativa + Dashboard de Conformidade + Terminologia SST Profissional**  
-**Capacidade:** Plataforma enterprise com dashboard executivo, terminologia adequada e funcionalidades avançadas
+**Status:** 🚀 **MVP completo + 95% transformação corporativa + Dashboard de Conformidade + Terminologia SST Profissional + Design Corporativo**  
+**Próxima Prioridade:** 🤖 **IA para Análise de Conformidade Automatizada**  
+**Capacidade:** Plataforma enterprise com dashboard executivo, terminologia adequada, design profissional e preparada para IA

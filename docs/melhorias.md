@@ -57,12 +57,13 @@ Status atual: MVP completo e operacional (frontend Next.js 15 + Supabase + N8N).
   - [x] Tipos: executivo, detalhado, gaps, compliance
   - [x] Estrutura para formatos JSON, CSV, PDF
 
-- [ ] **IA para Análise de Conformidade** (Estrutura preparada)
-  - [ ] Integração LLM para comparação semântica
+- [ ] **IA para Análise de Conformidade** 🚀 **PRÓXIMA PRIORIDADE**
+  - [ ] Integração LLM (OpenAI/Claude) para comparação semântica
   - [ ] Prompt engineering para análise normativa
-  - [ ] Sistema de scoring de conformidade (0-100)
-  - [ ] Identificação automática de gaps
-  - [ ] Geração de planos de ação
+  - [ ] Sistema de scoring automático de conformidade (0-100%)
+  - [ ] Identificação automática de gaps de conformidade
+  - [ ] Geração de planos de ação personalizados
+  - [ ] Worker assíncrono para processamento de documentos
 
 ### Dashboard de Conformidade ✅ **IMPLEMENTADO - 15 de setembro de 2025**
 
@@ -383,22 +384,32 @@ Continue com o próximo arquivo quando confirmar!
 
 ### **🎯 Próximos Passos**
 
-#### **1. Sistema de Alertas**
-- Alertas básicos para conformidade
-- Notificações de oportunidades
+#### **1. Sistema de Alertas** ✅ **EM ANDAMENTO**
+- ✅ Tabela `alertas_conformidade` criada
+- ✅ APIs básicas implementadas
+- ✅ Componente `AlertasList` criado
+- 🔄 **PRÓXIMO:** Finalizar integração e testar funcionalidades
 
-#### **2. Validação Zod**
+#### **2. IA para Análise de Conformidade** 🚀 **PRIORIDADE MÁXIMA**
+- 🔄 Integração LLM (OpenAI/Claude) para comparação semântica
+- 🔄 Sistema de scoring automático (0-100%)
+- 🔄 Identificação automática de gaps
+- 🔄 Geração de planos de ação personalizados
+- 🔄 Worker assíncrono para processamento
+
+#### **3. Validação Zod**
 - Schemas para APIs
 - Validação robusta
 
-#### **3. Testes Automatizados**
+#### **4. Testes Automatizados**
 - Testes unitários
 - Testes de integração
 
 ---
 
 **Melhorias atualizadas em:** 15 de setembro de 2025  
-**Status:** 🚀 **Conformidade Corporativa 95% + Dashboard de Conformidade + Terminologia SST Profissional**  
-**Capacidade:** Plataforma enterprise com dashboard executivo, terminologia adequada e funcionalidades avançadas
+**Status:** 🚀 **Conformidade Corporativa 95% + Dashboard de Conformidade + Terminologia SST Profissional + Design Corporativo**  
+**Próxima Prioridade:** 🤖 **IA para Análise de Conformidade Automatizada**  
+**Capacidade:** Plataforma enterprise com dashboard executivo, terminologia adequada, design profissional e preparada para IA
 
 
