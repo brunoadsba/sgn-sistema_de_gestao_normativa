@@ -9,7 +9,8 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@supabase/supabase-js'],
   },
-  // Configuração para Netlify com suporte a API routes
+  // Configuração para deploy estático no Netlify
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true,

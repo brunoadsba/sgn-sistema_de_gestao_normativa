@@ -24,46 +24,49 @@ interface Stats {
 }
 
 async function getStats(): Promise<Stats> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-    const response = await fetch(`${baseUrl}/api/normas/stats`, {
-      next: { revalidate: 60 }
-    })
-    
-    if (!response.ok) {
-      throw new Error('Falha ao carregar estatísticas')
-    }
-    
-    const result = await response.json()
-    return result.data
-  } catch (error) {
-    logger.error({ error }, 'Erro ao buscar estatísticas')
-    return {
-      total: 0,
-      ativas: 0,
-      revogadas: 0,
-      recentes: 0
-    }
+  // Dados mockados para demonstração
+  return {
+    total: 12,
+    ativas: 8,
+    revogadas: 4,
+    recentes: 3
   }
 }
 
 async function getRecentNormas(): Promise<Norma[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-    const response = await fetch(`${baseUrl}/api/normas?limit=5&sort=created_at&order=desc`, {
-      next: { revalidate: 60 }
-    })
-    
-    if (!response.ok) {
-      throw new Error('Falha ao carregar normas recentes')
+  // Dados mockados para demonstração
+  return [
+    {
+      id: 1,
+      codigo: "NR-01 - Disposições Gerais",
+      titulo: "NR-01 - Disposições Gerais",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-15T00:00:00Z",
+      data_criacao: "2025-01-15",
+      data_atualizacao: "2025-01-15",
+      nr_num: 1
+    },
+    {
+      id: 2,
+      codigo: "NR-02 - Inspeção Prévia",
+      titulo: "NR-02 - Inspeção Prévia",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-14T00:00:00Z",
+      data_criacao: "2025-01-14",
+      data_atualizacao: "2025-01-14",
+      nr_num: 2
+    },
+    {
+      id: 3,
+      codigo: "NR-03 - Embargo ou Interdição",
+      titulo: "NR-03 - Embargo ou Interdição",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-13T00:00:00Z",
+      data_criacao: "2025-01-13",
+      data_atualizacao: "2025-01-13",
+      nr_num: 3
     }
-    
-    const data = await response.json()
-    return data.data || []
-  } catch (error) {
-    logger.error({ error }, 'Erro ao buscar normas recentes')
-    return []
-  }
+  ]
 }
 
 // Função para detectar status baseado no código/título
