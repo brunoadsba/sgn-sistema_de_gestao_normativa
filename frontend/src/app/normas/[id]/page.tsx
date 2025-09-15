@@ -5,22 +5,65 @@ import Link from "next/link";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import BotoesSeguranca from "./components/BotoesSeguranca";
 
+// Função necessária para deploy estático
+export async function generateStaticParams() {
+  // IDs mockados para demonstração
+  return [
+    { id: '1' },
+    { id: '2' },
+    { id: '3' },
+    { id: '4' },
+    { id: '5' }
+  ];
+}
+
 async function getNorma(id: string) {
-  try {
-    const response = await fetch(`http://localhost:3001/api/normas/${id}`, {
-      cache: "no-store"
-    });
-    
-    if (!response.ok) {
-      return { success: false, data: null };
+  // Dados mockados para demonstração
+  const normasMock = [
+    {
+      id: 1,
+      codigo: "NR-01 - Disposições Gerais",
+      titulo: "NR-01 - Disposições Gerais",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-15T00:00:00Z"
+    },
+    {
+      id: 2,
+      codigo: "NR-02 - Inspeção Prévia",
+      titulo: "NR-02 - Inspeção Prévia",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-14T00:00:00Z"
+    },
+    {
+      id: 3,
+      codigo: "NR-03 - Embargo ou Interdição",
+      titulo: "NR-03 - Embargo ou Interdição",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-13T00:00:00Z"
+    },
+    {
+      id: 4,
+      codigo: "NR-04 - Serviços Especializados em Engenharia de Segurança e em Medicina do Trabalho",
+      titulo: "NR-04 - Serviços Especializados em Engenharia de Segurança e em Medicina do Trabalho",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-12T00:00:00Z"
+    },
+    {
+      id: 5,
+      codigo: "NR-05 - Comissão Interna de Prevenção de Acidentes",
+      titulo: "NR-05 - Comissão Interna de Prevenção de Acidentes",
+      orgao_publicador: "MTE",
+      created_at: "2025-01-11T00:00:00Z"
     }
-    
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error("Erro ao buscar norma:", error);
+  ];
+
+  const norma = normasMock.find(n => n.id.toString() === id);
+  
+  if (!norma) {
     return { success: false, data: null };
   }
+
+  return { success: true, data: norma };
 }
 
 export default async function NormaDetalhes({ 
