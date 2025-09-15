@@ -4,7 +4,7 @@
 Plataforma de compliance automatizada: coleta, análise de conformidade e relatórios executivos.
 
 ## Como rodar
-1) **Pré-requisitos:** Node 20, Supabase, N8N, SQLite3
+1) **Pré-requisitos:** Node 20, Supabase, N8N
 2) **Desenvolvimento:**
 ```bash
 # Frontend
