@@ -48,6 +48,33 @@
 - `GET /api/export` - Exportação de dados (CSV/JSON)
 - `GET /api/rate-limit` - Proteção contra abuso
 
+### APIs Dashboard de Conformidade ✨ **NOVO**
+- `GET /api/conformidade/dashboard/[empresaId]` - Dashboard completo
+- `GET /api/empresas/[id]` - Detalhes da empresa
+- `GET /api/alertas` - Sistema de alertas
+- `POST /api/alertas` - Criação de alertas
+- `PUT /api/alertas/[id]` - Atualização de alertas
+- `DELETE /api/alertas/[id]` - Remoção de alertas
+
+## Componentes Frontend Enterprise
+
+### Componentes de Conformidade ✨ **NOVO**
+- `StatusGeral.tsx` - Status consolidado com layout horizontal
+- `PontosAtencao.tsx` - Distribuição por severidade com cards interativos
+- `EstatisticasEssenciais.tsx` - Métricas de processamento
+- `AlertasList.tsx` - Sistema de alertas com ações
+
+### Componentes Base
+- `interactive-card.tsx` - Cards clicáveis com hover effects
+- `skeleton.tsx` - Estados de carregamento
+- `toaster.tsx` - Notificações do sistema
+
+### Design System
+- **Layout Vertical**: Distribuição em seções empilhadas
+- **Responsividade**: Mobile-first com breakpoints otimizados
+- **Interatividade**: Hover effects e transições suaves
+- **Cores Semânticas**: Verde, Azul, Laranja, Vermelho
+
 ### APIs Multi-tenant
 - `GET/POST /api/empresas` - Gestão de empresas clientes
 - `GET/POST /api/empresas/[id]/documentos` - Upload e gestão documental

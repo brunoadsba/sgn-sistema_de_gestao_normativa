@@ -36,6 +36,7 @@
 - **Backend:** Supabase (PostgreSQL + Auth), API Routes
 - **Automação:** N8N (coleta de normas)
 - **Deploy:** Vercel, Git
+- **Design:** Layout corporativo com componentes interativos
 
 ### ESTRUTURA ATUAL CONFIRMADA
 - **Branch atual:** `melhorias` (melhorias técnicas consolidadas)

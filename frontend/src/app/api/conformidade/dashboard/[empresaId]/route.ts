@@ -80,7 +80,7 @@ export async function GET(
     dataInicio.setDate(dataInicio.getDate() - parseInt(periodo));
     const dataInicioISO = dataInicio.toISOString();
 
-    // 1. ESTATÍSTICAS DE JOBS
+    // 1. ESTATÍSTICAS DE JOBS (filtrados por empresa)
     const { data: jobs, error: jobsError } = await supabase
       .from("analise_jobs")
       .select("id, status, created_at, completed_at, progresso, tipo_analise")
@@ -212,15 +212,32 @@ export async function GET(
     const riscoAlto = resultadosRows.filter(r => r.nivel_risco === 'alto').length;
     const riscoCritico = resultadosRows.filter(r => r.nivel_risco === 'critico').length;
 
-    // Estatísticas de Gaps
-    const totalGaps = gaps.length;
-    const gapsResolvidos = gaps.filter(g => g.resolvido).length;
-    const gapsPendentes = totalGaps - gapsResolvidos;
+    // Estatísticas de Gaps (usando dados de alertas como fallback)
+    let totalGaps = gaps.length;
+    let gapsResolvidos = gaps.filter(g => g.resolvido).length;
+    let gapsPendentes = totalGaps - gapsResolvidos;
 
-    const gapsCriticos = gaps.filter(g => g.severidade === 'critica').length;
-    const gapsAltos = gaps.filter(g => g.severidade === 'alta').length;
-    const gapsMedios = gaps.filter(g => g.severidade === 'media').length;
-    const gapsBaixos = gaps.filter(g => g.severidade === 'baixa').length;
+    let gapsCriticos = gaps.filter(g => g.severidade === 'critica').length;
+    let gapsAltos = gaps.filter(g => g.severidade === 'alta').length;
+    let gapsMedios = gaps.filter(g => g.severidade === 'media').length;
+    let gapsBaixos = gaps.filter(g => g.severidade === 'baixa').length;
+
+    // Usar dados de alertas como fonte principal (mais confiável)
+    const { data: alertasData } = await supabase
+      .from("alertas_conformidade")
+      .select("severidade, status")
+      .eq("empresa_id", empresaId);
+
+    if (alertasData && alertasData.length > 0) {
+      totalGaps = alertasData.length;
+      gapsResolvidos = alertasData.filter(a => a.status === 'resolvido').length;
+      gapsPendentes = alertasData.filter(a => a.status === 'ativo').length;
+
+      gapsCriticos = alertasData.filter(a => a.severidade === 'critica').length;
+      gapsAltos = alertasData.filter(a => a.severidade === 'alta').length;
+      gapsMedios = alertasData.filter(a => a.severidade === 'media').length;
+      gapsBaixos = alertasData.filter(a => a.severidade === 'baixa').length;
+    }
 
     const gapsPorCategoria: Record<string, number> = gaps.reduce((acc, gap) => {
       const categoria = gap.categoria || 'Sem categoria';

@@ -6,24 +6,46 @@ O Dashboard de Conformidade é uma funcionalidade empresarial do SGN que permite
 
 ## Funcionalidades
 
-### 🎯 Resumo Executivo
+### 🎯 Status Geral (Layout Horizontal)
 - **Índice de Conformidade**: Percentual de conformidade geral da empresa
-- **Total de Oportunidades de Melhoria**: Número de lacunas identificadas
-- **Documentos Avaliados**: Quantidade de documentos analisados
+- **Pontos Pendentes**: Número de lacunas que requerem atenção
+- **Status Geral**: Badge com status (Conforme/Atenção/Crítico)
 
-### 📊 KPIs Detalhados
-- **Total de Avaliações Realizadas**: Número total de análises executadas
-- **Em Andamento**: Avaliações em processo
-- **Concluídas**: Avaliações finalizadas com sucesso
-- **Não Conformes**: Avaliações que falharam
-- **Pendentes**: Avaliações aguardando processamento
-- **Oportunidades de Melhoria**: Lacunas identificadas
-- **Documentos Avaliados**: Documentos processados
-- **Índice de Conformidade (%)**: Score geral de conformidade
+### 📊 Pontos de Atenção
+- **Distribuição por Severidade**: Crítica, Alta, Média, Baixa
+- **Cards Interativos**: Clicáveis com hover effects
+- **Navegação**: Direcionamento para detalhes por severidade
 
-### 📋 Seções de Análise
-- **Oportunidades de Melhoria Identificadas**: Lacunas de conformidade
-- **Avaliações Recentes**: Status das análises mais recentes
+### 📈 Estatísticas Essenciais
+- **Análises**: Total de análises realizadas
+- **Documentos**: Documentos processados
+- **Pendentes**: Análises aguardando processamento
+- **Métricas Inferiores**: Taxa de sucesso e tempo médio
+
+### 🚨 Alertas de Conformidade
+- **Notificações**: Alertas importantes sobre conformidade
+- **Prazos**: Lembretes de vencimento
+- **Status**: Resolvido/Ativo/Ignorado
+
+## Design e Layout
+
+### 🎨 Design Corporativo
+- **Layout Vertical**: Distribuição em seções empilhadas
+- **Cards Profissionais**: Bordas sutis e sombras suaves
+- **Cores Semânticas**: Verde (sucesso), Azul (informação), Laranja (atenção), Vermelho (crítico)
+- **Tipografia Hierárquica**: Títulos, subtítulos e descrições bem definidos
+
+### 📱 Responsividade
+- **Mobile-First**: Layout adaptativo para todos os dispositivos
+- **Grid Inteligente**: 1-4 colunas baseado no conteúdo
+- **Breakpoints**: sm (640px), md (768px), lg (1024px), xl (1280px)
+- **Espaçamento Consistente**: gap-4, gap-6, space-y-6
+
+### 🖱️ Interatividade
+- **Cards Clicáveis**: Navegação para detalhes
+- **Hover Effects**: Tooltips informativos
+- **Transições Suaves**: duration-300 para todas as animações
+- **Estados Visuais**: Hover, focus, active bem definidos
 
 ## Terminologia SST
 
