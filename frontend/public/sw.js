@@ -7,12 +7,15 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('✅ Service Worker: Cache aberto')
-      return cache.addAll([
+      // Validar URLs antes de cachear para evitar "illegal path"
+      const CRITICAL_ASSETS = [
         '/',
         '/normas',
         '/empresas'
-      ]).catch(() => {
-        console.warn('⚠️ Service Worker: Erro ao cachear assets')
+      ]
+      
+      return cache.addAll(CRITICAL_ASSETS).catch((error) => {
+        console.warn('⚠️ Service Worker: Erro ao cachear assets:', error)
         return Promise.resolve()
       })
     })

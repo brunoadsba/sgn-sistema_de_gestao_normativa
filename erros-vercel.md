@@ -46,6 +46,36 @@
 **Tentativa:** Desabilitar ESLint e TypeScript checking
 **Resultado:** ❌ Não resolve o problema da dupla execução
 
+### **6. Erros Next.js 15 (Atualização)**
+**Erro:** `searchParams` deve ser `await`
+**Problema:** Next.js 15 mudou o comportamento do `searchParams`
+**Solução Aplicada:**
+```typescript
+// Antes (Next.js 14)
+export default function Page({ searchParams }: { searchParams?: SearchParams }) {
+  const page = Number(searchParams?.page) || 1
+}
+
+// Agora (Next.js 15)
+export default async function Page({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  const params = await searchParams
+  const page = Number(params?.page) || 1
+}
+```
+
+### **7. Service Worker Cache Inválido**
+**Erro:** `"Unable to add filesystem: <illegal path>"`
+**Problema:** URLs inválidas sendo adicionadas ao cache
+**Solução Aplicada:**
+```javascript
+// Validar URLs antes de cachear
+const CRITICAL_ASSETS = [
+  '/',
+  '/normas',
+  '/empresas'
+]
+```
+
 ## 🔍 Análise Técnica
 
 ### **Root Cause Analysis:**
@@ -63,44 +93,73 @@ Na segunda execução, o `npm install` não encontra as dependências que foram 
 2. **vercel.json com npm ci** - ❌ Falhou (sem package-lock.json)
 3. **Workspace com package.json na raiz** - ❌ Piorou
 4. **next.config.js ignorando erros** - ❌ Não resolveu
+5. **vercel.json com installCommand customizado** - ❌ Falhou
+6. **Configuração de buildCommand específico** - ❌ Falhou
+7. **Desabilitar ESLint e TypeScript checking** - ❌ Não resolveu
+8. **Usar npm ci em vez de npm install** - ❌ Falhou
+9. **Configuração de cache de dependências** - ❌ Falhou
+10. **Build local + deploy manual** - ⚠️ Parcialmente funcional
+11. **Configuração de monorepo com workspaces** - ❌ Piorou
+12. **Deploy direto do diretório frontend** - ❌ Falhou
 
 ## 💡 Soluções Propostas
 
-### **Solução 1: Deploy Manual**
-- Fazer build local e deploy do `.next` compilado
-- Bypass completo do processo de build do Vercel
+### **Solução 1: Migrar para Netlify** ⭐ **RECOMENDADA**
+- Melhor suporte a projetos com subdiretórios
+- Configuração `netlify.toml` já criada
+- Deploy mais confiável e previsível
+- **Status:** ✅ Configuração pronta para teste
 
 ### **Solução 2: Reestruturar Projeto**
 - Mover arquivos do `frontend/` para a raiz
 - Eliminar subdiretório para simplificar deploy
+- **Status:** ⚠️ Requer refatoração significativa
 
-### **Solução 3: Usar Outra Plataforma**
-- Netlify (melhor suporte a monorepos)
+### **Solução 3: Deploy Manual**
+- Fazer build local e deploy do `.next` compilado
+- Bypass completo do processo de build do Vercel
+- **Status:** ⚠️ Parcialmente funcional, mas não escalável
+
+### **Solução 4: Usar Outra Plataforma**
 - Railway (deploy direto do GitHub)
 - Render (alternativa ao Vercel)
+- **Status:** 🔄 Não testado ainda
 
-### **Solução 4: Configuração Avançada Vercel**
+### **Solução 5: Configuração Avançada Vercel**
 - Usar `vercel.json` com configurações específicas de workspace
 - Configurar build hooks customizados
+- **Status:** ❌ Todas as tentativas falharam
 
 ## 📊 Status Atual
 
-- **Tentativas:** 8+ configurações diferentes
-- **Tempo Investido:** ~2 horas
+- **Tentativas:** 12+ configurações diferentes
+- **Tempo Investido:** ~4 horas
 - **Resultado:** ❌ Deploy ainda falha
-- **Próximo Passo:** Avaliar soluções alternativas
+- **Próximo Passo:** Migrar para Netlify ou reestruturar projeto
 
-## 🎯 Recomendação
+## 🎯 Recomendação Final
 
 Para um **MVP sem custos**, recomendo:
 
-1. **Testar Netlify** - Melhor suporte a projetos com subdiretórios
-2. **Considerar Railway** - Deploy mais simples e confiável
-3. **Manter Vercel** apenas se conseguirmos resolver o problema de workspace
+1. **⭐ MIGRAR PARA NETLIFY** - Solução mais viável
+   - Configuração `netlify.toml` já pronta
+   - Melhor suporte a projetos com subdiretórios
+   - Deploy mais confiável e previsível
+   - **Próximo passo:** Testar deploy no Netlify
+
+2. **Considerar Railway** - Alternativa secundária
+   - Deploy direto do GitHub
+   - Configuração mais simples
+
+3. **Abandonar Vercel** - Não recomendado
+   - Múltiplas tentativas falharam
+   - Problema estrutural com workspace
+   - Tempo investido sem retorno
 
 ---
 
-**Data:** 14/09/2025  
+**Data:** 15/01/2025  
 **Projeto:** SGN - Sistema de Gestão Normativa  
 **Plataforma:** Vercel  
-**Status:** ❌ Falhou após múltiplas tentativas
+**Status:** ❌ Falhou após múltiplas tentativas  
+**Última Atualização:** Adicionados erros Next.js 15 e Service Worker

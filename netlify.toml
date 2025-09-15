@@ -1,14 +1,20 @@
 [build]
   base = "frontend"
-  publish = "frontend/.next"
-  command = "npm run build"
+  publish = "out"
+  command = "npm install && npm run build"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
+  status = 200
+
+# Configuração específica para Next.js
+[[redirects]]
+  from = "/api/*"
+  to = "/api/:splat"
   status = 200
 
 [[headers]]
