@@ -10,6 +10,16 @@ import { usePerformanceMonitoring } from '@/lib/performance'
 import type { GapItem } from '@/components/conformidade/GapsTable'
 import type { JobItem } from '@/components/conformidade/JobsList'
 
+// Função necessária para deploy estático
+export async function generateStaticParams() {
+  // IDs mockados para demonstração
+  return [
+    { id: '1' },
+    { id: '2' },
+    { id: '3' }
+  ];
+}
+
 // Definir tipo local para KPIs baseado no componente
 type DashboardKpis = {
   totalJobs: number
