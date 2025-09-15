@@ -6,9 +6,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    optimizePackageImports: ['@supabase/supabase-js'],
-  },
+  // experimental: {
+  //   optimizePackageImports: ['@supabase/supabase-js'],
+  // },
 }
 
 module.exports = nextConfig

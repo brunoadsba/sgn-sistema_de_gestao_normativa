@@ -114,3 +114,8 @@ export const ListLoadingSkeleton = ({ items = 5 }: { items?: number }) => (
     ))}
   </div>
 )
+
+// 🚀 COMPONENTE PRINCIPAL
+export function DynamicComponents() {
+  return null
+}
