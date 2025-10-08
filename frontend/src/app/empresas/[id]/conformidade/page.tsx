@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, ArrowLeft, Building2, RefreshCw } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Building2, RefreshCw, Brain } from 'lucide-react'
 import { AlertasList } from '@/components/conformidade/AlertasList'
 import { StatusGeral } from '@/components/conformidade/StatusGeral'
 import { PontosAtencao } from '@/components/conformidade/PontosAtencao'
 import { EstatisticasEssenciais } from '@/components/conformidade/EstatisticasEssenciais'
+import { ModalAnaliseIASimples } from '@/components/ia/ModalAnaliseIASimples'
 
 interface DashboardData {
   empresa: {
@@ -85,6 +86,7 @@ export default function ConformidadePage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [showIAAnalysis, setShowIAAnalysis] = useState(false)
 
   useEffect(() => {
     const fetchData = async (retryCount = 0) => {
@@ -213,15 +215,25 @@ export default function ConformidadePage({ params }: { params: Promise<{ id: str
                   </p>
                 </div>
               </div>
-              <Button 
-                onClick={handleRefresh} 
-                variant="outline" 
-                size="sm"
-                className="self-start lg:self-center"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar
-              </Button>
+              <div className="flex items-center space-x-3">
+                <Button 
+                  onClick={() => setShowIAAnalysis(true)}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  Analisar com IA
+                </Button>
+                <Button 
+                  onClick={handleRefresh} 
+                  variant="outline" 
+                  size="sm"
+                  className="self-start lg:self-center"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -266,6 +278,18 @@ export default function ConformidadePage({ params }: { params: Promise<{ id: str
           </Card>
         </div>
       </div>
+
+      {/* Modal de Análise IA Simplificado */}
+      <ModalAnaliseIASimples
+        isOpen={showIAAnalysis}
+        onClose={() => setShowIAAnalysis(false)}
+        empresaId={empresaId}
+        empresaNome={dashboardData?.empresa?.nome || 'Empresa'}
+        onAnaliseCompleta={(resultado) => {
+          console.log('Análise IA concluída:', resultado)
+          // Aqui podemos atualizar o dashboard com os resultados da IA
+        }}
+      />
     </div>
   )
 }

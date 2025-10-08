@@ -35,8 +35,8 @@ async function criarDadosExemplo() {
     const documentos = [
       {
         empresa_id: empresa.id,
-        nome_arquivo: 'PPRA_2025.pdf',
-        tipo_documento: 'PPRA',
+        nome_arquivo: 'PGR_2025.pdf',
+        tipo_documento: 'PGR',
         metadados: { tamanho: '2.5MB', paginas: 45 },
         created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias atrás
       },

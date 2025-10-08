@@ -40,7 +40,7 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
     switch(numeroNR) {
       case "1":
         aplicabilidade = "Aplicável a todas as empresas e empregadores que admitam trabalhadores";
-        observacoesTecnicas = "Fundamental para PPRA e PCMSO. Base para todas as demais NRs.";
+        observacoesTecnicas = "Fundamental para PGR e PCMSO. Base para todas as demais NRs.";
         break;
       case "6":
         aplicabilidade = "Empresas que utilizam equipamentos de proteção individual";
