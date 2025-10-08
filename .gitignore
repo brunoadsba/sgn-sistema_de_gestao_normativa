@@ -10,3 +10,4 @@ obsoleto/
 .env-n8n
 .env.local
 .env
+node_modules/

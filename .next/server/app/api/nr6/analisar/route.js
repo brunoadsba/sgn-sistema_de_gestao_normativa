@@ -1,0 +1,65 @@
+(()=>{var a={};a.id=4532,a.ids=[4532],a.modules={261:a=>{"use strict";a.exports=require("next/dist/shared/lib/router/utils/app-paths")},3295:a=>{"use strict";a.exports=require("next/dist/server/app-render/after-task-async-storage.external.js")},10846:a=>{"use strict";a.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},11997:a=>{"use strict";a.exports=require("punycode")},19121:a=>{"use strict";a.exports=require("next/dist/server/app-render/action-async-storage.external.js")},27910:a=>{"use strict";a.exports=require("stream")},28354:a=>{"use strict";a.exports=require("util")},29021:a=>{"use strict";a.exports=require("fs")},29294:a=>{"use strict";a.exports=require("next/dist/server/app-render/work-async-storage.external.js")},33873:a=>{"use strict";a.exports=require("path")},37830:a=>{"use strict";a.exports=require("node:stream/web")},44870:a=>{"use strict";a.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},55591:a=>{"use strict";a.exports=require("https")},57075:a=>{"use strict";a.exports=require("node:stream")},63033:a=>{"use strict";a.exports=require("next/dist/server/app-render/work-unit-async-storage.external.js")},73024:a=>{"use strict";a.exports=require("node:fs")},73566:a=>{"use strict";a.exports=require("worker_threads")},74075:a=>{"use strict";a.exports=require("zlib")},78335:()=>{},79551:a=>{"use strict";a.exports=require("url")},81630:a=>{"use strict";a.exports=require("http")},86439:a=>{"use strict";a.exports=require("next/dist/shared/lib/no-fallback-error.external")},95759:(a,b,c)=>{"use strict";c.r(b),c.d(b,{handler:()=>E,patchFetch:()=>D,routeModule:()=>z,serverHooks:()=>C,workAsyncStorage:()=>A,workUnitAsyncStorage:()=>B});var d={};c.r(d),c.d(d,{POST:()=>x});var e=c(95736),f=c(9117),g=c(4044),h=c(39326),i=c(32324),j=c(261),k=c(54290),l=c(85328),m=c(38928),n=c(46595),o=c(3421),p=c(17679),q=c(41681),r=c(63446),s=c(86439),t=c(51356),u=c(10641);let v=new(c(66545)).YH({apiKey:process.env.GROQ_API_KEY||"",dangerouslyAllowBrowser:!1});async function w(a){try{let d=(b=a,`
+AN\xc1LISE ESPEC\xcdFICA DE CONFORMIDADE COM NR-6 (EPI)
+
+TIPO DE DOCUMENTO: ${b.tipoDocumento}
+EMPRESA: ${b.empresaId}
+
+DOCUMENTO PARA AN\xc1LISE:
+${b.documento}
+
+CRIT\xc9RIOS ESPEC\xcdFICOS DA NR-6:
+
+1. OBRIGA\xc7\xd5ES DO EMPREGADOR (NR-6.6.1):
+   ✓ Fornecer EPI adequado ao risco (CA v\xe1lido)
+   ✓ Treinar trabalhador sobre uso correto
+   ✓ Substituir EPI danificado/vencido
+   ✓ Registrar entrega de EPIs
+   ✓ Fiscalizar uso correto
+
+2. OBRIGA\xc7\xd5ES DO TRABALHADOR (NR-6.7.1):
+   ✓ Usar EPI apenas para finalidade adequada
+   ✓ Responsabilizar-se pela guarda/conserva\xe7\xe3o
+   ✓ Comunicar altera\xe7\xf5es que o torne impr\xf3prio
+   ✓ Cumprir determina\xe7\xf5es do empregador
+
+3. DOCUMENTA\xc7\xc3O OBRIGAT\xd3RIA:
+   ✓ CA (Certificado de Aprova\xe7\xe3o) v\xe1lido
+   ✓ Ficha de entrega assinada
+   ✓ Registro de treinamento
+   ✓ Controle de validade/substitui\xe7\xe3o
+
+SEVERIDADE DOS GAPS:
+- CR\xcdTICA: CA vencido, EPI inadequado para risco, risco de vida
+- ALTA: Falta treinamento, documenta\xe7\xe3o incompleta, EPI danificado
+- M\xc9DIA: EPI inadequado para ambiente, controle deficiente
+- BAIXA: Melhorias na documenta\xe7\xe3o, otimiza\xe7\xf5es
+
+FORMATO DE RESPOSTA (JSON V\xc1LIDO):
+{
+  "score": 0-100,
+  "nivelRisco": "baixo|medio|alto|critico",
+  "gaps": [
+    {
+      "id": "epi_001",
+      "descricao": "Descri\xe7\xe3o espec\xedfica do gap de EPI",
+      "severidade": "baixa|media|alta|critica",
+      "categoria": "CA|Treinamento|Documentacao|EPI|Inspecao",
+      "recomendacao": "Recomenda\xe7\xe3o espec\xedfica para EPI",
+      "prazo": "30 dias",
+      "nr6_artigo": "6.6.1.a"
+    }
+  ],
+  "resumo": "Resumo executivo focado em EPIs",
+  "pontosPositivos": ["Pontos positivos relacionados a EPIs"],
+  "pontosAtencao": ["Pontos de aten\xe7\xe3o espec\xedficos de EPIs"],
+  "proximosPassos": ["Pr\xf3ximos passos para conformidade NR-6"],
+  "conformidadeNR6": {
+    "ca_valido": true/false,
+    "treinamento_realizado": true/false,
+    "epi_adequado": true/false,
+    "documentacao_completa": true/false
+  }
+}
+
+IMPORTANTE: Responda APENAS com o JSON v\xe1lido, sem texto adicional.
+  `),e=await v.chat.completions.create({messages:[{role:"system",content:"Voc\xea \xe9 um especialista em NR-6 (Equipamento de Prote\xe7\xe3o Individual) com 15+ anos de experi\xeancia. Analise documentos especificamente para conformidade com EPIs."},{role:"user",content:d}],model:"llama-3.1-8b-instant",temperature:.2,max_tokens:1500,top_p:.8}),f=e.choices[0]?.message?.content;if(!f)throw Error("Resposta vazia do GROQ");var b,c=f;try{let a=c.match(/\{[\s\S]*\}/);if(!a)throw Error("JSON n\xe3o encontrado na resposta");let b=JSON.parse(a[0]);if(!b.score||!b.conformidadeNR6)throw Error("Estrutura de resposta NR-6 inv\xe1lida");return b}catch(a){throw console.error("Erro ao parsear resposta NR-6:",a),Error("Falha ao processar resposta da IA para NR-6")}}catch(a){throw console.error("Erro na an\xe1lise NR-6:",a),Error(`Falha na an\xe1lise NR-6: ${a instanceof Error?a.message:"Erro desconhecido"}`)}}async function x(a){try{let b=await a.json(),c=function(a){let b=[];a.documento&&"string"==typeof a.documento||b.push('Campo "documento" \xe9 obrigat\xf3rio para an\xe1lise NR-6'),a.tipoDocumento||b.push('Campo "tipoDocumento" \xe9 obrigat\xf3rio para an\xe1lise NR-6');let c=["ficha_entrega_epi","treinamento_epi","inspecao_epi","ppra","outro"];return a.tipoDocumento&&!c.includes(a.tipoDocumento)&&b.push(`Tipo de documento inv\xe1lido. Tipos v\xe1lidos: ${c.join(", ")}`),a.empresaId&&"string"==typeof a.empresaId||b.push('Campo "empresaId" \xe9 obrigat\xf3rio para an\xe1lise NR-6'),a.documento&&a.documento.length>3e4&&b.push("Documento muito grande para an\xe1lise NR-6. M\xe1ximo 30.000 caracteres"),{valida:0===b.length,erros:b}}(b);if(!c.valida)return u.NextResponse.json({success:!1,error:"Dados de entrada inv\xe1lidos para an\xe1lise NR-6",detalhes:c.erros},{status:400});let d=Date.now(),e=await w(b),f=Date.now()-d,g={...e,timestamp:new Date().toISOString(),modeloUsado:"llama-3.1-8b-instant",tempoProcessamento:f,norma:"NR-6",versao:"2024.1"};return console.log(`An\xe1lise NR-6 conclu\xedda para empresa ${b.empresaId}:`,{score:e.score,gaps:e.gaps.length,conformidadeNR6:e.conformidadeNR6,tempoProcessamento:f}),u.NextResponse.json({success:!0,data:g,timestamp:new Date().toISOString(),requestId:y()})}catch(a){return console.error("Erro na an\xe1lise NR-6:",a),u.NextResponse.json({success:!1,error:"Erro interno do servidor na an\xe1lise NR-6",detalhes:a instanceof Error?a.message:"Erro desconhecido",timestamp:new Date().toISOString(),requestId:y()},{status:500})}}function y(){return`nr6_${Date.now()}_${Math.random().toString(36).substr(2,9)}`}let z=new e.AppRouteRouteModule({definition:{kind:f.RouteKind.APP_ROUTE,page:"/api/nr6/analisar/route",pathname:"/api/nr6/analisar",filename:"route",bundlePath:"app/api/nr6/analisar/route"},distDir:".next",relativeProjectDir:"",resolvedPagePath:"/home/brunoadsba/sgn/src/app/api/nr6/analisar/route.ts",nextConfigOutput:"",userland:d}),{workAsyncStorage:A,workUnitAsyncStorage:B,serverHooks:C}=z;function D(){return(0,g.patchFetch)({workAsyncStorage:A,workUnitAsyncStorage:B})}async function E(a,b,c){var d;let e="/api/nr6/analisar/route";"/index"===e&&(e="/");let g=await z.prepare(a,b,{srcPage:e,multiZoneDraftMode:!1});if(!g)return b.statusCode=400,b.end("Bad Request"),null==c.waitUntil||c.waitUntil.call(c,Promise.resolve()),null;let{buildId:u,params:v,nextConfig:w,isDraftMode:x,prerenderManifest:y,routerServerContext:A,isOnDemandRevalidate:B,revalidateOnlyGenerated:C,resolvedPathname:D}=g,E=(0,j.normalizeAppPath)(e),F=!!(y.dynamicRoutes[E]||y.routes[D]);if(F&&!x){let a=!!y.routes[D],b=y.dynamicRoutes[E];if(b&&!1===b.fallback&&!a)throw new s.NoFallbackError}let G=null;!F||z.isDev||x||(G="/index"===(G=D)?"/":G);let H=!0===z.isDev||!F,I=F&&!H,J=a.method||"GET",K=(0,i.getTracer)(),L=K.getActiveScopeSpan(),M={params:v,prerenderManifest:y,renderOpts:{experimental:{cacheComponents:!!w.experimental.cacheComponents,authInterrupts:!!w.experimental.authInterrupts},supportsDynamicResponse:H,incrementalCache:(0,h.getRequestMeta)(a,"incrementalCache"),cacheLifeProfiles:null==(d=w.experimental)?void 0:d.cacheLife,isRevalidate:I,waitUntil:c.waitUntil,onClose:a=>{b.on("close",a)},onAfterTaskError:void 0,onInstrumentationRequestError:(b,c,d)=>z.onRequestError(a,b,d,A)},sharedContext:{buildId:u}},N=new k.NodeNextRequest(a),O=new k.NodeNextResponse(b),P=l.NextRequestAdapter.fromNodeNextRequest(N,(0,l.signalFromNodeResponse)(b));try{let d=async c=>z.handle(P,M).finally(()=>{if(!c)return;c.setAttributes({"http.status_code":b.statusCode,"next.rsc":!1});let d=K.getRootSpanAttributes();if(!d)return;if(d.get("next.span_type")!==m.BaseServerSpan.handleRequest)return void console.warn(`Unexpected root span type '${d.get("next.span_type")}'. Please report this Next.js issue https://github.com/vercel/next.js`);let e=d.get("next.route");if(e){let a=`${J} ${e}`;c.setAttributes({"next.route":e,"http.route":e,"next.span_name":a}),c.updateName(a)}else c.updateName(`${J} ${a.url}`)}),g=async g=>{var i,j;let k=async({previousCacheEntry:f})=>{try{if(!(0,h.getRequestMeta)(a,"minimalMode")&&B&&C&&!f)return b.statusCode=404,b.setHeader("x-nextjs-cache","REVALIDATED"),b.end("This page could not be found"),null;let e=await d(g);a.fetchMetrics=M.renderOpts.fetchMetrics;let i=M.renderOpts.pendingWaitUntil;i&&c.waitUntil&&(c.waitUntil(i),i=void 0);let j=M.renderOpts.collectedTags;if(!F)return await (0,o.I)(N,O,e,M.renderOpts.pendingWaitUntil),null;{let a=await e.blob(),b=(0,p.toNodeOutgoingHttpHeaders)(e.headers);j&&(b[r.NEXT_CACHE_TAGS_HEADER]=j),!b["content-type"]&&a.type&&(b["content-type"]=a.type);let c=void 0!==M.renderOpts.collectedRevalidate&&!(M.renderOpts.collectedRevalidate>=r.INFINITE_CACHE)&&M.renderOpts.collectedRevalidate,d=void 0===M.renderOpts.collectedExpire||M.renderOpts.collectedExpire>=r.INFINITE_CACHE?void 0:M.renderOpts.collectedExpire;return{value:{kind:t.CachedRouteKind.APP_ROUTE,status:e.status,body:Buffer.from(await a.arrayBuffer()),headers:b},cacheControl:{revalidate:c,expire:d}}}}catch(b){throw(null==f?void 0:f.isStale)&&await z.onRequestError(a,b,{routerKind:"App Router",routePath:e,routeType:"route",revalidateReason:(0,n.c)({isRevalidate:I,isOnDemandRevalidate:B})},A),b}},l=await z.handleResponse({req:a,nextConfig:w,cacheKey:G,routeKind:f.RouteKind.APP_ROUTE,isFallback:!1,prerenderManifest:y,isRoutePPREnabled:!1,isOnDemandRevalidate:B,revalidateOnlyGenerated:C,responseGenerator:k,waitUntil:c.waitUntil});if(!F)return null;if((null==l||null==(i=l.value)?void 0:i.kind)!==t.CachedRouteKind.APP_ROUTE)throw Object.defineProperty(Error(`Invariant: app-route received invalid cache entry ${null==l||null==(j=l.value)?void 0:j.kind}`),"__NEXT_ERROR_CODE",{value:"E701",enumerable:!1,configurable:!0});(0,h.getRequestMeta)(a,"minimalMode")||b.setHeader("x-nextjs-cache",B?"REVALIDATED":l.isMiss?"MISS":l.isStale?"STALE":"HIT"),x&&b.setHeader("Cache-Control","private, no-cache, no-store, max-age=0, must-revalidate");let m=(0,p.fromNodeOutgoingHttpHeaders)(l.value.headers);return(0,h.getRequestMeta)(a,"minimalMode")&&F||m.delete(r.NEXT_CACHE_TAGS_HEADER),!l.cacheControl||b.getHeader("Cache-Control")||m.get("Cache-Control")||m.set("Cache-Control",(0,q.getCacheControlHeader)(l.cacheControl)),await (0,o.I)(N,O,new Response(l.value.body,{headers:m,status:l.value.status||200})),null};L?await g(L):await K.withPropagatedContext(a.headers,()=>K.trace(m.BaseServerSpan.handleRequest,{spanName:`${J} ${a.url}`,kind:i.SpanKind.SERVER,attributes:{"http.method":J,"http.target":a.url}},g))}catch(b){if(L||b instanceof s.NoFallbackError||await z.onRequestError(a,b,{routerKind:"App Router",routePath:E,routeType:"route",revalidateReason:(0,n.c)({isRevalidate:I,isOnDemandRevalidate:B})}),F)throw b;return await (0,o.I)(N,O,new Response(null,{status:500})),null}}},96487:()=>{}};var b=require("../../../../webpack-runtime.js");b.C(a);var c=b.X(0,[5873,1428,1187,1692,6545],()=>b(b.s=95759));module.exports=c})();
