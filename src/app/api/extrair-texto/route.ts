@@ -1,4 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Garantir Node runtime e execução dinâmica para lidar com pdfjs/mammoth e uploads
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
 import mammoth from 'mammoth'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'
 

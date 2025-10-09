@@ -25,7 +25,7 @@ interface Stats {
 
 async function getStats(): Promise<Stats> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/normas/stats`, {
+    const response = await fetch(`/api/normas/stats`, {
       next: { revalidate: 60 }
     })
     
@@ -48,7 +48,7 @@ async function getStats(): Promise<Stats> {
 
 async function getRecentNormas(): Promise<Norma[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/normas?limit=5&sort=created_at&order=desc`, {
+    const response = await fetch(`/api/normas?limit=5&sort=created_at&order=desc`, {
       next: { revalidate: 60 }
     })
     

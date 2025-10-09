@@ -49,8 +49,7 @@ async function getNormas(searchParams: Promise<{ [key: string]: string | string[
     }
     
     // Cache inteligente: 5 minutos para dados corporativos
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'
-    const apiUrl = `${baseUrl}/api/normas?${urlParams.toString()}`
+    const apiUrl = `/api/normas?${urlParams.toString()}`
     
     const response = await fetch(apiUrl, {
       headers: {

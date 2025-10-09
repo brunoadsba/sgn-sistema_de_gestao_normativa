@@ -68,8 +68,13 @@ export function ModalAnaliseIASimples({
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`)
+        const ct = response.headers.get('content-type') || ''
+        if (ct.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({} as any))
+          throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`)
+        }
+        const text = await response.text().catch(() => '')
+        throw new Error(text || `Erro ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -166,13 +171,15 @@ export function ModalAnaliseIASimples({
 
       if (!response.ok) {
         // Tentar obter detalhes do erro
+        const ct = response.headers.get('content-type') || ''
         let errorDetails = ''
-        try {
-          const errorData = await response.json()
+        if (ct.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({} as any))
           errorDetails = errorData.error || errorData.detalhes || 'Erro desconhecido'
           console.error('❌ Detalhes do erro:', errorData)
-        } catch (parseError) {
-          errorDetails = `Erro ${response.status}: ${response.statusText}`
+        } else {
+          const text = await response.text().catch(() => '')
+          errorDetails = text || `Erro ${response.status}: ${response.statusText}`
         }
         throw new Error(errorDetails)
       }

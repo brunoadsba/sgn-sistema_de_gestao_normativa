@@ -7,7 +7,7 @@ import BotoesSeguranca from "./components/BotoesSeguranca";
 
 async function getNorma(id: string) {
   try {
-    const response = await fetch(`http://localhost:3001/api/normas/${id}`, {
+    const response = await fetch(`/api/normas/${id}`, {
       cache: "no-store"
     });
     
