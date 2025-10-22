@@ -1,69 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analisarConformidade } from '@/lib/ia/groq'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
+import { CreateAnaliseSchema } from '@/schemas'
+import { createSuccessResponse, createErrorResponse, validateRequestBody } from '@/middlewares/validation'
+import { log } from '@/lib/logger'
 
-// POST /api/ia/analisar-conformidade
-export async function POST(request: NextRequest) {
+// Função principal para análise de IA
+async function analisarConformidadeHandler(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
-    const body = await request.json()
-    
-    // Validar entrada
-    const validacao = validarEntrada(body)
-    if (!validacao.valida) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Dados de entrada inválidos',
-          detalhes: validacao.erros 
-        },
-        { status: 400 }
-      )
+    log.info('Análise de conformidade iniciada');
+
+    // Validar entrada com Zod
+    const bodyValidation = await validateRequestBody(CreateAnaliseSchema, request);
+    if (!bodyValidation.success) {
+      log.warn('Validação de entrada falhou');
+      return createErrorResponse(bodyValidation.error, 400);
     }
 
-    const inicioProcessamento = Date.now()
+    const body = bodyValidation.data;
+    
+    log.info({
+      empresaId: body.empresaId,
+      tipoAnalise: body.tipoAnalise,
+    }, 'Validação de entrada bem-sucedida');
     
     // Executar análise
     const resultado = await analisarConformidade(body as AnaliseConformidadeRequest)
     
-    const tempoProcessamento = Date.now() - inicioProcessamento
+    const tempoProcessamento = Date.now() - startTime
     
     // Adicionar metadados
     const respostaCompleta: AnaliseConformidadeResponse = {
       ...resultado,
       timestamp: new Date().toISOString(),
-      modeloUsado: 'llama-3.1-70b-versatile',
+      modeloUsado: 'llama-3.1-8b-versatile',
       tempoProcessamento
     }
 
-    // Log da análise
-    console.log(`Análise concluída para empresa ${body.empresaId}:`, {
+    // Log de sucesso
+    log.info({
+      tempoProcessamento,
       score: resultado.score,
-      gaps: resultado.gaps.length,
-      tempoProcessamento
-    })
+      gapsCount: resultado.gaps.length,
+    }, 'Análise de conformidade concluída com sucesso');
 
-    return NextResponse.json({
-      success: true,
-      data: respostaCompleta,
-      timestamp: new Date().toISOString(),
-      requestId: generateRequestId()
-    })
+    return createSuccessResponse(
+      respostaCompleta,
+      "Análise de conformidade concluída com sucesso",
+      200
+    );
 
   } catch (error) {
-    console.error('Erro na análise de conformidade:', error)
+    const tempoProcessamento = Date.now() - startTime;
     
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Erro interno do servidor',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString(),
-        requestId: generateRequestId()
-      },
-      { status: 500 }
-    )
+    log.error({
+      tempoProcessamento,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    }, 'Erro na análise de conformidade');
+
+    return createErrorResponse(
+      "Erro interno do servidor na análise de conformidade",
+      500,
+      error instanceof Error ? error.message : 'Erro desconhecido'
+    );
   }
 }
+
+// Exportar função simplificada
+export const POST = analisarConformidadeHandler;
 
 // GET /api/ia/analisar-conformidade - Listar análises
 export async function GET(request: NextRequest) {

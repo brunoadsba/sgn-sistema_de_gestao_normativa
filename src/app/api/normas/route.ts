@@ -1,55 +1,59 @@
 import { supabase } from "@/lib/supabase";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 export const revalidate = 60;
 
-export async function GET(request: Request) {
+// Função principal ultra-simplificada para debug
+async function getNormasHandler(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 100);
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
-    const offset = (page - 1) * limit;
-
-    let query = supabase
+    console.log('🔍 DEBUG: Iniciando API de normas');
+    
+    // Teste básico do Supabase
+    const { data, error } = await supabase
       .from("normas")
-      .select("*", { count: "exact" });
+      .select("id, codigo, titulo")
+      .limit(3);
 
-    if (search) {
-      query = query.or(`codigo.ilike.%${search}%,titulo.ilike.%${search}%`);
-    }
-
-    if (status === "ativa") {
-      query = query.not("titulo", "ilike", "%REVOGADA%");
-    } else if (status === "revogada") {
-      query = query.ilike("titulo", "%REVOGADA%");
-    }
-
-    const { data: normas, error, count } = await query
-      .order("nr_num", { ascending: true, nullsFirst: false })
-      .range(offset, offset + limit - 1);
+    console.log('🔍 DEBUG: Resultado Supabase:', { data: data?.length, error: error?.message });
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+      console.error('❌ DEBUG: Erro Supabase:', error);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Erro no banco de dados",
+          details: error.message,
+          timestamp: new Date().toISOString()
+        }, 
+        { status: 500 }
+      );
     }
 
-    const pagination = {
-      page,
-      limit,
-      total: count || 0,
-      totalPages: Math.ceil((count || 0) / limit)
-    };
-
-    return NextResponse.json(
-      { success: true, data: normas, pagination, filters: { search, status } },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
-        }
+    console.log('✅ DEBUG: Sucesso, retornando dados');
+    
+    return NextResponse.json({
+      success: true,
+      data: data,
+      meta: {
+        timestamp: new Date().toISOString(),
+        count: data?.length || 0
       }
+    });
+
+  } catch (error) {
+    console.error('❌ DEBUG: Erro geral:', error);
+    
+    return NextResponse.json(
+      { 
+        success: false,
+        error: "Erro interno do servidor",
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString()
+      }, 
+      { status: 500 }
     );
-  } catch {
-    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
+
+// Exportar função simplificada
+export const GET = getNormasHandler;

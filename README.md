@@ -7,19 +7,69 @@ Plataforma de compliance automatizada: coleta, análise de conformidade e relat�
 1) **Pré-requisitos:** Node 20, Supabase, N8N
 2) **Desenvolvimento:**
 ```bash
-# Frontend
-cd /home/brunoadsba/sgn/frontend
+# Instalar dependências
 npm install
+
+# Executar em modo desenvolvimento
 npm run dev
 
-# N8N (em terminal separado)
-cd /home/brunoadsba/sgn
-n8n start
+# Ou usar o script seguro (limpa tudo antes)
+npm run dev:safe
 ```
 3) **Acesso:**
    - Frontend: http://localhost:3001
    - N8N: http://localhost:5678
 4) **Variáveis de ambiente:** veja `docs/arquitetura.md` e `docs/environment.md`
+
+## Testes
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar testes com coverage
+npm run test:coverage
+
+# Executar testes em modo watch
+npm run test:watch
+
+# Executar testes de segurança
+npm run security:test
+
+# Executar testes de performance
+npm run perf:test
+```
+
+## Docker
+
+```bash
+# Construir imagem
+npm run docker:build
+
+# Executar com Docker Compose
+npm run docker:start
+
+# Ver logs
+npm run docker:logs
+
+# Parar
+npm run docker:stop
+```
+
+## Segurança
+
+```bash
+# Teste completo de segurança
+npm run security:test
+
+# Testes específicos
+npm run security:test:rate-limit
+npm run security:test:cors
+npm run security:test:headers
+npm run security:test:attack
+npm run security:test:apis
+npm run security:test:performance
+```
 
 ## Teste rápido (API)
 ```bash

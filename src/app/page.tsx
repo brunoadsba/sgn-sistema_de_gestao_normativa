@@ -5,6 +5,9 @@ import { FileText, CheckCircle, XCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { logger } from "@/utils/logger"
 
+// Evitar pré-renderização em build que tentaria acessar APIs internas
+export const dynamic = 'force-dynamic'
+
 interface Norma {
   id: number
   codigo: string
@@ -36,7 +39,7 @@ async function getStats(): Promise<Stats> {
     const result = await response.json()
     return result.data
   } catch (error) {
-    logger.error({ error }, 'Erro ao buscar estatísticas')
+    logger.error('Erro ao buscar estatísticas', { error })
     return {
       total: 0,
       ativas: 0,
@@ -59,7 +62,7 @@ async function getRecentNormas(): Promise<Norma[]> {
     const data = await response.json()
     return data.data || []
   } catch (error) {
-    logger.error({ error }, 'Erro ao buscar normas recentes')
+    logger.error('Erro ao buscar normas recentes', { error })
     return []
   }
 }

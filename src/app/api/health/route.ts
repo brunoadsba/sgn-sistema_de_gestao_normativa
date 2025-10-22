@@ -1,11 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { logger } from '@/utils/logger';
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    logger.info('Health check iniciado', { url: request.url });
-
     // Verificar conexão com o banco de dados Supabase
     const { data, error } = await supabase
       .from('normas')
@@ -13,7 +12,6 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (error) {
-      logger.error('Health check falhou: erro no banco de dados', { error });
       return Response.json(
         { 
           status: 'error', 
@@ -25,9 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar se conseguiu conectar e fazer query
     if (!data) {
-      logger.error('Health check falhou: sem dados do banco');
       return Response.json(
         { 
           status: 'error', 
@@ -38,7 +34,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    logger.info('Health check bem-sucedido');
+    const duration = Date.now() - startTime;
+    
     return Response.json({
       status: 'ok',
       message: 'API está saudável',
@@ -46,11 +43,15 @@ export async function GET(request: NextRequest) {
       services: {
         database: 'ok',
         api: 'ok'
+      },
+      performance: {
+        duration: `${duration}ms`
       }
     });
 
   } catch (error) {
-    logger.error('Health check falhou: erro interno', { error });
+    const duration = Date.now() - startTime;
+    
     return Response.json(
       { 
         status: 'error', 

@@ -4,24 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-sgn-md text-sgn-sm font-sgn-medium ring-offset-background transition-all duration-sgn-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-sgn-primary-500 text-white shadow-sgn-sm hover:bg-sgn-primary-600 hover:shadow-sgn-md active:bg-sgn-primary-700",
-        destructive: "bg-sgn-danger-500 text-white shadow-sgn-sm hover:bg-sgn-danger-600 hover:shadow-sgn-md active:bg-sgn-danger-700",
-        outline: "border border-sgn-primary-200 bg-background shadow-sgn-sm hover:bg-sgn-primary-50 hover:text-sgn-primary-600 hover:border-sgn-primary-300",
-        secondary: "bg-sgn-primary-100 text-sgn-primary-700 shadow-sgn-sm hover:bg-sgn-primary-200 hover:shadow-sgn-md",
-        ghost: "hover:bg-sgn-primary-50 hover:text-sgn-primary-600",
-        link: "text-sgn-primary-500 underline-offset-4 hover:underline hover:text-sgn-primary-600",
-        success: "bg-sgn-success-500 text-white shadow-sgn-sm hover:bg-sgn-success-600 hover:shadow-sgn-md active:bg-sgn-success-700",
-        warning: "bg-sgn-warning-500 text-white shadow-sgn-sm hover:bg-sgn-warning-600 hover:shadow-sgn-md active:bg-sgn-warning-700",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        success: "bg-green-600 text-white hover:bg-green-700",
+        warning: "bg-yellow-600 text-white hover:bg-yellow-700",
       },
       size: {
-        default: "h-10 px-sgn-md py-sgn-sm",
-        sm: "h-9 rounded-sgn-sm px-sgn-sm text-sgn-xs",
-        lg: "h-11 rounded-sgn-lg px-sgn-lg text-sgn-base",
-        xl: "h-12 rounded-sgn-lg px-sgn-xl text-sgn-lg",
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        xl: "h-12 rounded-md px-10 text-lg",
         icon: "h-10 w-10",
       },
     },
@@ -52,7 +52,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="mr-sgn-sm h-sgn-sm w-sgn-sm animate-spin"
+            className="mr-2 h-4 w-4 animate-spin"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/lib/cache/query-client";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -51,13 +52,27 @@ export default function RootLayout({
                 >
                   Empresas
                 </a>
+                <a 
+                  href="/performance" 
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  Performance
+                </a>
+                <a 
+                  href="/security" 
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  Segurança
+                </a>
               </div>
             </div>
           </div>
         </header>
 
         <main className="min-h-screen bg-gray-50">
-          {children}
+          <QueryProvider>
+            {children}
+          </QueryProvider>
         </main>
 
         <footer className="bg-white border-t py-8">

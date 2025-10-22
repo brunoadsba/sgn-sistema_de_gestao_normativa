@@ -97,7 +97,14 @@ export function ModalAnaliseIASimples({
   }
 
   const executarAnalise = async () => {
+    console.log('🔍 DEBUG: executarAnalise chamado', {
+      arquivoSelecionado: !!arquivoSelecionado,
+      analisando,
+      empresaId
+    });
+    
     if (!arquivoSelecionado) {
+      console.log('❌ DEBUG: Nenhum arquivo selecionado');
       setErro('Por favor, selecione um arquivo.')
       return
     }
@@ -283,7 +290,10 @@ export function ModalAnaliseIASimples({
                         Clique para selecionar um arquivo ou arraste aqui
                       </p>
                       <Button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                          console.log('🔍 DEBUG: Botão Selecionar Arquivo clicado');
+                          fileInputRef.current?.click();
+                        }}
                         className="bg-blue-600 hover:bg-blue-700"
                       >
                         <Upload className="h-4 w-4 mr-2" />
@@ -318,7 +328,14 @@ export function ModalAnaliseIASimples({
                       </div>
 
                       <Button
-                        onClick={executarAnalise}
+                        onClick={() => {
+                          console.log('🔍 DEBUG: Botão Analisar com IA clicado', {
+                            arquivoSelecionado: !!arquivoSelecionado,
+                            analisando,
+                            disabled: analisando
+                          });
+                          executarAnalise();
+                        }}
                         disabled={analisando}
                         className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-semibold"
                       >
