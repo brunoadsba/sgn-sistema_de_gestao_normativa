@@ -49,7 +49,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
   
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider queryClient={queryClient}>
       {children}
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools 
