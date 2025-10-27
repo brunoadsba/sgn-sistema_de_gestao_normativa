@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:  # Permite disparo manual em qualquer branch
   schedule:
     # Run tests daily at 2 AM UTC
     - cron: '0 2 * * *'
