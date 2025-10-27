@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys, queryOptions, mutationOptions, cacheUtils } from './query-client';
+import { queryKeys, queryOptions, mutationOptions, cacheUtils } from '../lib/cache/query-client';
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
 
 // Hook para buscar normas
