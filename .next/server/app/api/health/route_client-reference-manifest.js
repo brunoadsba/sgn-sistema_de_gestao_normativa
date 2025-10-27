@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/health/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/home/brunoadsba/sgn/src/":[],"/home/brunoadsba/sgn/src/app/api/health/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}}

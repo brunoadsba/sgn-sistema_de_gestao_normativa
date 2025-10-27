@@ -1,7 +1,5 @@
 {
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/page": "app/page.js",
-  "/normas/page": "app/normas/page.js",
-  "/empresas/page": "app/empresas/page.js",
-  "/empresas/[id]/conformidade/page": "app/empresas/[id]/conformidade/page.js"
+  "/api/health/route": "app/api/health/route.js",
+  "/api/normas/route": "app/api/normas/route.js",
+  "/api/ia/analisar-conformidade/route": "app/api/ia/analisar-conformidade/route.js"
 }

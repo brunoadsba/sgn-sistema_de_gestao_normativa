@@ -1,65 +1,19 @@
 {
   "pages": {
-    "/layout": [
+    "/api/health/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
-    ],
-    "/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/loading.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/api/health/route.js"
     ],
     "/api/normas/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/normas/route.js"
     ],
-    "/api/normas/stats/route": [
+    "/api/ia/analisar-conformidade/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/normas/stats/route.js"
-    ],
-    "/manifest.webmanifest/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/manifest.webmanifest/route.js"
-    ],
-    "/normas/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/normas/page.js"
-    ],
-    "/empresas/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/empresas/page.js"
-    ],
-    "/empresas/[id]/conformidade/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/empresas/[id]/conformidade/page.js"
-    ],
-    "/api/conformidade/dashboard/[empresaId]/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/conformidade/dashboard/[empresaId]/route.js"
-    ],
-    "/api/alertas/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/alertas/route.js"
-    ],
-    "/api/extrair-texto/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/extrair-texto/route.js"
+      "static/chunks/app/api/ia/analisar-conformidade/route.js"
     ]
   }
 }

@@ -41,7 +41,14 @@
     "security:test:headers": "./scripts/security-test.sh headers",
     "security:test:attack": "./scripts/security-test.sh attack",
     "security:test:apis": "./scripts/security-test.sh apis",
-    "security:test:performance": "./scripts/security-test.sh performance"
+    "security:test:performance": "./scripts/security-test.sh performance",
+    "test:modes": "./scripts/test-modes.sh",
+    "test:modes:local": "./scripts/test-modes.sh local",
+    "test:modes:worktree": "./scripts/test-modes.sh worktree",
+    "test:modes:cloud": "./scripts/test-modes.sh cloud",
+    "test:modes:all": "./scripts/test-modes.sh all",
+    "test:watch": "jest --watch",
+    "test:continuous": "jest --watch --notify"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

@@ -1,0 +1,76 @@
+
+> sgn-sistema-gestao-normativa@0.1.0 dev
+> next dev --port 3001 --port 3001
+
+   ▲ Next.js 15.5.2
+   - Local:        http://localhost:3001
+   - Network:      http://10.255.255.254:3001
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 2.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 7.1s (665 modules)
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ ✓ Compiled in 803ms (245 modules)
+ GET / 200 in 19994ms
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ GET / 200 in 19999ms
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ GET / 200 in 19997ms
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ GET / 200 in 20000ms
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 1501ms (727 modules)
+[INFO] Health check iniciado {"url":"http://localhost:3001/api/health"}
+[INFO] Health check bem-sucedido 
+ GET /api/health 200 in 3073ms
+ ✓ Compiled /api/normas/stats in 241ms (729 modules)
+ GET /api/normas/stats 200 in 723ms
+ ✓ Compiled /api/normas in 339ms (743 modules)
+ GET /api/normas?limit=3 200 in 650ms
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ GET / 200 in 59977ms
+ HEAD / 200 in 60ms
+[ERROR] [object Object] "Erro ao buscar estatísticas"
+ ✓ Compiled in 745ms (246 modules)
+ ✓ Compiled in 388ms (246 modules)
+ ✓ Compiled / in 458ms (411 modules)
+[ERROR] Erro ao buscar estatísticas {"error":{}}
+[ERROR] Erro ao buscar estatísticas {"error":{}}
+ GET / 200 in 13654ms
+ ✓ Compiled /normas in 443ms (652 modules)
+ ⨯ ReferenceError: apiUrl is not defined
+    at getNormas (src/app/normas/page.tsx:84:12)
+    at async NormasPage (src/app/normas/page.tsx:178:18)
+  82 |     const errorDetails = {
+  83 |       error: errorMessage,
+> 84 |       url: apiUrl,
+     |            ^
+  85 |       timestamp: new Date().toISOString(),
+  86 |       environment: process.env.NODE_ENV
+  87 |     } {
+  digest: '2729042105'
+}
+ GET / 200 in 3001ms
+ GET /normas 200 in 709ms
+ ○ Compiling /empresas ...
+ ✓ Compiled /empresas in 1221ms (748 modules)
+ GET /empresas 200 in 3173ms
+ ✓ Compiled /favicon.ico in 186ms (527 modules)
+ GET /favicon.ico 200 in 288ms
+[ERROR] Erro ao buscar estatísticas {"error":{}}
+ GET / 200 in 30190ms
+[ERROR] Erro ao buscar estatísticas {"error":{}}
+ ✓ Compiled /manifest.webmanifest in 493ms (771 modules)
+ GET /manifest.webmanifest 200 in 744ms
+[ERROR] Erro ao buscar estatísticas {"error":{}}
+ GET / 200 in 75450ms
+ GET /manifest.webmanifest 200 in 36ms
+ ✓ Compiled /api/health in 464ms (526 modules)
+[INFO] Health check iniciado {"url":"http://localhost:3001/api/health"}
+[INFO] Health check bem-sucedido 
+ GET /api/health 200 in 1021ms
+ GET / 200 in 63943ms
