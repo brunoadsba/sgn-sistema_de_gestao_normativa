@@ -1,6 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import { schema } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
+import { getNormasByIds } from "@/lib/data/normas";
 
-export const revalidate = 0; // Jobs podem mudar status rapidamente
+export const revalidate = 0;
 
 type GapLite = {
   severidade: 'critica' | 'alta' | 'media' | 'baixa';
@@ -8,125 +11,111 @@ type GapLite = {
 };
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: jobId } = await params;
 
     if (!jobId) {
-      return Response.json({ 
-        success: false, 
-        error: "ID do job é obrigatório" 
-      }, { status: 400 });
+      return Response.json({ success: false, error: "ID do job é obrigatório" }, { status: 400 });
     }
 
-    // Buscar job com relacionamentos
-    const { data: job, error: jobError } = await supabase
-      .from("analise_jobs")
-      .select(`
-        *,
-        empresas(id, nome, cnpj, setor, porte),
-        documentos_empresa(
-          id, 
-          nome_arquivo, 
-          tipo_documento, 
-          metadados,
-          created_at
-        )
-      `)
-      .eq("id", jobId)
-      .single();
+    // Buscar job
+    const jobResult = await db
+      .select()
+      .from(schema.analiseJobs)
+      .where(eq(schema.analiseJobs.id, jobId))
+      .limit(1);
 
-    if (jobError || !job) {
-      return Response.json({ 
-        success: false, 
-        error: "Job não encontrado" 
-      }, { status: 404 });
+    const job = jobResult[0];
+    if (!job) {
+      return Response.json({ success: false, error: "Job não encontrado" }, { status: 404 });
     }
 
-    // Buscar resultado se o job estiver completo
+    // Buscar empresa
+    const empresaResult = await db
+      .select()
+      .from(schema.empresas)
+      .where(eq(schema.empresas.id, job.empresaId))
+      .limit(1);
+
+    // Buscar documento
+    const documentoResult = await db
+      .select()
+      .from(schema.documentosEmpresa)
+      .where(eq(schema.documentosEmpresa.id, job.documentoId))
+      .limit(1);
+
+    // Buscar resultado e gaps se job completo
     let analiseResultado: unknown = null;
     let gaps: GapLite[] = [];
-    
+
     if (job.status === 'completed') {
-      // Buscar resultado da análise
-      const { data: resultado } = await supabase
-        .from("analise_resultados")
-        .select("*")
-        .eq("job_id", jobId)
-        .single();
-      
-      if (resultado) {
-        analiseResultado = resultado;
+      const resultadoResult = await db
+        .select()
+        .from(schema.analiseResultados)
+        .where(eq(schema.analiseResultados.jobId, jobId))
+        .limit(1);
 
-        // Buscar gaps identificados
-        const { data: gapsData } = await supabase
-          .from("conformidade_gaps")
-          .select(`
-            id, severidade, resolvido, created_at,
-            normas(id, codigo, titulo)
-          `)
-          .eq("analise_resultado_id", (resultado as { id: string }).id)
-          .order("severidade", { ascending: false })
-          .order("created_at", { ascending: false });
+      if (resultadoResult[0]) {
+        analiseResultado = resultadoResult[0];
 
-        if (gapsData) gaps = gapsData as unknown as GapLite[];
+        const gapsData = await db
+          .select()
+          .from(schema.conformidadeGaps)
+          .where(eq(schema.conformidadeGaps.analiseResultadoId, resultadoResult[0].id))
+          .orderBy(desc(schema.conformidadeGaps.createdAt));
+
+        // Enriquecer gaps com dados de normas locais
+        const normaIds = [...new Set(gapsData.map(g => g.normaId).filter(Boolean))];
+        const normasMap = normaIds.length > 0
+          ? Object.fromEntries(getNormasByIds(normaIds as number[]).map(n => [n.id, n]))
+          : {};
+
+        gaps = gapsData.map(g => ({
+          ...g,
+          normas: g.normaId ? normasMap[g.normaId] || null : null,
+        })) as unknown as GapLite[];
       }
     }
 
-    // Calcular métricas do job
-    const tempoDecorrido = job.started_at 
-      ? Math.floor((new Date().getTime() - new Date(job.started_at).getTime()) / 1000)
+    const tempoDecorrido = job.startedAt
+      ? Math.floor((Date.now() - new Date(job.startedAt).getTime()) / 1000)
       : null;
 
-    const tempoTotal = job.completed_at && job.started_at
-      ? Math.floor((new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) / 1000)
+    const tempoTotal = job.completedAt && job.startedAt
+      ? Math.floor((new Date(job.completedAt).getTime() - new Date(job.startedAt).getTime()) / 1000)
       : null;
 
-    // Extrair informações das normas dos parâmetros
-    const normasInfo = job.parametros?.normas_codigos || [];
-    const totalNormas = job.parametros?.total_normas || 0;
+    const parametros = job.parametros as Record<string, unknown> | null;
+    const normasInfo = (parametros?.normas_codigos as string[]) || [];
+    const totalNormas = (parametros?.total_normas as number) || 0;
 
-    const response = {
+    return Response.json({
       success: true,
       data: {
-        // Informações do job
         job: {
           id: job.id,
           status: job.status,
           priority: job.priority,
-          tipo_analise: job.tipo_analise,
+          tipo_analise: job.tipoAnalise,
           progresso: job.progresso,
-          erro_detalhes: job.erro_detalhes,
-          created_at: job.created_at,
-          started_at: job.started_at,
-          completed_at: job.completed_at,
-          
-          // Métricas calculadas
+          erro_detalhes: job.erroDetalhes,
+          created_at: job.createdAt,
+          started_at: job.startedAt,
+          completed_at: job.completedAt,
           tempo_decorrido_segundos: tempoDecorrido,
           tempo_total_segundos: tempoTotal,
           tempo_decorrido_formatado: tempoDecorrido ? formatarTempo(tempoDecorrido) : null,
           tempo_total_formatado: tempoTotal ? formatarTempo(tempoTotal) : null,
-          
-          // Parâmetros da análise
           total_normas: totalNormas,
-          normas_codigos: normasInfo
+          normas_codigos: normasInfo,
         },
-
-        // Informações da empresa
-        empresa: job.empresas,
-
-        // Informações do documento
-        documento: job.documentos_empresa,
-
-        // Resultado da análise (se disponível)
+        empresa: empresaResult[0] || null,
+        documento: documentoResult[0] || null,
         resultado: analiseResultado,
-
-        // Gaps identificados (se disponível)
         gaps,
-
-        // Estatísticas dos gaps
         estatisticas_gaps: gaps.length > 0 ? {
           total: gaps.length,
           critica: gaps.filter(g => g.severidade === 'critica').length,
@@ -134,23 +123,17 @@ export async function GET(
           media: gaps.filter(g => g.severidade === 'media').length,
           baixa: gaps.filter(g => g.severidade === 'baixa').length,
           resolvidos: gaps.filter(g => g.resolvido === true).length,
-          pendentes: gaps.filter(g => g.resolvido === false).length
-        } : null
-      }
-    };
-
-    return Response.json(response);
+          pendentes: gaps.filter(g => g.resolvido === false).length,
+        } : null,
+      },
+    });
 
   } catch (error) {
     console.error('Erro ao consultar job:', error);
-    return Response.json({ 
-      success: false, 
-      error: "Erro interno do servidor" 
-    }, { status: 500 });
+    return Response.json({ success: false, error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
-// PUT para atualizar status/progresso do job (para workers)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -161,179 +144,120 @@ export async function PUT(
     const { status, progresso, erro_detalhes, resultado } = body;
 
     if (!jobId) {
-      return Response.json({ 
-        success: false, 
-        error: "ID do job é obrigatório" 
-      }, { status: 400 });
+      return Response.json({ success: false, error: "ID do job é obrigatório" }, { status: 400 });
     }
 
-    // Validar status permitidos
     const statusPermitidos = ['pending', 'running', 'completed', 'failed', 'cancelled'] as const;
     if (status && !statusPermitidos.includes(status)) {
-      return Response.json({ 
-        success: false, 
-        error: "Status inválido" 
-      }, { status: 400 });
+      return Response.json({ success: false, error: "Status inválido" }, { status: 400 });
     }
 
-    // Validar progresso
     if (progresso !== undefined && (progresso < 0 || progresso > 100)) {
-      return Response.json({ 
-        success: false, 
-        error: "Progresso deve estar entre 0 e 100" 
-      }, { status: 400 });
+      return Response.json({ success: false, error: "Progresso deve estar entre 0 e 100" }, { status: 400 });
     }
 
-    // Preparar dados para atualização
-    const updateData: Partial<{
-      status: string;
-      progresso: number;
-      erro_detalhes: string;
-      started_at: string;
-      completed_at: string;
-    }> = {};
-    
+    const updateData: Record<string, unknown> = {};
+
     if (status) updateData.status = status;
     if (progresso !== undefined) updateData.progresso = progresso;
-    if (erro_detalhes) updateData.erro_detalhes = erro_detalhes;
-    
-    // Timestamps automáticos
-    if (status === 'running' && !updateData.started_at) {
-      updateData.started_at = new Date().toISOString();
+    if (erro_detalhes) updateData.erroDetalhes = erro_detalhes;
+
+    if (status === 'running') {
+      updateData.startedAt = new Date().toISOString();
     }
     if (status === 'completed' || status === 'failed') {
-      updateData.completed_at = new Date().toISOString();
-      updateData.progresso = status === 'completed' ? 100 : updateData.progresso;
+      updateData.completedAt = new Date().toISOString();
+      updateData.progresso = status === 'completed' ? 100 : (updateData.progresso ?? 0);
     }
 
-    // Atualizar job
-    const { data: jobAtualizado, error: updateError } = await supabase
-      .from("analise_jobs")
-      .update(updateData)
-      .eq("id", jobId)
-      .select()
-      .single();
+    const updated = await db
+      .update(schema.analiseJobs)
+      .set(updateData)
+      .where(eq(schema.analiseJobs.id, jobId))
+      .returning();
 
-    if (updateError) {
-      return Response.json({ 
-        success: false, 
-        error: "Erro ao atualizar job" 
-      }, { status: 500 });
-    }
+    const jobAtualizado = updated[0];
 
-    // Se há resultado para salvar (job completo)
-    if (status === 'completed' && resultado) {
-      const { error: resultadoError } = await supabase
-        .from("analise_resultados")
-        .insert([{
-          job_id: jobId,
-          empresa_id: jobAtualizado.empresa_id,
-          documento_id: jobAtualizado.documento_id,
-          ...resultado
-        }]);
-
-      if (resultadoError) {
-        console.error('Erro ao salvar resultado:', resultadoError);
-        // Não falhar a requisição, apenas logar
+    if (status === 'completed' && resultado && jobAtualizado) {
+      try {
+        await db
+          .insert(schema.analiseResultados)
+          .values({
+            jobId,
+            empresaId: jobAtualizado.empresaId,
+            documentoId: jobAtualizado.documentoId,
+            ...resultado,
+          });
+      } catch (err) {
+        console.error('Erro ao salvar resultado:', err);
       }
     }
 
     return Response.json({
       success: true,
       data: jobAtualizado,
-      message: "Job atualizado com sucesso"
+      message: "Job atualizado com sucesso",
     });
 
   } catch (error) {
     console.error('Erro ao atualizar job:', error);
-    return Response.json({ 
-      success: false, 
-      error: "Erro interno do servidor" 
-    }, { status: 500 });
+    return Response.json({ success: false, error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
-// DELETE para cancelar job
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: jobId } = await params;
 
     if (!jobId) {
-      return Response.json({ 
-        success: false, 
-        error: "ID do job é obrigatório" 
-      }, { status: 400 });
+      return Response.json({ success: false, error: "ID do job é obrigatório" }, { status: 400 });
     }
 
-    // Verificar se job pode ser cancelado
-    const { data: job, error: jobError } = await supabase
-      .from("analise_jobs")
-      .select("id, status")
-      .eq("id", jobId)
-      .single();
+    const jobResult = await db
+      .select({ id: schema.analiseJobs.id, status: schema.analiseJobs.status })
+      .from(schema.analiseJobs)
+      .where(eq(schema.analiseJobs.id, jobId))
+      .limit(1);
 
-    if (jobError || !job) {
-      return Response.json({ 
-        success: false, 
-        error: "Job não encontrado" 
-      }, { status: 404 });
+    if (jobResult.length === 0) {
+      return Response.json({ success: false, error: "Job não encontrado" }, { status: 404 });
     }
 
-    if (job.status === 'completed') {
-      return Response.json({ 
-        success: false, 
-        error: "Não é possível cancelar job já concluído" 
-      }, { status: 400 });
+    if (jobResult[0].status === 'completed') {
+      return Response.json({ success: false, error: "Não é possível cancelar job já concluído" }, { status: 400 });
     }
 
-    // Cancelar job
-    const { data: jobCancelado, error: cancelError } = await supabase
-      .from("analise_jobs")
-      .update({
+    const cancelled = await db
+      .update(schema.analiseJobs)
+      .set({
         status: 'cancelled',
-        completed_at: new Date().toISOString(),
-        erro_detalhes: 'Cancelado pelo usuário'
+        completedAt: new Date().toISOString(),
+        erroDetalhes: 'Cancelado pelo usuário',
       })
-      .eq("id", jobId)
-      .select()
-      .single();
-
-    if (cancelError) {
-      return Response.json({ 
-        success: false, 
-        error: "Erro ao cancelar job" 
-      }, { status: 500 });
-    }
+      .where(eq(schema.analiseJobs.id, jobId))
+      .returning();
 
     return Response.json({
       success: true,
-      data: jobCancelado,
-      message: "Job cancelado com sucesso"
+      data: cancelled[0],
+      message: "Job cancelado com sucesso",
     });
 
   } catch (error) {
     console.error('Erro ao cancelar job:', error);
-    return Response.json({ 
-      success: false, 
-      error: "Erro interno do servidor" 
-    }, { status: 500 });
+    return Response.json({ success: false, error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
-// Função utilitária para formatar tempo
 function formatarTempo(segundos: number): string {
   const horas = Math.floor(segundos / 3600);
   const minutos = Math.floor((segundos % 3600) / 60);
   const segs = segundos % 60;
 
-  if (horas > 0) {
-    return `${horas}h ${minutos}m ${segs}s`;
-  } else if (minutos > 0) {
-    return `${minutos}m ${segs}s`;
-  } else {
-    return `${segs}s`;
-  }
+  if (horas > 0) return `${horas}h ${minutos}m ${segs}s`;
+  if (minutos > 0) return `${minutos}m ${segs}s`;
+  return `${segs}s`;
 }

@@ -1,17 +1,8 @@
 import pino from 'pino';
 
 // Configuração do logger Pino para produção
-const logger = pino({
+const pinoOptions: pino.LoggerOptions = {
   level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV === 'development' ? {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-      singleLine: false,
-    }
-  } : undefined,
   formatters: {
     level: (label) => {
       return { level: label };
@@ -23,7 +14,21 @@ const logger = pino({
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
   },
-});
+};
+
+if (process.env.NODE_ENV === 'development') {
+  pinoOptions.transport = {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+      singleLine: false,
+    },
+  };
+}
+
+const logger = pino(pinoOptions);
 
 // Logger com contexto para APIs
 export const createLogger = (context: string) => {
@@ -41,7 +46,7 @@ export const databaseLogger = createLogger('database');
 export const authLogger = createLogger('auth');
 
 // Função para log de erro com stack trace e contexto
-export const logError = (error: Error, context?: Record<string, any>) => {
+export const logError = (error: Error, context?: Record<string, unknown>) => {
   logger.error({
     error: {
       message: error.message,
@@ -53,7 +58,7 @@ export const logError = (error: Error, context?: Record<string, any>) => {
 };
 
 // Função para log de performance com métricas
-export const logPerformance = (operation: string, duration: number, context?: Record<string, any>) => {
+export const logPerformance = (operation: string, duration: number, context?: Record<string, unknown>) => {
   logger.info({
     operation,
     duration,
@@ -67,7 +72,7 @@ export const logPerformance = (operation: string, duration: number, context?: Re
 };
 
 // Função para log de auditoria (ações importantes)
-export const logAudit = (action: string, userId?: string, context?: Record<string, any>) => {
+export const logAudit = (action: string, userId?: string, context?: Record<string, unknown>) => {
   logger.info({
     audit: {
       action,
@@ -81,7 +86,7 @@ export const logAudit = (action: string, userId?: string, context?: Record<strin
 };
 
 // Função para log de segurança
-export const logSecurity = (event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: Record<string, any>) => {
+export const logSecurity = (event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: Record<string, unknown>) => {
   logger.warn({
     security: {
       event,
@@ -95,7 +100,7 @@ export const logSecurity = (event: string, severity: 'low' | 'medium' | 'high' |
 };
 
 // Função para log de negócio (métricas importantes)
-export const logBusiness = (metric: string, value: number, context?: Record<string, any>) => {
+export const logBusiness = (metric: string, value: number, context?: Record<string, unknown>) => {
   logger.info({
     business: {
       metric,

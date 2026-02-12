@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FileText, Search, Filter, Download, RefreshCw, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { logger } from "@/utils/logger"
+import { log as logger } from "@/lib/logger"
 
 // Configuração de renderização dinâmica para máxima flexibilidade corporativa
 export const dynamic = 'force-dynamic'
@@ -81,7 +81,6 @@ async function getNormas(searchParams: Promise<{ [key: string]: string | string[
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     const errorDetails = {
       error: errorMessage,
-      url: apiUrl,
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV
     }

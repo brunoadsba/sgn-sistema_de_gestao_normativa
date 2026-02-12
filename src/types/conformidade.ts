@@ -227,8 +227,6 @@ export interface EngineConfig {
 
 export interface NotificationConfig {
   email_enabled: boolean;
-  webhook_enabled: boolean;
-  webhook_url?: string;
   notify_on_completion: boolean;
   notify_on_failure: boolean;
   notify_on_high_risk: boolean;

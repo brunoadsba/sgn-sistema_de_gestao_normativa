@@ -27,7 +27,7 @@ fi
 
 # 4. Verificar integridade das dependências críticas
 echo "🔍 Verificando dependências críticas..."
-npm ls next @supabase/supabase-js groq-sdk >/dev/null 2>&1
+npm ls next drizzle-orm groq-sdk >/dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "⚠️ Dependências críticas corrompidas. Reinstalando..."
     npm install

@@ -57,7 +57,7 @@ export function useCorrelationId(): string {
 }
 
 // Função para criar contexto de logging padronizado
-export function createLogContext(request: NextRequest, additionalContext?: Record<string, any>) {
+export function createLogContext(request: NextRequest, additionalContext?: Record<string, unknown>) {
   const requestInfo = extractRequestInfo(request);
   
   return {

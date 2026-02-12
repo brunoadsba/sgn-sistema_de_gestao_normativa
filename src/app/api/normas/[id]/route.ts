@@ -1,17 +1,13 @@
 import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getNormaById } from "@/lib/data/normas";
 
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
 
   try {
-    const { data: norma, error } = await supabase
-      .from("normas")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const norma = getNormaById(id);
 
-    if (error) {
+    if (!norma) {
       return Response.json({ error: "Norma não encontrada" }, { status: 404 });
     }
 

@@ -33,7 +33,7 @@ export function EstatisticasEssenciais({
   const router = useRouter()
   
   // Filtrar apenas estatísticas relevantes (não zero)
-  const estatisticas = [
+  const estatisticas: Array<{ key: string; label: string; value: number; description: string; icon: React.ReactNode; color: 'red' | 'orange' | 'yellow' | 'blue' | 'green' | 'gray'; onClick: () => void }> = [
     {
       key: 'analises',
       label: 'Análises',

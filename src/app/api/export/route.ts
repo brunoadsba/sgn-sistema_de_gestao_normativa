@@ -1,70 +1,64 @@
-import { supabase } from "@/lib/supabase";
+import { getNormas } from "@/lib/data/normas";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const format = searchParams.get("format") || "json"; // json ou csv
+    const format = searchParams.get("format") || "json";
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const categoria = searchParams.get("categoria") || "";
     const limit = Math.min(parseInt(searchParams.get("limit") || "1000"), 1000);
 
-    let query = supabase
-      .from("normas")
-      .select("id,codigo,titulo,orgao_publicador,created_at");
+    let normas = getNormas();
 
     // Aplicar filtros
     if (search) {
-      query = query.or(`codigo.ilike.%${search}%,titulo.ilike.%${search}%`);
+      const q = search.toLowerCase();
+      normas = normas.filter(n =>
+        n.codigo.toLowerCase().includes(q) ||
+        n.titulo.toLowerCase().includes(q)
+      );
     }
     if (status === "ativa") {
-      query = query.not("titulo", "ilike", "%REVOGADA%");
+      normas = normas.filter(n => !n.titulo.toUpperCase().includes("REVOGADA"));
     } else if (status === "revogada") {
-      query = query.ilike("titulo", "%REVOGADA%");
+      normas = normas.filter(n => n.titulo.toUpperCase().includes("REVOGADA"));
     }
     if (categoria === "seguranca") {
-      query = query.ilike("titulo", "%SEGURANÇA%");
+      normas = normas.filter(n => n.titulo.toUpperCase().includes("SEGURANÇA"));
     } else if (categoria === "saude") {
-      query = query.ilike("titulo", "%SAÚDE%");
+      normas = normas.filter(n => n.titulo.toUpperCase().includes("SAÚDE"));
     }
 
-    const { data: normas, error } = await query
-      .order("codigo")
-      .limit(limit);
-
-    if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
-    }
+    normas = normas.slice(0, limit);
 
     if (format === "csv") {
-      // Gerar CSV
       const headers = ["ID", "Código", "Título", "Órgão", "Data Criação"];
       const csvContent = [
         headers.join(","),
-        ...(normas || []).map(norma => [
+        ...normas.map(norma => [
           norma.id,
           `"${norma.codigo}"`,
-          `"${norma.titulo.replace(/"/g, "\"\"")}"`,
+          `"${norma.titulo.replace(/"/g, '""')}"`,
           `"${norma.orgao_publicador}"`,
-          norma.created_at
+          norma.created_at,
         ].join(","))
       ].join("\n");
 
       return new Response(csvContent, {
         headers: {
           "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="normas_${new Date().toISOString().split("T")[0]}.csv"`
-        }
+          "Content-Disposition": `attachment; filename="normas_${new Date().toISOString().split("T")[0]}.csv"`,
+        },
       });
     }
 
-    // Formato JSON (padrão)
     return Response.json({
       success: true,
       format,
       exported_at: new Date().toISOString(),
-      total_records: normas?.length || 0,
-      data: normas
+      total_records: normas.length,
+      data: normas,
     });
 
   } catch {

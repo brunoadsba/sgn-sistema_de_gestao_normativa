@@ -1,5 +1,6 @@
-// import { unstable_cache } from 'next/cache' // Removido - não utilizado
-import { supabase } from '@/lib/supabase'
+import { db } from '@/lib/db'
+import { schema } from '@/lib/db'
+import { eq, like, sql, desc } from 'drizzle-orm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,42 +9,36 @@ import { Separator } from '@/components/ui/separator'
 import { Search, Building2, Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 
-// Função para buscar empresas (sem cache)
 async function getEmpresas(page: number, limit: number, search: string) {
-  let query = supabase
-    .from('empresas')
-    .select('*', { count: 'exact' })
-  
-  if (search) {
-    query = query.ilike('nome', `%${search}%`)
-  }
-  
   const offset = (page - 1) * limit
-  const { data, error, count } = await query
-    .range(offset, offset + limit - 1)
-    .order('created_at', { ascending: false })
-  
-  if (error) throw error
-  
-  return { empresas: data || [], total: count || 0 }
+
+  const conditions = search
+    ? like(schema.empresas.nome, `%${search}%`)
+    : undefined
+
+  const [data, countResult] = await Promise.all([
+    db.select().from(schema.empresas)
+      .where(conditions)
+      .orderBy(desc(schema.empresas.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(schema.empresas)
+      .where(conditions),
+  ])
+
+  return { empresas: data, total: countResult[0]?.count ?? 0 }
 }
 
-// Função para estatísticas (sem cache)
 async function getEmpresasStats() {
-  const { count: total } = await supabase
-    .from('empresas')
-    .select('*', { count: 'exact', head: true })
-  
-  const { count: ativas } = await supabase
-    .from('empresas')
-    .select('*', { count: 'exact', head: true })
-    .eq('ativo', true)
-  
-  return {
-    total: total || 0,
-    ativas: ativas || 0,
-    inativas: (total || 0) - (ativas || 0)
-  }
+  const [totalResult, ativasResult] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(schema.empresas),
+    db.select({ count: sql<number>`count(*)` }).from(schema.empresas).where(eq(schema.empresas.ativo, true)),
+  ])
+
+  const total = totalResult[0]?.count ?? 0
+  const ativas = ativasResult[0]?.count ?? 0
+
+  return { total, ativas, inativas: total - ativas }
 }
 
 function EmpresasList({ empresas, total, page, limit, search }: {
@@ -51,10 +46,9 @@ function EmpresasList({ empresas, total, page, limit, search }: {
     id: string
     nome: string
     ativo: boolean
-    created_at: string
-    cnpj: string
+    createdAt: string
+    cnpj: string | null
     setor: string | null
-    descricao?: string
   }>
   total: number
   page: number
@@ -65,7 +59,6 @@ function EmpresasList({ empresas, total, page, limit, search }: {
   
   return (
     <div className="space-y-6">
-      {/* Lista de empresas */}
       <div className="grid gap-4">
         {empresas.map((empresa) => (
           <Card key={empresa.id} className="hover:shadow-md transition-shadow">
@@ -83,34 +76,24 @@ function EmpresasList({ empresas, total, page, limit, search }: {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>Fundada: {new Date(empresa.created_at).toLocaleDateString('pt-BR')}</span>
+                      <span>Fundada: {new Date(empresa.createdAt).toLocaleDateString('pt-BR')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      <span>CNPJ: {empresa.cnpj}</span>
+                      <span>CNPJ: {empresa.cnpj || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Setor: {empresa.setor || 'Não informado'}</span>
                     </div>
                   </div>
-                  
-                  {empresa.descricao && (
-                    <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-                      {empresa.descricao}
-                    </p>
-                  )}
                 </div>
                 
                 <div className="flex flex-col gap-2">
                   <Link href={`/empresas/${empresa.id}`}>
-                    <Button size="sm">
-                      Ver Detalhes
-                    </Button>
+                    <Button size="sm">Ver Detalhes</Button>
                   </Link>
                   <Link href={`/empresas/${empresa.id}/conformidade`}>
-                    <Button variant="outline" size="sm">
-                      Conformidade
-                    </Button>
+                    <Button variant="outline" size="sm">Conformidade</Button>
                   </Link>
                 </div>
               </div>
@@ -119,27 +102,20 @@ function EmpresasList({ empresas, total, page, limit, search }: {
         ))}
       </div>
       
-      {/* Paginação */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Mostrando {((page - 1) * limit) + 1} a {Math.min(page * limit, total)} de {total} empresas
           </p>
-          
           <div className="flex gap-2">
             {page > 1 && (
               <Link href={`/empresas?page=${page - 1}${search ? `&search=${search}` : ''}`}>
-                <Button variant="outline" size="sm">
-                  Anterior
-                </Button>
+                <Button variant="outline" size="sm">Anterior</Button>
               </Link>
             )}
-            
             {page < totalPages && (
               <Link href={`/empresas?page=${page + 1}${search ? `&search=${search}` : ''}`}>
-                <Button variant="outline" size="sm">
-                  Próxima
-                </Button>
+                <Button variant="outline" size="sm">Próxima</Button>
               </Link>
             )}
           </div>
@@ -170,7 +146,6 @@ export default async function EmpresasPage({
         </p>
       </div>
       
-      {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -203,19 +178,13 @@ export default async function EmpresasPage({
         </Card>
       </div>
       
-      {/* Filtros */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <form method="get" className="flex gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  name="search"
-                  placeholder="Buscar empresas..."
-                  defaultValue={search}
-                  className="pl-10"
-                />
+                <Input name="search" placeholder="Buscar empresas..." defaultValue={search} className="pl-10" />
               </div>
             </div>
             <Button type="submit">
@@ -224,9 +193,7 @@ export default async function EmpresasPage({
             </Button>
             {search && (
               <Link href="/empresas">
-                <Button type="button" variant="outline">
-                  Limpar
-                </Button>
+                <Button type="button" variant="outline">Limpar</Button>
               </Link>
             )}
           </form>
@@ -235,14 +202,7 @@ export default async function EmpresasPage({
       
       <Separator className="mb-6" />
       
-      {/* Lista de empresas */}
-      <EmpresasList 
-        empresas={empresas} 
-        total={total} 
-        page={page} 
-        limit={10} 
-        search={search} 
-      />
+      <EmpresasList empresas={empresas} total={total} page={page} limit={10} search={search} />
     </div>
   )
 }

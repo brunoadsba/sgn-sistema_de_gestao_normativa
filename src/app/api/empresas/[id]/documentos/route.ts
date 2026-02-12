@@ -1,4 +1,10 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import { schema } from "@/lib/db";
+import { eq, desc } from "drizzle-orm";
+import path from "path";
+import fs from "fs/promises";
+
+const UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads');
 
 export async function POST(
   request: Request,
@@ -19,43 +25,37 @@ export async function POST(
       return Response.json({ error: "Tipo de documento é obrigatório" }, { status: 400 });
     }
 
-    // Upload para Supabase Storage - caminho simplificado
+    // Salvar arquivo no filesystem local
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const uploadPath = path.join(UPLOAD_DIR, empresaId);
     
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("documentos-empresa")
-      .upload(fileName, file);
-
-    if (uploadError) {
-      console.error('Erro upload Supabase:', uploadError);
-      return Response.json({ error: "Erro no upload do arquivo" }, { status: 500 });
-    }
+    await fs.mkdir(uploadPath, { recursive: true });
+    
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filePath = path.join(uploadPath, fileName);
+    await fs.writeFile(filePath, buffer);
 
     // Salvar metadados no banco
-    const { data, error } = await supabase
-      .from("documentos_empresa")
-      .insert([{
-        empresa_id: empresaId,
-        nome_arquivo: file.name,
-        tipo_documento: tipoDocumento,
-        url_storage: uploadData.path,
+    const storagePath = `${empresaId}/${fileName}`;
+    
+    const inserted = await db
+      .insert(schema.documentosEmpresa)
+      .values({
+        empresaId,
+        nomeArquivo: file.name,
+        tipoDocumento,
+        urlStorage: storagePath,
         metadados: {
           tamanho: file.size,
           tipo_mime: file.type,
-          upload_timestamp: new Date().toISOString()
-        }
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro banco:', error);
-      return Response.json({ error: "Erro ao salvar documento" }, { status: 500 });
-    }
+          upload_timestamp: new Date().toISOString(),
+        },
+      })
+      .returning();
 
     return Response.json({
       success: true,
-      data
+      data: inserted[0],
     }, { status: 201 });
 
   } catch (err) {
@@ -65,26 +65,22 @@ export async function POST(
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: empresaId } = await params;
     
-    const { data: documentos, error } = await supabase
-      .from("documentos_empresa")
-      .select("*")
-      .eq("empresa_id", empresaId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
-    }
+    const documentos = await db
+      .select()
+      .from(schema.documentosEmpresa)
+      .where(eq(schema.documentosEmpresa.empresaId, empresaId))
+      .orderBy(desc(schema.documentosEmpresa.createdAt));
 
     return Response.json({
       success: true,
-      data: documentos || [],
-      total: documentos?.length || 0
+      data: documentos,
+      total: documentos.length,
     });
 
   } catch {

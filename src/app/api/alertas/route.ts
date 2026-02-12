@@ -1,27 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import { schema } from "@/lib/db";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export const revalidate = 60;
-
-// Tipos para alertas de conformidade
-type AlertaConformidade = {
-  id: string;
-  empresa_id: string;
-  tipo: 'oportunidade' | 'risco' | 'prazo' | 'conformidade';
-  severidade: 'baixa' | 'media' | 'alta' | 'critica';
-  titulo: string;
-  descricao: string;
-  acao_requerida: string;
-  prazo: string | null;
-  status: 'ativo' | 'resolvido' | 'ignorado';
-  norma_id: string | null;
-  documento_id: string | null;
-  analise_id: string | null;
-  created_at: string;
-  updated_at: string;
-  resolved_at: string | null;
-  metadata: Record<string, any>;
-};
 
 export async function GET(request: Request) {
   try {
@@ -34,54 +16,40 @@ export async function GET(request: Request) {
     const tipo = searchParams.get("tipo");
     const offset = (page - 1) * limit;
 
-    let query = supabase
-      .from("alertas_conformidade")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false });
+    const conditions = [];
 
-    // Filtros opcionais
-    if (empresaId) {
-      query = query.eq("empresa_id", empresaId);
-    }
+    if (empresaId) conditions.push(eq(schema.alertasConformidade.empresaId, empresaId));
+    if (status) conditions.push(eq(schema.alertasConformidade.status, status));
+    if (severidade) conditions.push(eq(schema.alertasConformidade.severidade, severidade));
+    if (tipo) conditions.push(eq(schema.alertasConformidade.tipo, tipo));
 
-    if (status) {
-      query = query.eq("status", status);
-    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    if (severidade) {
-      query = query.eq("severidade", severidade);
-    }
+    const [alertas, countResult] = await Promise.all([
+      db
+        .select()
+        .from(schema.alertasConformidade)
+        .where(whereClause)
+        .orderBy(desc(schema.alertasConformidade.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(schema.alertasConformidade)
+        .where(whereClause),
+    ]);
 
-    if (tipo) {
-      query = query.eq("tipo", tipo);
-    }
-
-    const { data: alertas, error, count } = await query.range(
-      offset,
-      offset + limit - 1
-    );
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        {
-          status: 500,
-          headers: {
-            "Cache-Control": "no-store",
-          },
-        }
-      );
-    }
+    const count = countResult[0]?.count ?? 0;
 
     return NextResponse.json(
       {
         success: true,
-        data: alertas || [],
+        data: alertas,
         pagination: {
           page,
           limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
+          total: count,
+          totalPages: Math.ceil(count / limit),
         },
       },
       {
@@ -114,10 +82,9 @@ export async function POST(request: Request) {
       norma_id,
       documento_id,
       analise_id,
-      metadata
+      metadata,
     } = body;
 
-    // Validações básicas
     if (!empresa_id || !tipo || !severidade || !titulo || !descricao || !acao_requerida) {
       return NextResponse.json(
         { error: "Campos obrigatórios: empresa_id, tipo, severidade, titulo, descricao, acao_requerida" },
@@ -125,7 +92,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validar valores enum
     const tiposValidos = ['oportunidade', 'risco', 'prazo', 'conformidade'];
     const severidadesValidas = ['baixa', 'media', 'alta', 'critica'];
 
@@ -144,51 +110,38 @@ export async function POST(request: Request) {
     }
 
     // Verificar se empresa existe
-    const { data: empresa, error: empresaError } = await supabase
-      .from("empresas")
-      .select("id")
-      .eq("id", empresa_id)
-      .eq("ativo", true)
-      .single();
+    const empresaResult = await db
+      .select({ id: schema.empresas.id })
+      .from(schema.empresas)
+      .where(and(eq(schema.empresas.id, empresa_id), eq(schema.empresas.ativo, true)))
+      .limit(1);
 
-    if (empresaError || !empresa) {
+    if (empresaResult.length === 0) {
       return NextResponse.json(
         { error: "Empresa não encontrada ou inativa" },
         { status: 404 }
       );
     }
 
-    // Criar alerta
-    const { data: novoAlerta, error } = await supabase
-      .from("alertas_conformidade")
-      .insert([{
-        empresa_id,
+    const inserted = await db
+      .insert(schema.alertasConformidade)
+      .values({
+        empresaId: empresa_id,
         tipo,
         severidade,
         titulo,
         descricao,
-        acao_requerida,
+        acaoRequerida: acao_requerida,
         prazo: prazo ? new Date(prazo).toISOString() : null,
-        norma_id: norma_id || null,
-        documento_id: documento_id || null,
-        analise_id: analise_id || null,
-        metadata: metadata || {}
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json(
-        { error: "Erro ao criar alerta" },
-        { status: 500 }
-      );
-    }
+        normaId: norma_id || null,
+        documentoId: documento_id || null,
+        analiseId: analise_id || null,
+        metadata: metadata || {},
+      })
+      .returning();
 
     return NextResponse.json(
-      {
-        success: true,
-        data: novoAlerta
-      },
+      { success: true, data: inserted[0] },
       { status: 201 }
     );
 

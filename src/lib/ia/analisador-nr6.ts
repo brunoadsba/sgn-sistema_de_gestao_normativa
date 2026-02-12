@@ -1,15 +1,31 @@
 import { Groq } from 'groq-sdk'
+import { env } from '@/lib/env'
 
 // Configuração do cliente GROQ
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || '',
+  apiKey: env.GROQ_API_KEY,
   dangerouslyAllowBrowser: false
 })
+
+const MAX_DOCUMENT_LENGTH = 50000
+
+function sanitizeInput(input: string): string {
+  return input
+    .slice(0, MAX_DOCUMENT_LENGTH)
+    .replace(/```/g, '')
+    .replace(/\bsystem\b:/gi, '')
+    .replace(/\brole\b:\s*["']?(system|assistant)["']?/gi, '')
+    .replace(/\bignore\b.*\binstructions?\b/gi, '[removido]')
+    .replace(/\bforget\b.*\bprevious\b/gi, '[removido]')
+    .trim()
+}
 
 // Tipos específicos para NR-6
 export interface AnaliseNR6Request {
   documento: string
-  tipoDocumento: 'ficha_entrega_epi' | 'treinamento_epi' | 'inspecao_epi' | 'ppra' | 'outro'
+  tipoDocumento: 'ficha_entrega_epi' | 'treinamento_epi' | 'inspecao_epi' | 'pgr' | 'nr1_gro' | 'ppra' | 'outro'
+  // PGR e NR-1-GRO são os documentos principais (NR-1 GRO substituiu PPRA)
+  // PPRA mantido para compatibilidade com documentos legados
   empresaId: string
   funcionario?: string
   setor?: string
@@ -82,7 +98,7 @@ TIPO DE DOCUMENTO: ${request.tipoDocumento}
 EMPRESA: ${request.empresaId}
 
 DOCUMENTO PARA ANÁLISE:
-${request.documento}
+${sanitizeInput(request.documento)}
 
 CRITÉRIOS ESPECÍFICOS DA NR-6:
 

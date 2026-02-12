@@ -5,15 +5,18 @@ import { logPerformance } from '@/lib/logger';
 // Interface para configuração de cache
 interface CacheConfig {
   key: string;
-  ttl?: number;
-  skipCache?: boolean;
-  tags?: string[];
+  ttl?: number | undefined;
+  skipCache?: boolean | undefined;
+  tags?: string[] | undefined;
 }
+
+// Tipo para handler de API
+type CacheApiHandler = (request: NextRequest, ...args: unknown[]) => Promise<NextResponse>;
 
 // Middleware para adicionar cache às respostas
 export function withCache(config: CacheConfig) {
-  return function(handler: Function) {
-    return async (request: NextRequest, ...args: any[]) => {
+  return function(handler: CacheApiHandler) {
+    return async (request: NextRequest, ...args: unknown[]) => {
       const startTime = Date.now();
       
       try {
@@ -40,21 +43,50 @@ export function withCache(config: CacheConfig) {
         
         // Executar handler original
         const response = await handler(request, ...args);
-        const responseData = await response.json();
+        
+        // Clonar resposta para poder ler e ainda retornar
+        const clonedResponse = response.clone();
+        
+        // Tentar ler dados da resposta (pode ser JSON ou outro formato)
+        let responseData: unknown;
+        const contentType = response.headers.get('content-type') || '';
+        
+        try {
+          if (contentType.includes('application/json')) {
+            responseData = await clonedResponse.json();
+          } else {
+            // Para outros tipos de conteúdo, não cachear
+            const duration = Date.now() - startTime;
+            logPerformance('cache_miss', duration, { key: cacheKey });
+            
+            return response;
+          }
+        } catch (error) {
+          // Se não conseguir parsear, retornar resposta original sem cachear
+          console.warn('Não foi possível parsear resposta para cache:', error);
+          const duration = Date.now() - startTime;
+          logPerformance('cache_miss', duration, { key: cacheKey });
+          return response;
+        }
         
         // Armazenar no cache se a resposta foi bem-sucedida
         if (response.status === 200 && !config.skipCache) {
-          await cacheManager.set(
-            cacheKey,
-            responseData,
-            config.ttl || CACHE_TTL.NORMAS
-          );
-          
-          // Adicionar tags se especificadas
-          if (config.tags && config.tags.length > 0) {
-            for (const tag of config.tags) {
-              await cacheManager.hset(`cache:tags:${tag}`, cacheKey, Date.now());
+          try {
+            await cacheManager.set(
+              cacheKey,
+              responseData,
+              config.ttl || CACHE_TTL.NORMAS
+            );
+            
+            // Adicionar tags se especificadas
+            if (config.tags && config.tags.length > 0) {
+              for (const tag of config.tags) {
+                await cacheManager.hset(`cache:tags:${tag}`, cacheKey, Date.now());
+              }
             }
+          } catch (cacheError) {
+            console.error('Erro ao armazenar no cache:', cacheError);
+            // Continuar mesmo se cache falhar
           }
         }
         
@@ -65,7 +97,7 @@ export function withCache(config: CacheConfig) {
         return NextResponse.json(responseData, {
           status: response.status,
           headers: {
-            ...response.headers,
+            ...Object.fromEntries(response.headers.entries()),
             'X-Cache': 'MISS',
             'X-Cache-Key': cacheKey,
             'X-Cache-TTL': String(config.ttl || CACHE_TTL.NORMAS),
@@ -84,8 +116,8 @@ export function withCache(config: CacheConfig) {
 
 // Middleware para invalidar cache
 export function withCacheInvalidation(tags: string[]) {
-  return function(handler: Function) {
-    return async (request: NextRequest, ...args: any[]) => {
+  return function(handler: CacheApiHandler) {
+    return async (request: NextRequest, ...args: unknown[]) => {
       const response = await handler(request, ...args);
       
       // Se a operação foi bem-sucedida, invalidar cache

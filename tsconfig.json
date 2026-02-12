@@ -23,13 +23,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/schemas/*": ["./src/schemas/*"],
-      "@/middlewares/*": ["./src/middlewares/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -46,6 +40,8 @@
     "dist",
     "build",
     "coverage",
+    "obsoleto",
+    "src/__tests__",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",

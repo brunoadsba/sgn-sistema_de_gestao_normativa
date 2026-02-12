@@ -1,12 +1,13 @@
 import Redis from 'ioredis';
 import { logError } from '@/lib/logger';
+import { env } from '@/lib/env';
 
 // Configuração do Redis
 const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
+  host: env.REDIS_HOST,
+  port: parseInt(env.REDIS_PORT),
+  ...(env.REDIS_PASSWORD ? { password: env.REDIS_PASSWORD } : {}),
+  db: parseInt(env.REDIS_DB),
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
@@ -91,7 +92,7 @@ export class CacheManager {
   }
   
   // Set com TTL
-  async set(key: string, value: any, ttlSeconds: number = 3600): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds: number = 3600): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
       await this.redis.setex(key, ttlSeconds, serialized);
@@ -123,13 +124,23 @@ export class CacheManager {
     }
   }
   
-  // Delete pattern
+  // Delete pattern (usa SCAN em vez de KEYS para não bloquear Redis)
   async deletePattern(pattern: string): Promise<void> {
     try {
-      const keys = await this.redis.keys(pattern);
-      if (keys.length > 0) {
-        await this.redis.del(...keys);
-      }
+      let cursor = '0';
+      do {
+        const [nextCursor, keys] = await this.redis.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100
+        );
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await this.redis.del(...keys);
+        }
+      } while (cursor !== '0');
     } catch (error) {
       logError(error as Error, { context: 'cache-delete-pattern', pattern });
     }
@@ -167,7 +178,7 @@ export class CacheManager {
   }
   
   // Set hash
-  async hset(key: string, field: string, value: any): Promise<void> {
+  async hset(key: string, field: string, value: unknown): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
       await this.redis.hset(key, field, serialized);

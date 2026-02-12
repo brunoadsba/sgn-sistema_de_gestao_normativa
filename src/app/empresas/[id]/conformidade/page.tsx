@@ -4,8 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { AlertCircle, ArrowLeft, Building2, RefreshCw, Brain } from 'lucide-react'
+import { AlertCircle, AlertTriangle, ArrowLeft, RefreshCw, Brain } from 'lucide-react'
 import { AlertasList } from '@/components/conformidade/AlertasList'
 import { StatusGeral } from '@/components/conformidade/StatusGeral'
 import { PontosAtencao } from '@/components/conformidade/PontosAtencao'
@@ -117,7 +116,7 @@ export default function ConformidadePage({ params }: { params: Promise<{ id: str
         
       } catch (err) {
         console.error('Erro ao carregar dashboard:', err)
-        if (retryCount < 2 && (err instanceof Error && err.name === 'AbortError' || err.message.includes('fetch'))) {
+        if (retryCount < 2 && err instanceof Error && (err.name === 'AbortError' || err.message.includes('fetch'))) {
           console.log(`Tentativa ${retryCount + 1} de 3...`)
           setTimeout(() => fetchData(retryCount + 1), 1000 * (retryCount + 1)) // Backoff exponencial
           return

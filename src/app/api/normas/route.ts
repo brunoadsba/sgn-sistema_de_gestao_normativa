@@ -1,59 +1,21 @@
-import { supabase } from "@/lib/supabase";
-import { NextResponse, NextRequest } from "next/server";
+import { getNormas } from "@/lib/data/normas";
+import { NextResponse } from "next/server";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
-// Função principal ultra-simplificada para debug
-async function getNormasHandler(request: NextRequest) {
+export async function GET() {
   try {
-    console.log('🔍 DEBUG: Iniciando API de normas');
-    
-    // Teste básico do Supabase
-    const { data, error } = await supabase
-      .from("normas")
-      .select("id, codigo, titulo")
-      .limit(3);
+    const normas = getNormas();
 
-    console.log('🔍 DEBUG: Resultado Supabase:', { data: data?.length, error: error?.message });
-
-    if (error) {
-      console.error('❌ DEBUG: Erro Supabase:', error);
-      return NextResponse.json(
-        { 
-          success: false,
-          error: "Erro no banco de dados",
-          details: error.message,
-          timestamp: new Date().toISOString()
-        }, 
-        { status: 500 }
-      );
-    }
-
-    console.log('✅ DEBUG: Sucesso, retornando dados');
-    
     return NextResponse.json({
       success: true,
-      data: data,
-      meta: {
-        timestamp: new Date().toISOString(),
-        count: data?.length || 0
-      }
+      data: normas.map(n => ({ id: n.id, codigo: n.codigo, titulo: n.titulo })),
+      total: normas.length,
     });
-
-  } catch (error) {
-    console.error('❌ DEBUG: Erro geral:', error);
-    
+  } catch {
     return NextResponse.json(
-      { 
-        success: false,
-        error: "Erro interno do servidor",
-        details: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString()
-      }, 
+      { success: false, error: "Erro interno do servidor" },
       { status: 500 }
     );
   }
 }
-
-// Exportar função simplificada
-export const GET = getNormasHandler;

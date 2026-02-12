@@ -1,16 +1,35 @@
 import { Groq } from 'groq-sdk'
+import { env } from '@/lib/env'
 
 // Configuração do cliente GROQ
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || '',
+  apiKey: env.GROQ_API_KEY,
   dangerouslyAllowBrowser: false // Apenas para server-side
 })
+
+// Limite máximo de caracteres para documentos enviados à IA
+const MAX_DOCUMENT_LENGTH = 50000
+
+/**
+ * Sanitiza input do usuário antes de enviar à IA.
+ * Remove tentativas de prompt injection e limita tamanho.
+ */
+function sanitizeInput(input: string): string {
+  return input
+    .slice(0, MAX_DOCUMENT_LENGTH)
+    .replace(/```/g, '')
+    .replace(/\bsystem\b:/gi, '')
+    .replace(/\brole\b:\s*["']?(system|assistant)["']?/gi, '')
+    .replace(/\bignore\b.*\binstructions?\b/gi, '[removido]')
+    .replace(/\bforget\b.*\bprevious\b/gi, '[removido]')
+    .trim()
+}
 
 // Tipos para análise de conformidade
 export interface AnaliseConformidadeRequest {
   documento: string
   tipoDocumento: string
-  empresaId: string
+  empresaId?: string
   normasAplicaveis?: string[]
 }
 
@@ -69,11 +88,14 @@ export async function analisarConformidade(
 
 // Gerar prompt especializado
 function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
+  const documentoSanitizado = sanitizeInput(request.documento)
+  const tipoSanitizado = sanitizeInput(request.tipoDocumento)
+  
   return `
-ANÁLISE DE CONFORMIDADE SST - DOCUMENTO: ${request.tipoDocumento}
+ANÁLISE DE CONFORMIDADE SST - DOCUMENTO: ${tipoSanitizado}
 
 DOCUMENTO PARA ANÁLISE:
-${request.documento}
+${documentoSanitizado}
 
 NORMAS APLICÁVEIS: ${request.normasAplicaveis?.join(', ') || 'NRs gerais'}
 

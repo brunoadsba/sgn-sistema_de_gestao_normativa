@@ -16,8 +16,8 @@ const createQueryClient = () => new QueryClient({
       retry: (failureCount, error) => {
         // Não retry para erros 4xx (client errors)
         if (error && typeof error === 'object' && 'status' in error) {
-          const status = (error as any).status;
-          if (status >= 400 && status < 500) {
+          const status = (error as Record<string, unknown>).status;
+          if (typeof status === 'number' && status >= 400 && status < 500) {
             return false;
           }
         }
@@ -56,7 +56,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools 
           initialIsOpen={false}
-          position="bottom-right"
+          buttonPosition="bottom-right"
         />
       )}
     </QueryClientProvider>
@@ -69,7 +69,7 @@ export const queryKeys = {
   normas: {
     all: ['normas'] as const,
     lists: () => [...queryKeys.normas.all, 'list'] as const,
-    list: (filters: Record<string, any>) => [...queryKeys.normas.lists(), filters] as const,
+    list: (filters: Record<string, string>) => [...queryKeys.normas.lists(), filters] as const,
     details: () => [...queryKeys.normas.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.normas.details(), id] as const,
     stats: () => [...queryKeys.normas.all, 'stats'] as const,
@@ -101,7 +101,7 @@ export const queryKeys = {
 export const queryOptions = {
   // Normas queries
   normas: {
-    list: (filters: Record<string, any> = {}) => ({
+    list: (filters: Record<string, string> = {}) => ({
       queryKey: queryKeys.normas.list(filters),
       staleTime: 5 * 60 * 1000, // 5 minutos
       gcTime: 10 * 60 * 1000, // 10 minutos
@@ -150,18 +150,18 @@ export const queryOptions = {
 export const mutationOptions = {
   // IA Analysis mutation
   iaAnalysis: {
-    onSuccess: (data: any) => {
-      console.log('✅ Análise de IA concluída:', data);
+    onSuccess: (data: unknown) => {
+      console.log('Análise de IA concluída:', data);
     },
     onError: (error: Error) => {
-      console.error('❌ Erro na análise de IA:', error);
+      console.error('Erro na análise de IA:', error);
     },
   },
   
   // Generic mutation options
   generic: {
     onError: (error: Error) => {
-      console.error('❌ Erro na mutation:', error);
+      console.error('Erro na mutation:', error);
     },
   },
 } as const;
@@ -194,7 +194,7 @@ export const cacheUtils = {
   },
   
   // Prefetch normas list
-  prefetchNormas: async (queryClient: QueryClient, filters: Record<string, any> = {}) => {
+  prefetchNormas: async (queryClient: QueryClient, filters: Record<string, string> = {}) => {
     await queryClient.prefetchQuery({
       ...queryOptions.normas.list(filters),
       queryFn: async () => {
@@ -232,8 +232,8 @@ export const errorUtils = {
   // Check if error is 4xx client error
   isClientError: (error: unknown): boolean => {
     if (error && typeof error === 'object' && 'status' in error) {
-      const status = (error as any).status;
-      return status >= 400 && status < 500;
+      const status = (error as Record<string, unknown>).status;
+      return typeof status === 'number' && status >= 400 && status < 500;
     }
     return false;
   },
@@ -241,8 +241,8 @@ export const errorUtils = {
   // Check if error is 5xx server error
   isServerError: (error: unknown): boolean => {
     if (error && typeof error === 'object' && 'status' in error) {
-      const status = (error as any).status;
-      return status >= 500;
+      const status = (error as Record<string, unknown>).status;
+      return typeof status === 'number' && status >= 500;
     }
     return false;
   },

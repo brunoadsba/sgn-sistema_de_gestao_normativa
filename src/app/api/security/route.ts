@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getSecurityConfig, validateSecurityConfig } from '@/middlewares/security';
 import { getRateLimitStats, resetRateLimit } from '@/middlewares/rate-limit';
 import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation';

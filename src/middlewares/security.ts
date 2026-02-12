@@ -90,7 +90,7 @@ export const SECURITY_HEADERS = {
 } as const;
 
 // Função para verificar se origin é permitida
-function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boolean {
   if (!origin) return false;
   
   return allowedOrigins.some(allowedOrigin => {
@@ -103,10 +103,21 @@ function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
   });
 }
 
+// Interface para configuração CORS
+interface CorsConfig {
+  readonly origin: readonly string[];
+  readonly methods: readonly string[];
+  readonly allowedHeaders: readonly string[];
+  readonly credentials: boolean;
+}
+
+// Tipo para handler de API
+type SecurityApiHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>;
+
 // Middleware para CORS
-export function withCORS(config: typeof CORS_CONFIG.development) {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+export function withCORS(config: CorsConfig) {
+  return function(handler: SecurityApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const origin = req.headers.get('origin');
       const method = req.method;
       
@@ -161,8 +172,8 @@ export function withCORS(config: typeof CORS_CONFIG.development) {
 
 // Middleware para headers de segurança
 export function withSecurityHeaders() {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: SecurityApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const response = await handler(req, ...args);
       
       // Adicionar headers de segurança
@@ -191,8 +202,8 @@ export function withSecurityHeaders() {
 
 // Middleware para validação de request
 export function withRequestValidation() {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: SecurityApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const logContext = createLogContext(req);
       
       // Verificar tamanho do request
@@ -256,8 +267,8 @@ export function withRequestValidation() {
 
 // Middleware para proteção contra ataques comuns
 export function withAttackProtection() {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: SecurityApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const logContext = createLogContext(req);
       const url = req.url;
       
@@ -334,10 +345,10 @@ export function withAttackProtection() {
 
 // Middleware combinado de segurança
 export function withSecurity() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const corsConfig = isProduction ? CORS_CONFIG.production : CORS_CONFIG.development;
+  const isProd = process.env.NODE_ENV === 'production';
+  const corsConfig: CorsConfig = isProd ? CORS_CONFIG.production : CORS_CONFIG.development;
   
-  return function(handler: Function) {
+  return function(handler: SecurityApiHandler) {
     return withCORS(corsConfig)(
       withSecurityHeaders()(
         withRequestValidation()(
@@ -367,7 +378,8 @@ export function validateSecurityConfig() {
   const issues: string[] = [];
   
   // Verificar se CORS está configurado corretamente
-  if (config.cors.origin.length === 0) {
+  const corsOrigins = config.cors.origin as readonly string[];
+  if (corsOrigins.length === 0) {
     issues.push('CORS origins não configurados');
   }
   

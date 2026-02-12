@@ -9,7 +9,6 @@ echo "🧹 Iniciando limpeza completa do SGN..."
 echo "📦 Parando processos Node.js..."
 pkill -f "npm run dev" 2>/dev/null || true
 pkill -f "next dev" 2>/dev/null || true
-pkill -f "n8n start" 2>/dev/null || true
 
 # 2. Matar processos na porta 3001
 echo "🔌 Liberando porta 3001..."

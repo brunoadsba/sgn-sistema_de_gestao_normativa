@@ -4,7 +4,7 @@
 export interface AnaliseConformidadeRequest {
   documento: string
   tipoDocumento: string
-  empresaId: string
+  empresaId?: string
   normasAplicaveis?: string[]
   prioridade?: 'baixa' | 'media' | 'alta' | 'critica'
 }
@@ -30,10 +30,10 @@ export interface GapConformidade {
   categoria: string
   recomendacao: string
   prazo: string
-  impacto: string
+  impacto?: string
   custoEstimado?: number
   responsavelSugerido?: string
-  normasRelacionadas: string[]
+  normasRelacionadas?: string[]
 }
 
 // Tipos para plano de ação
@@ -143,23 +143,13 @@ export interface FilaProcessamento {
   erro?: string
 }
 
-// Tipos para webhook de notificação
-export interface WebhookAnalise {
-  id: string
-  empresaId: string
-  tipo: 'analise_concluida' | 'gap_critico' | 'score_baixo'
-  dados: any
-  timestamp: string
-  processado: boolean
-}
-
 // Tipos para auditoria de IA
 export interface AuditoriaIA {
   id: string
   acao: string
   usuarioId?: string
   empresaId: string
-  dados: any
+  dados: Record<string, unknown>
   timestamp: string
   ip?: string
   userAgent?: string
@@ -262,16 +252,6 @@ export interface ExportacaoAnalise {
   filtros: FiltrosAnalise
   timestamp: string
   usuarioId: string
-}
-
-// Tipos para integração com sistemas externos
-export interface IntegracaoExterna {
-  tipo: 'webhook' | 'api' | 'email' | 'sms'
-  endpoint?: string
-  configuracao: any
-  ativo: boolean
-  ultimaExecucao?: string
-  status: 'ativo' | 'inativo' | 'erro'
 }
 
 // Tipos para backup e restore

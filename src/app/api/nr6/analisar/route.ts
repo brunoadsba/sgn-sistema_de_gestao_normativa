@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analisarNR6 } from '@/lib/ia/analisador-nr6'
-import { AnaliseNR6Request, AnaliseNR6Response } from '@/lib/ia/analisador-nr6'
+import { AnaliseNR6Request } from '@/lib/ia/analisador-nr6'
 
 // POST /api/nr6/analisar
 export async function POST(request: NextRequest) {
@@ -83,7 +83,9 @@ function validarEntradaNR6(body: any): { valida: boolean; erros: string[] } {
     erros.push('Campo "tipoDocumento" é obrigatório para análise NR-6')
   }
 
-  const tiposValidos = ['ficha_entrega_epi', 'treinamento_epi', 'inspecao_epi', 'ppra', 'outro']
+  const tiposValidos = ['ficha_entrega_epi', 'treinamento_epi', 'inspecao_epi', 'pgr', 'nr1_gro', 'ppra', 'outro']
+  // PGR e NR-1-GRO são os documentos principais (NR-1 GRO substituiu PPRA)
+  // PPRA mantido para compatibilidade com documentos legados
   if (body.tipoDocumento && !tiposValidos.includes(body.tipoDocumento)) {
     erros.push(`Tipo de documento inválido. Tipos válidos: ${tiposValidos.join(', ')}`)
   }

@@ -1,11 +1,10 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner'
 import { 
   Building2, 
@@ -131,15 +130,6 @@ export default function EmpresaDetalhesPage() {
         </Card>
       </div>
     )
-  }
-
-  const getPorteVariant = (porte: string) => {
-    switch (porte) {
-      case 'grande': return 'default'
-      case 'medio': return 'secondary'
-      case 'pequeno': return 'outline'
-      default: return 'secondary'
-    }
   }
 
   const getPorteLabel = (porte: string) => {

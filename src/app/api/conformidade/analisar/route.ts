@@ -1,6 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import { schema } from "@/lib/db";
+import { eq, and } from "drizzle-orm";
+import { getNormasByIds } from "@/lib/data/normas";
 
-export const revalidate = 0; // Sempre executar fresh para análises
+export const revalidate = 0;
 
 export async function POST(request: Request) {
   try {
@@ -14,73 +17,73 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: empresa, error: empresaError } = await supabase
-      .from("empresas")
-      .select("id, nome, ativo")
-      .eq("id", empresa_id)
-      .eq("ativo", true)
-      .single();
+    const empresaResult = await db
+      .select({ id: schema.empresas.id, nome: schema.empresas.nome })
+      .from(schema.empresas)
+      .where(and(eq(schema.empresas.id, empresa_id), eq(schema.empresas.ativo, true)))
+      .limit(1);
 
-    if (empresaError || !empresa) {
+    if (empresaResult.length === 0) {
       return Response.json(
         { success: false, error: "Empresa não encontrada ou inativa" },
         { status: 404, headers: { "Cache-Control": "no-store" } }
       );
     }
+    const empresa = empresaResult[0];
 
-    const { data: documento, error: documentoError } = await supabase
-      .from("documentos_empresa")
-      .select("id, nome_arquivo, tipo_documento, metadados")
-      .eq("id", documento_id)
-      .eq("empresa_id", empresa_id)
-      .single();
+    const documentoResult = await db
+      .select({
+        id: schema.documentosEmpresa.id,
+        nomeArquivo: schema.documentosEmpresa.nomeArquivo,
+        tipoDocumento: schema.documentosEmpresa.tipoDocumento,
+        metadados: schema.documentosEmpresa.metadados,
+      })
+      .from(schema.documentosEmpresa)
+      .where(and(
+        eq(schema.documentosEmpresa.id, documento_id),
+        eq(schema.documentosEmpresa.empresaId, empresa_id)
+      ))
+      .limit(1);
 
-    if (documentoError || !documento) {
+    if (documentoResult.length === 0) {
       return Response.json(
         { success: false, error: "Documento não encontrado ou não pertence à empresa" },
         { status: 404, headers: { "Cache-Control": "no-store" } }
       );
     }
+    const documento = documentoResult[0];
 
-    const { data: normas, error: normasError } = await supabase
-      .from("normas")
-      .select("id, codigo, titulo")
-      .in("id", norma_ids);
-
-    if (normasError || !normas || normas.length !== norma_ids.length) {
+    // Buscar normas dos dados locais
+    const normas = getNormasByIds(norma_ids);
+    if (normas.length !== norma_ids.length) {
       return Response.json(
         { success: false, error: "Uma ou mais normas não foram encontradas" },
         { status: 404, headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    const { data: job, error: jobError } = await supabase
-      .from("analise_jobs")
-      .insert([{
-        empresa_id,
-        documento_id,
+    const inserted = await db
+      .insert(schema.analiseJobs)
+      .values({
+        empresaId: empresa_id,
+        documentoId: documento_id,
         status: 'pending',
         priority: Math.max(1, Math.min(10, priority)),
-        tipo_analise,
+        tipoAnalise: tipo_analise,
+        normaIds: norma_ids,
         parametros: {
           norma_ids,
           total_normas: normas.length,
-          documento_nome: documento.nome_arquivo,
+          documento_nome: documento.nomeArquivo,
           normas_codigos: normas.map(n => n.codigo),
           empresa_nome: empresa.nome,
-          timestamp_criacao: new Date().toISOString()
+          timestamp_criacao: new Date().toISOString(),
         },
-        progresso: 0
-      }])
-      .select()
-      .single();
+        progresso: 0,
+      })
+      .returning();
 
-    if (jobError) {
-      return Response.json(
-        { success: false, error: "Erro ao criar job de análise" },
-        { status: 500, headers: { "Cache-Control": "no-store" } }
-      );
-    }
+    const job = inserted[0];
 
     return Response.json(
       {
@@ -90,11 +93,11 @@ export async function POST(request: Request) {
           status: job.status,
           message: `Análise de conformidade iniciada para ${normas.length} normas`,
           empresa: empresa.nome,
-          documento: documento.nome_arquivo,
+          documento: documento.nomeArquivo,
           normas_analisadas: normas.length,
           estimated_completion: "5-15 minutos",
-          created_at: job.created_at
-        }
+          created_at: job.createdAt,
+        },
       },
       { status: 201, headers: { "Cache-Control": "no-store" } }
     );
@@ -108,7 +111,6 @@ export async function POST(request: Request) {
   }
 }
 
-// GET para listar jobs da empresa (cacheável)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -123,32 +125,20 @@ export async function GET(request: Request) {
       );
     }
 
-    let query = supabase
-      .from("analise_jobs")
-      .select(`
-        *,
-        documentos_empresa(nome_arquivo, tipo_documento),
-        empresas(nome)
-      `)
-      .eq("empresa_id", empresa_id)
-      .order("created_at", { ascending: false })
+    const conditions = [eq(schema.analiseJobs.empresaId, empresa_id)];
+    if (status) {
+      conditions.push(eq(schema.analiseJobs.status, status));
+    }
+
+    const jobs = await db
+      .select()
+      .from(schema.analiseJobs)
+      .where(and(...conditions))
+      .orderBy(schema.analiseJobs.createdAt)
       .limit(limit);
 
-    if (status) {
-      query = query.eq("status", status);
-    }
-
-    const { data: jobs, error } = await query;
-
-    if (error) {
-      return Response.json(
-        { success: false, error: "Erro ao buscar jobs" },
-        { status: 500, headers: { "Cache-Control": "no-store" } }
-      );
-    }
-
     return Response.json(
-      { success: true, data: jobs || [], total: jobs?.length || 0 },
+      { success: true, data: jobs, total: jobs.length },
       { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
     );
 

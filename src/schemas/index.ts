@@ -33,18 +33,16 @@ export const EmpresaSchema = z.object({
   data_atualizacao: z.string().datetime().optional(),
 });
 
-// Schema para Análise de Conformidade
+// Schema para Análise de Conformidade (camelCase alinhado com interfaces TS)
 export const AnaliseConformidadeSchema = z.object({
   id: z.string().uuid().optional(),
-  empresa_id: z.string().uuid('ID da empresa inválido'),
+  empresaId: z.string().uuid('ID da empresa inválido').optional(),
   documento: z.string().min(1, 'Documento é obrigatório').max(50000, 'Documento muito grande'),
-  tipo_documento: z.enum(['PPRA', 'PCMSO', 'LTCAT', 'ASO', 'OUTRO']),
-  normas_aplicaveis: z.array(z.string()).min(1, 'Pelo menos uma norma deve ser aplicável'),
+  tipoDocumento: z.enum(['PGR', 'NR-1-GRO', 'PCMSO', 'LTCAT', 'ASO', 'PPRA', 'OUTRO']),
+  normasAplicaveis: z.array(z.string()).min(1, 'Pelo menos uma norma deve ser aplicável'),
   score: z.number().min(0).max(100).optional(),
-  nivel_risco: z.enum(['baixo', 'medio', 'alto', 'critico']).optional(),
+  nivelRisco: z.enum(['baixo', 'medio', 'alto', 'critico']).optional(),
   status: z.enum(['pendente', 'processando', 'concluida', 'erro']).default('pendente'),
-  data_criacao: z.string().datetime().optional(),
-  data_conclusao: z.string().datetime().optional(),
 });
 
 // Schema para Gaps de Conformidade
@@ -84,10 +82,8 @@ export const UpdateEmpresaSchema = EmpresaSchema.partial().omit({ id: true, data
 export const CreateAnaliseSchema = AnaliseConformidadeSchema.omit({ 
   id: true, 
   score: true, 
-  nivel_risco: true, 
+  nivelRisco: true, 
   status: true, 
-  data_criacao: true, 
-  data_conclusao: true 
 });
 
 export const CreateAlertaSchema = AlertaSchema.omit({ 
@@ -99,8 +95,8 @@ export const CreateAlertaSchema = AlertaSchema.omit({
 
 // Schema para parâmetros de query
 export const QueryParamsSchema = z.object({
-  page: z.string().transform(Number).pipe(z.number().min(1)).default('1'),
-  limit: z.string().transform(Number).pipe(z.number().min(1).max(100)).default('10'),
+  page: z.string().default('1').transform(Number).pipe(z.number().min(1)),
+  limit: z.string().default('10').transform(Number).pipe(z.number().min(1).max(100)),
   search: z.string().optional(),
   status: z.string().optional(),
   categoria: z.string().optional(),
@@ -109,7 +105,7 @@ export const QueryParamsSchema = z.object({
 // Schema para resposta de API
 export const ApiResponseSchema = z.object({
   success: z.boolean(),
-  data: z.any().optional(),
+  data: z.unknown().optional(),
   error: z.string().optional(),
   message: z.string().optional(),
   pagination: z.object({
@@ -135,4 +131,4 @@ export type CreateAnalise = z.infer<typeof CreateAnaliseSchema>;
 export type CreateAlerta = z.infer<typeof CreateAlertaSchema>;
 
 export type QueryParams = z.infer<typeof QueryParamsSchema>;
-export type ApiResponse<T = any> = z.infer<typeof ApiResponseSchema> & { data?: T };
+export type ApiResponse<T = unknown> = z.infer<typeof ApiResponseSchema> & { data?: T };

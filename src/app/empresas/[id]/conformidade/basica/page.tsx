@@ -1,4 +1,4 @@
-export default function ConformidadeBasica({ params }: { params: Promise<{ id: string }> }) {
+export default function ConformidadeBasica({ params: _params }: { params: Promise<{ id: string }> }) {
   return (
     <div>
       <h1>Teste Básico</h1>

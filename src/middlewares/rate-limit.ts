@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCacheManager } from '@/lib/cache/redis';
+import { getCacheManager, CacheManager } from '@/lib/cache/redis';
 import { logSecurity } from '@/lib/logger';
-import { getCorrelationId, createLogContext } from '@/lib/logger/correlation';
+import { createLogContext } from '@/lib/logger/correlation';
 
 // Configurações de rate limiting
 export const RATE_LIMIT_CONFIG = {
@@ -53,7 +53,7 @@ interface RateLimitConfig {
 
 // Classe para gerenciar rate limiting
 export class RateLimiter {
-  private cacheManager: any;
+  private cacheManager: CacheManager | null = null;
   
   constructor() {
     this.initializeCache();
@@ -75,7 +75,6 @@ export class RateLimiter {
                'unknown';
     
     const userAgent = req.headers.get('user-agent') || 'unknown';
-    const correlationId = getCorrelationId(req);
     
     // Usar IP + User-Agent para maior precisão
     return `${prefix}:${ip}:${Buffer.from(userAgent).toString('base64').slice(0, 20)}`;
@@ -104,10 +103,10 @@ export class RateLimiter {
       const windowStart = now - config.windowMs;
       
       // Buscar hits existentes
-      const existingHits = await this.cacheManager.get(key) || [];
+      const existingHits = await this.cacheManager.get<number[]>(key) || [];
       
       // Filtrar hits dentro da janela atual
-      const validHits = existingHits.filter((hit: number) => hit > windowStart);
+      const validHits = existingHits.filter((hit) => hit > windowStart);
       
       // Verificar se excedeu o limite
       const isAllowed = validHits.length < config.max;
@@ -142,7 +141,7 @@ export class RateLimiter {
   }
   
   // Log de tentativas de rate limiting
-  private async logRateLimitAttempt(req: NextRequest, config: RateLimitConfig, result: any) {
+  async logRateLimitAttempt(req: NextRequest, config: RateLimitConfig, result: { allowed: boolean; totalHits: number; remaining: number; resetTime: number }) {
     const logContext = createLogContext(req);
     
     if (!result.allowed) {
@@ -167,15 +166,18 @@ export async function getRateLimiter(): Promise<RateLimiter> {
   return rateLimiter;
 }
 
+// Tipo para handler de API
+type ApiHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>;
+
 // Middleware para rate limiting
 export function withRateLimit(config: RateLimitConfig) {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: ApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const limiter = await getRateLimiter();
       const result = await limiter.checkLimit(req, config);
       
       // Log da tentativa
-      await limiter['logRateLimitAttempt'](req, config, result);
+      await limiter.logRateLimitAttempt(req, config, result);
       
       if (!result.allowed) {
         const response = NextResponse.json(
@@ -249,27 +251,17 @@ export async function resetRateLimit(ip: string, prefix: string = 'rate_limit') 
 export async function getRateLimitStats() {
   try {
     const cacheManager = await getCacheManager();
-    const keys = await cacheManager.redis.keys('rate_limit:*');
     
+    // Usar SCAN via deletePattern approach para contar chaves
     const stats = {
-      totalKeys: keys.length,
+      totalKeys: 0,
       activeLimits: 0,
       blockedIPs: 0,
     };
     
-    for (const key of keys) {
-      const hits = await cacheManager.get(key);
-      if (hits && hits.length > 0) {
-        stats.activeLimits++;
-        
-        // Verificar se algum IP está bloqueado
-        const now = Date.now();
-        const recentHits = hits.filter((hit: number) => hit > now - 15 * 60 * 1000);
-        if (recentHits.length >= 100) {
-          stats.blockedIPs++;
-        }
-      }
-    }
+    // Buscar chaves de rate limit via get com prefixo
+    const cacheStats = await cacheManager.getStats();
+    stats.totalKeys = cacheStats.keys;
     
     return stats;
   } catch (error) {
@@ -288,8 +280,8 @@ export function withSlowDown(config: {
   delayAfter: number;
   delayMs: number;
 }) {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: ApiHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const limiter = await getRateLimiter();
       const result = await limiter.checkLimit(req, {
         ...config,

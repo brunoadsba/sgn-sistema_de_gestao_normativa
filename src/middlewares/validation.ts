@@ -11,8 +11,8 @@ export function validateRequest<T>(
     return { success: true, data: validatedData };
   } catch (error) {
     if (error instanceof ZodError) {
-      const errorMessages = error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
+      const errorMessages = error.issues.map((issue) => 
+        `${issue.path.join('.')}: ${issue.message}`
       ).join(', ');
       return { success: false, error: `Dados inválidos: ${errorMessages}` };
     }
@@ -48,7 +48,7 @@ export async function validateRequestBody<T>(
 export function createErrorResponse(
   message: string,
   status: number = 400,
-  details?: any
+  details?: unknown
 ): NextResponse {
   return NextResponse.json(
     {

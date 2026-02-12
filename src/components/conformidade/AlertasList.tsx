@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Clock, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react'
+import { AlertTriangle, Clock, CheckCircle, EyeOff } from 'lucide-react'
 
 interface AlertaConformidade {
   id: string

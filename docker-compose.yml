@@ -13,14 +13,10 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - NEXT_TELEMETRY_DISABLED=1
-      # Supabase Configuration
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Database (SQLite)
+      - DATABASE_PATH=/app/data/sgn.db
       # GROQ Configuration
       - GROQ_API_KEY=${GROQ_API_KEY}
-      # N8N Configuration
-      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
       # Redis Configuration
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -28,6 +24,7 @@ services:
       # Logging
       - LOG_LEVEL=info
     volumes:
+      - ./data:/app/data
       - ./logs:/app/logs
     depends_on:
       - redis
@@ -73,47 +70,8 @@ services:
     networks:
       - sgn-network
 
-  # Monitoring with Prometheus (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-    restart: unless-stopped
-    networks:
-      - sgn-network
-
-  # Grafana for dashboards (optional)
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-    networks:
-      - sgn-network
-
 volumes:
   redis_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
     driver: local
 
 networks:

@@ -1,65 +1,105 @@
 import type { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isDatabaseReady } from '@/lib/db';
+import { isRedisAvailable } from '@/lib/cache/redis';
+import { env } from '@/lib/env';
 
-export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+interface HealthCheck {
+  status: 'ok' | 'degraded' | 'error';
+  timestamp: string;
+  version: string;
+  environment: string;
+  services: {
+    database: 'ok' | 'error';
+    cache: 'ok' | 'error' | 'unavailable';
+    api: 'ok' | 'error';
+  };
+  performance: {
+    duration: string;
+  };
+  uptime: number;
+}
+
+const startTime = Date.now();
+
+export async function GET(_request: NextRequest) {
+  const checkStartTime = Date.now();
+  const services: HealthCheck['services'] = {
+    database: 'error',
+    cache: 'unavailable',
+    api: 'ok',
+  };
   
   try {
-    // Verificar conexão com o banco de dados Supabase
-    const { data, error } = await supabase
-      .from('normas')
-      .select('id')
-      .limit(1);
+    // Verificar conexão com SQLite
+    services.database = isDatabaseReady() ? 'ok' : 'error';
 
-    if (error) {
-      return Response.json(
-        { 
-          status: 'error', 
-          message: 'API não está saudável - erro no banco de dados',
-          details: error.message,
-          timestamp: new Date().toISOString()
-        }, 
-        { status: 503 }
-      );
+    // Verificar conexão com Redis (não crítico)
+    try {
+      const redisAvailable = await isRedisAvailable();
+      services.cache = redisAvailable ? 'ok' : 'unavailable';
+    } catch {
+      services.cache = 'unavailable';
     }
 
-    if (!data) {
-      return Response.json(
-        { 
-          status: 'error', 
-          message: 'API não está saudável - sem dados do banco',
-          timestamp: new Date().toISOString()
-        }, 
-        { status: 503 }
-      );
-    }
-
-    const duration = Date.now() - startTime;
+    const duration = Date.now() - checkStartTime;
+    const uptime = Math.floor((Date.now() - startTime) / 1000);
     
-    return Response.json({
-      status: 'ok',
-      message: 'API está saudável',
+    let status: HealthCheck['status'] = 'ok';
+    if (services.database === 'error') {
+      status = 'error';
+    } else if (services.cache === 'unavailable') {
+      status = 'degraded';
+    }
+
+    const health: HealthCheck = {
+      status,
       timestamp: new Date().toISOString(),
-      services: {
-        database: 'ok',
-        api: 'ok'
-      },
+      version: process.env.npm_package_version || '1.0.0',
+      environment: env.NODE_ENV,
+      services,
       performance: {
-        duration: `${duration}ms`
-      }
+        duration: `${duration}ms`,
+      },
+      uptime,
+    };
+
+    const httpStatus = status === 'error' ? 503 : 200;
+    
+    return Response.json(health, { 
+      status: httpStatus,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'X-Health-Check': 'true',
+      },
     });
 
   } catch (error) {
-    const duration = Date.now() - startTime;
+    const duration = Date.now() - checkStartTime;
+    const uptime = Math.floor((Date.now() - startTime) / 1000);
     
     return Response.json(
       { 
-        status: 'error', 
-        message: 'API não está saudável - erro interno',
-        details: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString()
+        status: 'error' as const,
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: env.NODE_ENV,
+        services: {
+          ...services,
+          api: 'error' as const,
+        },
+        performance: {
+          duration: `${duration}ms`,
+        },
+        uptime,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
       }, 
-      { status: 503 }
+      { 
+        status: 503,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'X-Health-Check': 'true',
+        },
+      }
     );
   }
 }

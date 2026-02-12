@@ -134,7 +134,9 @@ export default function NR6Page() {
                     <SelectItem value="ficha_entrega_epi">Ficha de Entrega de EPI</SelectItem>
                     <SelectItem value="treinamento_epi">Treinamento de EPI</SelectItem>
                     <SelectItem value="inspecao_epi">Inspeção de EPI</SelectItem>
-                    <SelectItem value="ppra">PPRA</SelectItem>
+                    <SelectItem value="pgr">PGR (Programa de Gerenciamento de Riscos) ⭐ Principal</SelectItem>
+                    <SelectItem value="nr1_gro">NR-1 GRO</SelectItem>
+                    <SelectItem value="ppra">PPRA (Legado - substituído por PGR)</SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>

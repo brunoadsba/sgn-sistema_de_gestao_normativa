@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys, queryOptions, mutationOptions, cacheUtils } from '../lib/cache/query-client';
+import { queryKeys, queryOptions, cacheUtils } from '../lib/cache/query-client';
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
 
 // Hook para buscar normas
-export function useNormas(filters: Record<string, any> = {}) {
+export function useNormas(filters: Record<string, string> = {}) {
   return useQuery({
     ...queryOptions.normas.list(filters),
     queryFn: async () => {
@@ -90,11 +90,13 @@ export function useExecuteIAAnalysis() {
     },
     onSuccess: (data, variables) => {
       // Invalidate related queries
-      cacheUtils.invalidateIAAnalysis(queryClient, variables.empresaId);
+      if (variables.empresaId) {
+        cacheUtils.invalidateIAAnalysis(queryClient, variables.empresaId);
+      }
       
       // Update cache with new result
       queryClient.setQueryData(
-        queryKeys.ia.result(data.id || 'latest'),
+        queryKeys.ia.result('latest'),
         data
       );
       

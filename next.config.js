@@ -7,18 +7,25 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   experimental: {
-    optimizePackageImports: ['@supabase/supabase-js', 'groq-sdk'],
+    optimizePackageImports: ['groq-sdk'],
   },
   images: {
-    domains: ['kqdilsmgjlgmqcoubpel.supabase.co'],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
   },
+  // better-sqlite3 é módulo nativo, precisa ser external no serverless
+  serverExternalPackages: ['better-sqlite3'],
   
   // Security headers
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production';
+    
+    // CSP nonce gerado com crypto para segurança
+    const crypto = require('crypto');
+    const cspNonce = `'nonce-${crypto.randomBytes(16).toString('base64')}'`;
     
     return [
       {
@@ -31,9 +38,10 @@ const nextConfig = {
               ? 'https://sgn.vercel.app' 
               : 'http://localhost:3001' 
           },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Correlation-ID' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS, PATCH' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Correlation-ID, X-Requested-With' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Max-Age', value: '86400' },
           
           // Security headers
           { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -42,10 +50,8 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
           
-          // Rate limiting headers
-          { key: 'X-RateLimit-Limit', value: '100' },
-          { key: 'X-RateLimit-Remaining', value: '99' },
-          { key: 'X-RateLimit-Reset', value: '1640995200' },
+          // API Security
+          { key: 'X-API-Version', value: '1.0' },
         ],
       },
       {
@@ -58,12 +64,12 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
           
-          // CSP headers
+          // CSP headers (melhorado)
           { 
             key: 'Content-Security-Policy', 
             value: isProduction
-              ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
-              : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' ws: wss: https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+              ? `default-src 'self'; script-src 'self' ${cspNonce}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;`
+              : `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' ws: wss: https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';`
           },
           
           // HSTS (apenas em produção)
