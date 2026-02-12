@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-12 (sessão 10: limpeza técnica, CI/CD e validação final)
+> Atualizado em: 2026-02-12 (sessão 11: README guia de uso)
 
 ---
 
@@ -162,7 +162,6 @@ Projeto de uso privado. Apenas o proprietário utiliza.
 - Testes automatizados: zero testes unitários/integração/E2E
 - Rate limiting existe como middleware mas não é usado nas rotas
 - Worker assíncrono real não existe (processamento de conformidade é síncrono)
-- Branch `feat/sqlite-migration` precisa ser mergeada na `master`
 
 ### Prioridade Média
 - React Query não está integrado em todas as páginas
@@ -305,7 +304,7 @@ Tudo que não é usado foi movido para `obsoleto/` (ignorado pelo git):
 | Seed | `scripts/seed.ts` criado e executado com sucesso |
 | Scripts npm | Adicionados `db:generate`, `db:push`, `db:studio`, `db:seed` |
 | Build | `npm run build` com 0 erros (29 rotas geradas) |
-| Branch | `feat/sqlite-migration` (pendente merge na master) |
+| Branch | `feat/sqlite-migration` mergeada na `master` (sessão 10) |
 
 ### Persistência IA e testes manuais (sessão 9)
 
@@ -328,6 +327,16 @@ Tudo que não é usado foi movido para `obsoleto/` (ignorado pelo git):
 | Superfícies sem uso | Dashboards antigos de `performance/security` removidos; páginas mantidas como descontinuadas |
 | Validação técnica | `npx tsc --noEmit` e `npm run build` com sucesso |
 | E2E básico | Fluxo API (`health`, `empresas`, `ia/analisar-conformidade`, histórico) executado com PASS |
+
+### README guia de uso (sessão 11)
+
+| Item | O que foi feito |
+|------|----------------|
+| README reescrito | Foco em guia de uso para o usuário, menos técnico |
+| Conteúdo | Público-alvo, tabela de funcionalidades, passo a passo por área (Analisar, Empresas, Normas, NR-6) |
+| Início rápido | Pré-requisitos, passos para rodar localmente e via Docker |
+| Dicas e troubleshooting | Formatos suportados, normas sugeridas, problemas comuns e soluções |
+| Detalhes técnicos | Removidos do README; links para docs/memory.md, arquitetura, SECURITY, CONTRIBUTING |
 
 ---
 
@@ -357,51 +366,41 @@ O plano foi discutido e aprovado na sessão 7, executado na branch `feat/sqlite-
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
 
-### Fase 3 - Pós-migração (imediato)
-
-1. **Merge da branch `feat/sqlite-migration` na `master`**
-   - Revisar diff completo, criar PR ou merge direto
-   - Confirmar se a branch padrão é `master` ou `main` antes do merge
-
-2. **Executar limpeza final do working tree**
-   - Consolidar alterações úteis e descartar artefatos/ruído remanescente
-   - Garantir `git status` rastreável para revisão e PR
-
 ### Fase 4 - Qualidade
 
-4. **Implementar testes unitários para APIs críticas**
+1. **Implementar testes unitários para APIs críticas**
    - Prioridade: `/api/empresas`, `/api/alertas`, `/api/conformidade/analisar`
    - Usar Jest (já configurado no projeto)
    - Testar com banco SQLite in-memory para isolamento
 
-5. **Aplicar rate limiting nas rotas de API**
+2. **Aplicar rate limiting nas rotas de API**
    - Middleware já existe em `src/middlewares/rate-limit.ts`
    - Aplicar nas rotas públicas: `/api/ia/*`, `/api/empresas`, `/api/alertas`
 
-6. **Adicionar Error Boundaries nas páginas**
+3. **Adicionar Error Boundaries nas páginas**
    - `src/app/empresas/error.tsx`, `src/app/normas/error.tsx`
    - Componente reutilizável com retry
 
 ### Fase 5 - Produção
 
-7. **Configurar Sentry para error tracking**
+4. **Configurar Sentry para error tracking**
    - Instalar `@sentry/nextjs`, configurar DSN
    - Capturar erros de API e client-side
 
-8. **Otimizar Docker para produção**
+5. **Otimizar Docker para produção**
    - Testar `docker-compose.prod.yml` end-to-end
    - Verificar healthcheck, volume persistente, limites de memória
    - Configurar backup do SQLite (cron job que copia `./data/sgn.db`)
 
-9. **Integrar React Query em todas as páginas**
+6. **Integrar React Query em todas as páginas**
    - Páginas de empresas e conformidade ainda fazem fetch direto
    - Provider já existe em `src/lib/cache/query-client.tsx`
 
 ### Fase 6 - Evolução (quando demandado)
 
-10. **Gráficos de evolução de conformidade** (tendência de score ao longo do tempo)
-11. **Timeline de análises realizadas** por empresa
-12. **Comparações side-by-side de documentos**
+7. **Gráficos de evolução de conformidade** (tendência de score ao longo do tempo)
+8. **Timeline de análises realizadas** por empresa
+9. **Comparações side-by-side de documentos**
 
 ---
 
