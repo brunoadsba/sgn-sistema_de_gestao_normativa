@@ -49,6 +49,9 @@ Thumbs.db
 .idea/
 *.sublime-project
 *.sublime-workspace
+.cursor/.agent-tools/
+.cursor/plans/
+.agent/
 
 # ============================================
 # Debug / Logs
