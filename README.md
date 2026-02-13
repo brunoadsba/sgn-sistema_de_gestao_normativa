@@ -86,7 +86,7 @@ O sistema estará disponível em `http://localhost:3001`.
 | Framework | Next.js 15 (App Router) |
 | Linguagem | TypeScript (strict mode) |
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM |
-| IA | GROQ SDK (Llama 3.1 8B) |
+| IA | GROQ SDK (Llama 4 Scout 17B) |
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 
 ## Dicas de uso

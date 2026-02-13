@@ -30,6 +30,13 @@ Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 - **types/conformidade.ts**: reescrito sem interfaces de empresa
 - **types/ia.ts**: simplificado, removidos tipos não usados
 
+### Modelo de IA
+
+- **Modelo trocado**: `llama-3.1-8b-instant` (8B) → `meta-llama/llama-4-scout-17b-16e-instruct` (17B ativos, 109B total, MoE 16 experts)
+- **max_tokens aumentado**: conformidade 2000→4000, NR-6 1500→3000
+- **Capacidades**: contexto 10M tokens, 460 tok/s, free tier 1000 req/dia + 30K TPM
+- **Metadado `modeloUsado`** atualizado nas rotas `/api/ia/analisar-conformidade` e `/api/nr6/analisar`
+
 ### Validado
 
 - `npx tsc --noEmit` — 0 erros

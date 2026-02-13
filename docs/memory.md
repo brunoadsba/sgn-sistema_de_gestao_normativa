@@ -115,7 +115,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 1. **Página principal de análise com IA**
    - Upload de documento com drag-and-drop (PDF, DOCX, TXT)
    - Seleção de NRs aplicáveis (grid multi-select com filtro)
-   - Análise de conformidade via GROQ + Llama 3.1 (~1.2s)
+   - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
    - Exibição de resultado: score, risco, gaps, recomendações, próximos passos
 2. Catálogo de normas com busca e detalhes
 3. Análise especializada NR-6 (EPIs)
@@ -163,7 +163,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 10 | 2026-02-12 | Limpeza técnica, CI/CD, merge master |
 | 11 | 2026-02-12 | README reescrito como guia de uso |
 | 12 | 2026-02-12 | Workflows e Guia-Vercel |
-| 13 | 2026-02-13 | Refatoração single-user: removidos empresas, Redis, conformidade, alertas, rate-limit, security, demo, seed. Schema DB simplificado (4 tabelas). 0 erros TS. |
+| 13 | 2026-02-13 | Refatoração single-user: removidos empresas, Redis, conformidade, alertas, rate-limit, security, demo, seed. Schema DB simplificado (4 tabelas). Modelo IA trocado para Llama 4 Scout 17B (MoE). 0 erros TS. |
 
 ---
 
@@ -171,13 +171,11 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
 
-### Fase 4 - Modelo de IA
+### Fase 4 - Modelo de IA (CONCLUÍDA)
 
-1. **Pesquisar e implementar o melhor modelo Llama para o GROQ**
-   - Avaliar modelos open-source disponíveis no GROQ (free tier, custo zero)
-   - Critérios: qualidade de resposta para SST, velocidade, limites de tokens
-   - Modelo atual: `llama-3.1-8b-instant` — avaliar se há versão mais poderosa e leve
-   - Atualizar `src/lib/ia/groq.ts` e `src/lib/ia/analisador-nr6.ts` com o modelo escolhido
+- Modelo atualizado de `llama-3.1-8b-instant` (8B) para `meta-llama/llama-4-scout-17b-16e-instruct` (17B ativos, 109B total, MoE)
+- Contexto: 10M tokens, velocidade: 460 tok/s, free tier: 1000 req/dia, 30K TPM
+- `max_tokens` aumentado: conformidade 4000, NR-6 3000
 
 ### Fase 5 - Qualidade
 
@@ -267,7 +265,7 @@ Página inicial (/)
   ├── 2. Selecionar NRs aplicáveis (grid multi-select)
   ├── 3. Clicar "Analisar Conformidade com IA"
   │     ├── POST /api/extrair-texto (extrai texto do arquivo)
-  │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 3.1)
+  │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout)
   └── 4. Ver resultado (score, risco, gaps, recomendações)
 ```
 
