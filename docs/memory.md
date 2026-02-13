@@ -23,7 +23,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM | 0.45.1 |
-| IA | GROQ SDK (Llama 3.1 8B Instant) | 0.32.0 |
+| IA | GROQ SDK (Llama 4 Scout 17B) | 0.32.0 |
 | Validação | Zod | 4.1.5 |
 | State | React Query (TanStack) | 5.90.5 |
 | Animações | Framer Motion | 12.23.12 |

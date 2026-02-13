@@ -35,7 +35,7 @@ async function analisarConformidadeHandler(request: NextRequest) {
     const respostaCompleta: AnaliseConformidadeResponse = {
       ...resultado,
       timestamp: new Date().toISOString(),
-      modeloUsado: 'llama-3.1-8b-versatile',
+      modeloUsado: 'llama-4-scout-17b-16e-instruct',
       tempoProcessamento
     }
 

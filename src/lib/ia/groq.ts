@@ -67,9 +67,9 @@ export async function analisarConformidade(
           content: prompt
         }
       ],
-      model: 'llama-3.1-8b-instant',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 4000,
       top_p: 0.9
     })
 

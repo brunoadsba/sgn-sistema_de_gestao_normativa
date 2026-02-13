@@ -68,9 +68,9 @@ export async function analisarNR6(request: AnaliseNR6Request): Promise<AnaliseNR
           content: prompt
         }
       ],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.2, // Muito baixa para consistência
-      max_tokens: 1500,
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      temperature: 0.2,
+      max_tokens: 3000,
       top_p: 0.8
     })
 

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const respostaCompleta = {
       ...resultado,
       timestamp: new Date().toISOString(),
-      modeloUsado: 'llama-3.1-8b-instant',
+      modeloUsado: 'llama-4-scout-17b-16e-instruct',
       tempoProcessamento,
       norma: 'NR-6',
       versao: '2024.1'
