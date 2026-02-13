@@ -115,5 +115,6 @@ Para detalhes de arquitetura, API e contribuição:
 
 - `docs/memory.md` — estado do projeto e próximos passos
 - `docs/sql/arquitetura.md` — arquitetura e banco de dados
+- `docs/Guia-Vercel.md` — referência Skills.sh para agentes IA
 - `SECURITY.md` — segurança
 - `CONTRIBUTING.md` — como contribuir

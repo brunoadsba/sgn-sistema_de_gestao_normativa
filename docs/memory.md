@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-12 (sessão 11: README guia de uso)
+> Atualizado em: 2026-02-12 (sessão 12: doc workflows e Guia-Vercel)
 
 ---
 
@@ -40,9 +40,9 @@ Projeto de uso privado. Apenas o proprietário utiliza.
 
 ```
 /                                   # Raiz do projeto
-├── .github/workflows/              # CI/CD (ci, deploy, release, test)
+├── .github/workflows/              # CI/CD (ci, deploy, release)
 ├── docker/                         # nginx.conf + .env.example
-├── docs/                           # memory.md + sql/
+├── docs/                           # memory.md, sql/, Guia-Vercel.md
 ├── obsoleto/                       # Código/docs removidos (ignorado pelo git e tsconfig)
 ├── public/                         # sw.js
 ├── scripts/                        # 8 scripts utilitários (bash, js)
@@ -146,7 +146,7 @@ Projeto de uso privado. Apenas o proprietário utiliza.
 9. API de health check
 10. Rate limiting básico (middleware)
 11. Logging estruturado com Pino
-12. CI/CD com GitHub Actions (4 workflows)
+12. CI/CD com GitHub Actions (3 workflows: ci, deploy, release)
 13. Docker multi-stage build
 14. Validação de env com Zod
 15. Schemas Zod para APIs principais (camelCase)
@@ -337,6 +337,14 @@ Tudo que não é usado foi movido para `obsoleto/` (ignorado pelo git):
 | Início rápido | Pré-requisitos, passos para rodar localmente e via Docker |
 | Dicas e troubleshooting | Formatos suportados, normas sugeridas, problemas comuns e soluções |
 | Detalhes técnicos | Removidos do README; links para docs/memory.md, arquitetura, SECURITY, CONTRIBUTING |
+
+### Atualização doc e workflows (sessão 12)
+
+| Item | O que foi feito |
+|------|----------------|
+| Workflows | Corrigido: 3 workflows (ci, deploy, release); test.yml removido na sessão 10 |
+| docs/ | Adicionado Guia-Vercel.md (referência Skills.sh para agentes IA) |
+| Estrutura | Atualizada descrição de docs/ e .github/workflows/ |
 
 ---
 
