@@ -1,9 +1,7 @@
 name: Release Pipeline
 
+# Desativado: executa apenas manualmente (Actions > Release Pipeline > Run workflow)
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
