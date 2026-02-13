@@ -19,9 +19,9 @@ tipo(feature): descrição concisa
 
 Exemplos:
 
-- `feat(ia): persistir resultados de conformidade no sqlite`
+- `feat(ia): implementar novo modelo llama no groq`
 - `fix(api): corrigir paginação de listagem de análises`
-- `docs(memory): atualizar estado pós-migração`
+- `docs(memory): atualizar estado pós-refatoração`
 
 ## Checklist antes de abrir PR
 
@@ -29,16 +29,11 @@ Exemplos:
    ```bash
    npx tsc --noEmit
    ```
-2. Executar testes aplicáveis:
-   ```bash
-   npm test
-   ```
-3. Atualizar documentação afetada:
+2. Atualizar documentação afetada:
    - `README.md`
    - `docs/memory.md`
-   - `docs/sql/arquitetura.md`
    - `SECURITY.md` (se houver impacto de segurança)
-4. Garantir ausência de secrets em arquivos versionados
+3. Garantir ausência de secrets em arquivos versionados
 
 ## Convenções de código
 
@@ -47,3 +42,5 @@ Exemplos:
 3. Respostas de API com estrutura consistente (`success`, `data`, `error`)
 4. Logs via `@/lib/logger`
 5. Evitar duplicação de código (DRY)
+6. Arquivos com máximo de 200 linhas
+7. Server Components por padrão, `"use client"` apenas quando necessário

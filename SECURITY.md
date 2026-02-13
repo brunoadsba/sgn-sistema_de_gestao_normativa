@@ -7,58 +7,50 @@ Documentar os controles de segurança existentes, limites atuais e próximos pas
 ## Controles implementados
 
 1. Validação de entrada com Zod nas rotas principais
-2. Sanitização de input para prompts de IA
-3. Headers de segurança configurados no app
+2. Sanitização de input para prompts de IA (`sanitizeInput` em `groq.ts` e `analisador-nr6.ts`)
+3. Headers de segurança configurados no app (`next.config.js`)
 4. Logging estruturado com Pino
-5. Bloqueio de endpoints de demo em produção
-6. Tratamento padronizado de respostas de erro/sucesso em parte das APIs
+5. Tratamento padronizado de respostas de erro/sucesso nas APIs
+6. Variáveis de ambiente validadas com Zod (`src/lib/env.ts`)
 
-## Middleware de rate limiting
+## Modelo de segurança
 
-- Implementado em `src/middlewares/rate-limit.ts`
-- Configurações existentes para categorias de endpoint
-- Limitação atual: ainda não aplicado de forma consistente em todas as rotas públicas
+Aplicação single-user, executada localmente. Sem autenticação (acesso restrito à máquina local). Única comunicação externa é com a API do GROQ para análise de IA.
 
 ## Riscos atuais conhecidos
 
-1. APIs sem autenticação/autorização
-2. Rate limit não aplicado em toda superfície pública
-3. Sem monitoramento centralizado (Sentry ausente)
+1. APIs sem autenticação (aceitável para uso local single-user)
+2. Sem monitoramento centralizado (Sentry ausente)
+3. Sem rate limiting (removido junto com Redis — desnecessário para uso local)
 
-## Recomendações prioritárias
+## Recomendações para produção
 
-1. Aplicar `rateLimitMiddlewares` em:
-   - `/api/ia/*`
-   - `/api/empresas`
-   - `/api/alertas`
-2. Definir camada mínima de autenticação para APIs sensíveis
+Se o projeto evoluir para multi-user ou deploy público:
+
+1. Implementar autenticação (NextAuth ou similar)
+2. Adicionar rate limiting em `/api/ia/*`
 3. Integrar observabilidade de erros (Sentry)
-4. Formalizar testes automatizados de segurança no CI
+4. Configurar HTTPS
+5. Implementar CORS restritivo
 
-## Variáveis de ambiente relacionadas
+## Variáveis de ambiente
 
 ```bash
 NODE_ENV=development|production
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
+GROQ_API_KEY=                     # Obrigatória
+DATABASE_PATH=./data/sgn.db       # Opcional (default: ./data/sgn.db)
 ```
 
-## Checklist rápido de validação de segurança
+## Checklist rápido
 
-1. Confirmar `GROQ_API_KEY` somente em `.env.local`/secrets
-2. Confirmar que não há secrets versionados
-3. Confirmar inexistência de arquivos legados como `.env-n8n`
-4. Rotacionar imediatamente credenciais que já tenham sido expostas em ambiente local
-5. Executar:
-   ```bash
-   npm run security:test
-   ```
-6. Revisar logs de erro da API após testes
+1. Confirmar `GROQ_API_KEY` somente em `.env.local` (nunca versionado)
+2. Confirmar que não há secrets versionados (`git grep -i "api_key\|password\|secret"`)
+3. Executar validação de tipagem: `npx tsc --noEmit`
 
 ## Histórico recente
 
 - Supabase e N8N removidos do fluxo principal
+- Redis removido (desnecessário para single-user local)
 - Banco local SQLite com Drizzle em operação
+- Feature de empresas removida (app single-user)
 - Persistência da análise IA implementada com registro de jobs/resultados/gaps

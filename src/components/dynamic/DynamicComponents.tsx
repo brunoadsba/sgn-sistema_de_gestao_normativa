@@ -2,46 +2,12 @@
 
 import dynamic from 'next/dynamic'
 import React from 'react'
-import { LoadingSpinner, CardLoading, TableLoading } from '@/components/loading/LoadingSpinner'
+import { LoadingSpinner, CardLoading } from '@/components/loading/LoadingSpinner'
 
 // 🚀 LAZY LOADING OTIMIZADO - Componentes pesados carregados sob demanda
 
-// Componentes de conformidade (carregados apenas quando necessário)
-export const DynamicKpis = dynamic(
-  () => import('@/components/conformidade/Kpis').then(mod => ({ default: mod.Kpis })),
-  {
-    loading: () => (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <CardLoading key={i} />
-        ))}
-      </div>
-    ),
-    ssr: false // 🚀 Desabilita SSR para componentes interativos
-  }
-)
+// Componentes de conformidade removidos (feature empresas descontinuada)
 
-export const DynamicGapsTable = dynamic(
-  () => import('@/components/conformidade/GapsTable').then(mod => ({ default: mod.GapsTable })),
-  {
-    loading: () => <TableLoading rows={5} columns={4} />,
-    ssr: false
-  }
-)
-
-export const DynamicJobsList = dynamic(
-  () => import('@/components/conformidade/JobsList').then(mod => ({ default: mod.JobsList })),
-  {
-    loading: () => (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <CardLoading key={i} />
-        ))}
-      </div>
-    ),
-    ssr: false
-  }
-)
 
 // Toast system (carregado sob demanda)
 export const DynamicToaster = dynamic(
@@ -63,7 +29,7 @@ export function LazyWrapper({ condition, children, fallback }: LazyWrapperProps)
   if (!condition) {
     return <>{fallback || <LoadingSpinner />}</>
   }
-  
+
   return <>{children}</>
 }
 

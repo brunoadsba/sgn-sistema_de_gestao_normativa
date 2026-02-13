@@ -21,17 +21,16 @@ async function analisarConformidadeHandler(request: NextRequest) {
     }
 
     const body = bodyValidation.data;
-    
+
     log.info({
-      empresaId: body.empresaId,
       tipoDocumento: body.tipoDocumento,
     }, 'Validação de entrada bem-sucedida');
-    
+
     // Executar análise
     const resultado = await analisarConformidade(body as AnaliseConformidadeRequest)
-    
+
     const tempoProcessamento = Date.now() - startTime
-    
+
     // Adicionar metadados
     const respostaCompleta: AnaliseConformidadeResponse = {
       ...resultado,
@@ -40,7 +39,7 @@ async function analisarConformidadeHandler(request: NextRequest) {
       tempoProcessamento
     }
 
-    // Persistir no banco (quando empresaId estiver disponível)
+    // Persistir no banco
     await persistirAnaliseConformidade(body as AnaliseConformidadeRequest, respostaCompleta)
 
     // Log de sucesso
@@ -58,7 +57,7 @@ async function analisarConformidadeHandler(request: NextRequest) {
 
   } catch (error) {
     const tempoProcessamento = Date.now() - startTime;
-    
+
     log.error({
       tempoProcessamento,
       error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -81,9 +80,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limite = Math.min(Math.max(parseInt(searchParams.get('limite') || '10'), 1), 100)
     const pagina = Math.max(parseInt(searchParams.get('pagina') || '1'), 1)
-    const empresaId = searchParams.get('empresaId') || undefined
-
-    const data = await listarAnalisesConformidade(pagina, limite, empresaId)
+    const data = await listarAnalisesConformidade(pagina, limite)
 
     return createSuccessResponse(data)
 
@@ -91,7 +88,7 @@ export async function GET(request: NextRequest) {
     log.error({
       error: error instanceof Error ? error.message : 'Erro desconhecido'
     }, 'Erro ao listar análises de conformidade')
-    
+
     return createErrorResponse(
       'Erro ao listar análises',
       500,

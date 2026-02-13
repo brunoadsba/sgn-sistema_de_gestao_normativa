@@ -32,13 +32,12 @@ interface AnaliseResultado {
 export default function NR6Page() {
   const [documento, setDocumento] = useState('')
   const [tipoDocumento, setTipoDocumento] = useState('')
-  const [empresaId, setEmpresaId] = useState('')
   const [loading, setLoading] = useState(false)
   const [resultado, setResultado] = useState<AnaliseResultado | null>(null)
   const [error, setError] = useState('')
 
   const analisarDocumento = async () => {
-    if (!documento || !tipoDocumento || !empresaId) {
+    if (!documento || !tipoDocumento) {
       setError('Preencha todos os campos obrigatórios')
       return
     }
@@ -55,8 +54,7 @@ export default function NR6Page() {
         },
         body: JSON.stringify({
           documento,
-          tipoDocumento,
-          empresaId
+          tipoDocumento
         })
       })
 
@@ -114,17 +112,6 @@ export default function NR6Page() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Empresa ID</label>
-                <input
-                  type="text"
-                  value={empresaId}
-                  onChange={(e) => setEmpresaId(e.target.value)}
-                  placeholder="Ex: empresa-123"
-                  className="w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <div>
                 <label className="text-sm font-medium">Tipo de Documento</label>
                 <Select value={tipoDocumento} onValueChange={setTipoDocumento}>
                   <SelectTrigger>
@@ -158,8 +145,8 @@ export default function NR6Page() {
                 </Alert>
               )}
 
-              <Button 
-                onClick={analisarDocumento} 
+              <Button
+                onClick={analisarDocumento}
                 disabled={loading}
                 className="w-full"
               >
@@ -183,29 +170,29 @@ export default function NR6Page() {
                 {/* Status de Conformidade NR-6 */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
-                    {resultado.conformidadeNR6.ca_valido ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                    {resultado.conformidadeNR6.ca_valido ?
+                      <CheckCircle className="h-4 w-4 text-green-500" /> :
                       <XCircle className="h-4 w-4 text-red-500" />
                     }
                     <span className="text-sm">CA Válido</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {resultado.conformidadeNR6.treinamento_realizado ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                    {resultado.conformidadeNR6.treinamento_realizado ?
+                      <CheckCircle className="h-4 w-4 text-green-500" /> :
                       <XCircle className="h-4 w-4 text-red-500" />
                     }
                     <span className="text-sm">Treinamento</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {resultado.conformidadeNR6.epi_adequado ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                    {resultado.conformidadeNR6.epi_adequado ?
+                      <CheckCircle className="h-4 w-4 text-green-500" /> :
                       <XCircle className="h-4 w-4 text-red-500" />
                     }
                     <span className="text-sm">EPI Adequado</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {resultado.conformidadeNR6.documentacao_completa ? 
-                      <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                    {resultado.conformidadeNR6.documentacao_completa ?
+                      <CheckCircle className="h-4 w-4 text-green-500" /> :
                       <XCircle className="h-4 w-4 text-red-500" />
                     }
                     <span className="text-sm">Documentação</span>

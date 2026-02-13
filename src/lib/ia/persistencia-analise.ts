@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
 import { log } from '@/lib/logger';
@@ -20,34 +20,15 @@ export async function persistirAnaliseConformidade(
   entrada: AnaliseConformidadeRequest,
   resultado: AnaliseConformidadeResponse
 ): Promise<void> {
-  if (!entrada.empresaId) {
-    log.warn('Análise concluída sem empresaId; persistência ignorada');
-    return;
-  }
-
-  const empresa = await db
-    .select({ id: schema.empresas.id })
-    .from(schema.empresas)
-    .where(and(eq(schema.empresas.id, entrada.empresaId), eq(schema.empresas.ativo, true)))
-    .limit(1);
-
-  if (empresa.length === 0) {
-    log.warn({ empresaId: entrada.empresaId }, 'Empresa não encontrada; persistência ignorada');
-    return;
-  }
-
   const documentoInserido = await db
-    .insert(schema.documentosEmpresa)
+    .insert(schema.documentos)
     .values({
-      empresaId: entrada.empresaId,
       nomeArquivo: `analise-ia-${Date.now()}.txt`,
       tipoDocumento: entrada.tipoDocumento,
       conteudoExtraido: entrada.documento,
-      metadados: {
-        origem: 'api-ia-analisar-conformidade',
-      },
+      metadados: { origem: 'api-ia-analisar-conformidade' },
     })
-    .returning({ id: schema.documentosEmpresa.id });
+    .returning({ id: schema.documentos.id });
 
   const documentoId = documentoInserido[0]?.id;
   if (!documentoId) {
@@ -57,19 +38,14 @@ export async function persistirAnaliseConformidade(
   const jobInserido = await db
     .insert(schema.analiseJobs)
     .values({
-      empresaId: entrada.empresaId,
       documentoId,
       normaIds: entrada.normasAplicaveis ?? [],
       status: 'completed',
       tipoAnalise: 'completa',
       priority: 5,
       progresso: 100,
-      parametros: {
-        tipoDocumento: entrada.tipoDocumento,
-      },
-      metadata: {
-        modeloUsado: resultado.modeloUsado,
-      },
+      parametros: { tipoDocumento: entrada.tipoDocumento },
+      metadata: { modeloUsado: resultado.modeloUsado },
       startedAt: new Date(Date.now() - resultado.tempoProcessamento).toISOString(),
       completedAt: new Date().toISOString(),
     })
@@ -83,7 +59,6 @@ export async function persistirAnaliseConformidade(
   const resultadoInserido = await db
     .insert(schema.analiseResultados)
     .values({
-      empresaId: entrada.empresaId,
       jobId,
       documentoId,
       scoreGeral: Math.round(resultado.score),
@@ -120,21 +95,20 @@ export async function persistirAnaliseConformidade(
       }))
     );
   }
+
+  log.info({ documentoId, jobId, analiseResultadoId }, 'Análise persistida com sucesso');
 }
 
 export async function listarAnalisesConformidade(
   pagina: number,
-  limite: number,
-  empresaId?: string
+  limite: number
 ): Promise<AnaliseListagem> {
   const offset = (pagina - 1) * limite;
-  const whereClause = empresaId ? eq(schema.analiseResultados.empresaId, empresaId) : undefined;
 
   const [countResult, resultados] = await Promise.all([
     db
       .select({ count: sql<number>`count(*)` })
-      .from(schema.analiseResultados)
-      .where(whereClause),
+      .from(schema.analiseResultados),
     db
       .select({
         id: schema.analiseResultados.id,
@@ -144,7 +118,6 @@ export async function listarAnalisesConformidade(
         createdAt: schema.analiseResultados.createdAt,
       })
       .from(schema.analiseResultados)
-      .where(whereClause)
       .orderBy(desc(schema.analiseResultados.createdAt))
       .limit(limite)
       .offset(offset),

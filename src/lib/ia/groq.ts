@@ -29,7 +29,6 @@ function sanitizeInput(input: string): string {
 export interface AnaliseConformidadeRequest {
   documento: string
   tipoDocumento: string
-  empresaId?: string
   normasAplicaveis?: string[]
 }
 
@@ -56,7 +55,7 @@ export async function analisarConformidade(
 ): Promise<AnaliseConformidadeResponse> {
   try {
     const prompt = gerarPromptAnalise(request)
-    
+
     const completion = await groq.chat.completions.create({
       messages: [
         {
@@ -90,7 +89,7 @@ export async function analisarConformidade(
 function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
   const documentoSanitizado = sanitizeInput(request.documento)
   const tipoSanitizado = sanitizeInput(request.tipoDocumento)
-  
+
   return `
 ANÁLISE DE CONFORMIDADE SST - DOCUMENTO: ${tipoSanitizado}
 
@@ -140,7 +139,7 @@ function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
     }
 
     const parsed = JSON.parse(jsonMatch[0])
-    
+
     // Validar estrutura
     if (!parsed.score || !parsed.nivelRisco || !parsed.gaps) {
       throw new Error('Estrutura de resposta inválida')
@@ -158,20 +157,20 @@ export async function analisarConformidadeLote(
   documentos: AnaliseConformidadeRequest[]
 ): Promise<AnaliseConformidadeResponse[]> {
   const resultados: AnaliseConformidadeResponse[] = []
-  
+
   for (const documento of documentos) {
     try {
       const resultado = await analisarConformidade(documento)
       resultados.push(resultado)
-      
+
       // Delay para respeitar rate limits
       await new Promise(resolve => setTimeout(resolve, 100))
     } catch (error) {
-      console.error(`Erro ao analisar documento ${documento.empresaId}:`, error)
+      console.error('Erro ao analisar documento no lote:', error)
       // Continuar com outros documentos
     }
   }
-  
+
   return resultados
 }
 

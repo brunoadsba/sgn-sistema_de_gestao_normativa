@@ -33,15 +33,15 @@ export async function GET(request: Request) {
     normas = normas.slice(0, limit);
 
     if (format === "csv") {
-      const headers = ["ID", "Código", "Título", "Órgão", "Data Criação"];
+      const headers = ["ID", "Código", "Título", "Categoria", "Status"];
       const csvContent = [
         headers.join(","),
         ...normas.map(norma => [
           norma.id,
           `"${norma.codigo}"`,
           `"${norma.titulo.replace(/"/g, '""')}"`,
-          `"${norma.orgao_publicador}"`,
-          norma.created_at,
+          `"${norma.categoria}"`,
+          norma.status,
         ].join(","))
       ].join("\n");
 

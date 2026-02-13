@@ -3,7 +3,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/cache/query-client";
 import Link from "next/link";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
 });
@@ -31,22 +31,16 @@ export default function RootLayout({
                 Gestão Normativa
               </span>
             </Link>
-            
+
             <nav className="flex items-center gap-1">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
               >
                 Analisar
               </Link>
-              <Link 
-                href="/empresas" 
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                Empresas
-              </Link>
-              <Link 
-                href="/normas" 
+              <Link
+                href="/normas"
                 className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
               >
                 Normas

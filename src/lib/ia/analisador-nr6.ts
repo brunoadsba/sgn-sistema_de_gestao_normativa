@@ -24,9 +24,6 @@ function sanitizeInput(input: string): string {
 export interface AnaliseNR6Request {
   documento: string
   tipoDocumento: 'ficha_entrega_epi' | 'treinamento_epi' | 'inspecao_epi' | 'pgr' | 'nr1_gro' | 'ppra' | 'outro'
-  // PGR e NR-1-GRO são os documentos principais (NR-1 GRO substituiu PPRA)
-  // PPRA mantido para compatibilidade com documentos legados
-  empresaId: string
   funcionario?: string
   setor?: string
 }
@@ -59,7 +56,7 @@ export interface AnaliseNR6Response {
 export async function analisarNR6(request: AnaliseNR6Request): Promise<AnaliseNR6Response> {
   try {
     const prompt = gerarPromptNR6(request)
-    
+
     const completion = await groq.chat.completions.create({
       messages: [
         {
@@ -95,7 +92,6 @@ function gerarPromptNR6(request: AnaliseNR6Request): string {
 ANÁLISE ESPECÍFICA DE CONFORMIDADE COM NR-6 (EPI)
 
 TIPO DE DOCUMENTO: ${request.tipoDocumento}
-EMPRESA: ${request.empresaId}
 
 DOCUMENTO PARA ANÁLISE:
 ${sanitizeInput(request.documento)}
@@ -167,7 +163,7 @@ function parsearRespostaNR6(response: string): AnaliseNR6Response {
     }
 
     const parsed = JSON.parse(jsonMatch[0])
-    
+
     // Validar estrutura específica da NR-6
     if (!parsed.score || !parsed.conformidadeNR6) {
       throw new Error('Estrutura de resposta NR-6 inválida')

@@ -6,27 +6,27 @@ import { AnaliseNR6Request } from '@/lib/ia/analisador-nr6'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     // Validar entrada específica para NR-6
     const validacao = validarEntradaNR6(body)
     if (!validacao.valida) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Dados de entrada inválidos para análise NR-6',
-          detalhes: validacao.erros 
+          detalhes: validacao.erros
         },
         { status: 400 }
       )
     }
 
     const inicioProcessamento = Date.now()
-    
+
     // Executar análise específica da NR-6
     const resultado = await analisarNR6(body as AnaliseNR6Request)
-    
+
     const tempoProcessamento = Date.now() - inicioProcessamento
-    
+
     // Adicionar metadados específicos da NR-6
     const respostaCompleta = {
       ...resultado,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log específico da NR-6
-    console.log(`Análise NR-6 concluída para empresa ${body.empresaId}:`, {
+    console.log('Análise NR-6 concluída:', {
       score: resultado.score,
       gaps: resultado.gaps.length,
       conformidadeNR6: resultado.conformidadeNR6,
@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
     })
 
     // Salvar análise no banco (implementar depois)
-    // await salvarAnaliseNR6(body.empresaId, respostaCompleta)
 
     return NextResponse.json({
       success: true,
@@ -57,10 +56,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro na análise NR-6:', error)
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Erro interno do servidor na análise NR-6',
         detalhes: error instanceof Error ? error.message : 'Erro desconhecido',
         timestamp: new Date().toISOString(),
@@ -90,9 +89,7 @@ function validarEntradaNR6(body: any): { valida: boolean; erros: string[] } {
     erros.push(`Tipo de documento inválido. Tipos válidos: ${tiposValidos.join(', ')}`)
   }
 
-  if (!body.empresaId || typeof body.empresaId !== 'string') {
-    erros.push('Campo "empresaId" é obrigatório para análise NR-6')
-  }
+
 
   // Validar tamanho específico para NR-6
   if (body.documento && body.documento.length > 30000) {

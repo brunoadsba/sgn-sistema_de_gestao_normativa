@@ -7,12 +7,12 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50);
 
     if (!q || q.length < 2) {
-      return Response.json({ 
-        error: "Query deve ter pelo menos 2 caracteres" 
+      return Response.json({
+        error: "Query deve ter pelo menos 2 caracteres"
       }, { status: 400 });
     }
 
-    const normas = searchNormas(q, limit);
+    const normas = searchNormas(q).slice(0, limit);
 
     // Calcular score de relevância
     const results = normas.map(norma => {

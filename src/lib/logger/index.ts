@@ -16,17 +16,8 @@ const pinoOptions: pino.LoggerOptions = {
   },
 };
 
-if (process.env.NODE_ENV === 'development') {
-  pinoOptions.transport = {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname',
-      singleLine: false,
-    },
-  };
-}
+// pino-pretty transport desabilitado em dev — usa worker threads
+// que conflitam com hot-reload do Next.js (erro MODULE_NOT_FOUND worker.js)
 
 const logger = pino(pinoOptions);
 

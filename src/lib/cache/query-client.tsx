@@ -11,7 +11,7 @@ const createQueryClient = () => new QueryClient({
       // Tempo de cache padrão
       staleTime: 5 * 60 * 1000, // 5 minutos
       gcTime: 10 * 60 * 1000, // 10 minutos (anteriormente cacheTime)
-      
+
       // Retry configuration
       retry: (failureCount, error) => {
         // Não retry para erros 4xx (client errors)
@@ -24,22 +24,22 @@ const createQueryClient = () => new QueryClient({
         // Retry até 3 vezes para outros erros
         return failureCount < 3;
       },
-      
+
       // Retry delay com backoff exponencial
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      
+
       // Refetch configuration
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       refetchOnMount: true,
-      
+
       // Network mode
       networkMode: 'online',
     },
     mutations: {
       // Retry mutations apenas uma vez
       retry: 1,
-      
+
       // Retry delay para mutations
       retryDelay: 1000,
     },
@@ -49,12 +49,12 @@ const createQueryClient = () => new QueryClient({
 // Provider do React Query
 export function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}
       {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools 
+        <ReactQueryDevtools
           initialIsOpen={false}
           buttonPosition="bottom-right"
         />
@@ -74,21 +74,21 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.normas.details(), id] as const,
     stats: () => [...queryKeys.normas.all, 'stats'] as const,
   },
-  
+
   // IA Analysis
   ia: {
     all: ['ia'] as const,
-    analysis: (empresaId: string) => [...queryKeys.ia.all, 'analysis', empresaId] as const,
+    analysis: () => [...queryKeys.ia.all, 'analysis'] as const,
     results: () => [...queryKeys.ia.all, 'results'] as const,
     result: (id: string) => [...queryKeys.ia.results(), id] as const,
   },
-  
+
   // Health
   health: {
     all: ['health'] as const,
     check: () => [...queryKeys.health.all, 'check'] as const,
   },
-  
+
   // User
   user: {
     all: ['user'] as const,
@@ -106,35 +106,35 @@ export const queryOptions = {
       staleTime: 5 * 60 * 1000, // 5 minutos
       gcTime: 10 * 60 * 1000, // 10 minutos
     }),
-    
+
     detail: (id: string) => ({
       queryKey: queryKeys.normas.detail(id),
       staleTime: 10 * 60 * 1000, // 10 minutos
       gcTime: 30 * 60 * 1000, // 30 minutos
     }),
-    
+
     stats: () => ({
       queryKey: queryKeys.normas.stats(),
       staleTime: 2 * 60 * 1000, // 2 minutos
       gcTime: 5 * 60 * 1000, // 5 minutos
     }),
   },
-  
+
   // IA queries
   ia: {
-    analysis: (empresaId: string) => ({
-      queryKey: queryKeys.ia.analysis(empresaId),
+    analysis: () => ({
+      queryKey: queryKeys.ia.analysis(),
       staleTime: 30 * 60 * 1000, // 30 minutos
       gcTime: 60 * 60 * 1000, // 1 hora
     }),
-    
+
     result: (id: string) => ({
       queryKey: queryKeys.ia.result(id),
       staleTime: 60 * 60 * 1000, // 1 hora
       gcTime: 24 * 60 * 60 * 1000, // 24 horas
     }),
   },
-  
+
   // Health queries
   health: {
     check: () => ({
@@ -157,7 +157,7 @@ export const mutationOptions = {
       console.error('Erro na análise de IA:', error);
     },
   },
-  
+
   // Generic mutation options
   generic: {
     onError: (error: Error) => {
@@ -172,27 +172,27 @@ export const cacheUtils = {
   invalidateNormas: (queryClient: QueryClient) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.normas.all });
   },
-  
+
   // Invalidate specific norma
   invalidateNorma: (queryClient: QueryClient, id: string) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.normas.detail(id) });
   },
-  
+
   // Invalidate IA cache
   invalidateIA: (queryClient: QueryClient) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.ia.all });
   },
-  
+
   // Invalidate specific IA analysis
-  invalidateIAAnalysis: (queryClient: QueryClient, empresaId: string) => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.ia.analysis(empresaId) });
+  invalidateIAAnalysis: (queryClient: QueryClient) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.ia.analysis() });
   },
-  
+
   // Clear all cache
   clearAll: (queryClient: QueryClient) => {
     queryClient.clear();
   },
-  
+
   // Prefetch normas list
   prefetchNormas: async (queryClient: QueryClient, filters: Record<string, string> = {}) => {
     await queryClient.prefetchQuery({
@@ -204,7 +204,7 @@ export const cacheUtils = {
       },
     });
   },
-  
+
   // Prefetch norma detail
   prefetchNormaDetail: async (queryClient: QueryClient, id: string) => {
     await queryClient.prefetchQuery({
@@ -228,7 +228,7 @@ export const errorUtils = {
       error.message.includes('timeout')
     );
   },
-  
+
   // Check if error is 4xx client error
   isClientError: (error: unknown): boolean => {
     if (error && typeof error === 'object' && 'status' in error) {
@@ -237,7 +237,7 @@ export const errorUtils = {
     }
     return false;
   },
-  
+
   // Check if error is 5xx server error
   isServerError: (error: unknown): boolean => {
     if (error && typeof error === 'object' && 'status' in error) {
@@ -246,7 +246,7 @@ export const errorUtils = {
     }
     return false;
   },
-  
+
   // Get error message
   getErrorMessage: (error: unknown): string => {
     if (error instanceof Error) {
