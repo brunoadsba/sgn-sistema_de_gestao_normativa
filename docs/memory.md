@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-13 (sessão 13: refatoração single-user)
+> Atualizado em: 2026-02-15 (sessão 14: limite de contexto IA 500k caracteres)
 
 ---
 
@@ -164,6 +164,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 11 | 2026-02-12 | README reescrito como guia de uso |
 | 12 | 2026-02-12 | Workflows e Guia-Vercel |
 | 13 | 2026-02-13 | Refatoração single-user: removidos empresas, Redis, conformidade, alertas, rate-limit, security, demo, seed. Schema DB simplificado (4 tabelas). Modelo IA trocado para Llama 4 Scout 17B (MoE). 0 erros TS. |
+| 14 | 2026-02-15 | Limite de documento para IA aumentado de 50k para 500k caracteres em `src/lib/ia/groq.ts`. Llama 4 Scout suporta 10M tokens (~150 páginas). |
 
 ---
 
@@ -176,6 +177,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 - Modelo atualizado de `llama-3.1-8b-instant` (8B) para `meta-llama/llama-4-scout-17b-16e-instruct` (17B ativos, 109B total, MoE)
 - Contexto: 10M tokens, velocidade: 460 tok/s, free tier: 1000 req/dia, 30K TPM
 - `max_tokens` aumentado: conformidade 4000, NR-6 3000
+- `MAX_DOCUMENT_LENGTH`: 500.000 caracteres (~150 páginas) em `src/lib/ia/groq.ts` — aproveita o contexto de 10M tokens do Llama 4 Scout
 
 ### Fase 5 - Qualidade
 
