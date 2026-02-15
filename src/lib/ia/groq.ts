@@ -8,7 +8,9 @@ const groq = new Groq({
 })
 
 // Limite máximo de caracteres para documentos enviados à IA
-const MAX_DOCUMENT_LENGTH = 50000
+// Limite máximo de caracteres para documentos enviados à IA
+// Llama 4 Scout tem 10M tokens de contexto, então 500k caracteres é seguro (~150 páginas)
+const MAX_DOCUMENT_LENGTH = 500000
 
 /**
  * Sanitiza input do usuário antes de enviar à IA.
