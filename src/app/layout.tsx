@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { QueryProvider } from "@/lib/cache/query-client";
 import Link from "next/link";
 
 const inter = Inter({
@@ -50,9 +49,7 @@ export default function RootLayout({
         </header>
 
         <main className="min-h-[calc(100vh-3.5rem)] bg-gray-50">
-          <QueryProvider>
-            {children}
-          </QueryProvider>
+          {children}
         </main>
       </body>
     </html>

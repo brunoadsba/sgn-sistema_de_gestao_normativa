@@ -2,6 +2,95 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-19] - Links de todas as NRs e anexos (Sessão 17)
+
+### Adicionado
+
+- **Campo `urlAnexos`** na interface `NormaLocal` (`src/lib/data/normas.ts`): array opcional de `{ label: string; url: string }` para mapear anexos individuais de cada NR
+- **17 anexos mapeados**:
+  - NR-11: Anexo I (transporte de sacas)
+  - NR-15: Anexos I a XIV + XIII-A (15 anexos, incluindo 2 que apontam para Portaria MTP nº 426/2021)
+  - NR-17: Anexo I (checkout) e Anexo II (teleatendimento)
+- **Constante `URL_BASE_ARQUIVOS`**: segundo caminho base para PDFs no domínio do MTE (`arquivos/normas-regulamentadoras/`)
+- **Constante `URL_BASE_PORTARIAS`**: caminho base para portarias SST de 2021
+- **Seção de anexos na página `/normas/[id]`**: lista de links para todos os anexos quando existirem
+
+### Alterado
+
+- **`src/lib/data/normas.ts`**: `urlOficial` de todas as 38 NRs substituído por links diretos confirmados. NR-2 e NR-27 (revogadas) também receberam links diretos para seus PDFs históricos
+- **`src/app/normas/[id]/page.tsx`**: adicionada seção "Anexos" abaixo do link oficial
+
+### Removido
+
+- **Constante `URL_LISTAGEM_MTE`**: removida de `normas.ts` pois todas as NRs agora têm link direto confirmado
+
+---
+
+## [2026-02-18] - Links diretos NRs e documentação (Sessão 16)
+
+### Adicionado
+
+- **`URL_BASE_PDF`** em `src/lib/data/normas.ts`: constante com o domínio base dos PDFs diretos do MTE (acesso-a-informacao / CTPP)
+- **NR-1 com link direto confirmado**: `urlOficial` da NR-1 atualizado para o PDF específico `nr-01-atualizada-2025-i-3.pdf`
+
+### Alterado
+
+- **`src/lib/data/normas.ts`**: comentários atualizados explicando o status de cada URL (confirmada vs. fallback)
+- **`docs/memory.md`**: atualização completa — stack (React Query removido, Playwright adicionado), histórico de sessões (15 e 16), estrutura de pastas (e2e/, remoção de lib/cache/), seção de próximos passos com tabela de status dos links por NR
+- **`CHANGELOG.md`**: entradas de sessões 15 e 16
+
+### Próximo passo documentado
+
+- Bruno vai fornecer os links diretos individuais para NR-2 a NR-38 (exceto NR-2 e NR-27, revogadas)
+
+---
+
+## [2026-02-18] - Testes E2E, UX/UI e correções críticas (Sessão 15)
+
+### Adicionado
+
+- **Playwright E2E**: instalado e configurado (`playwright.config.ts`). 5 suites de testes em `e2e/`:
+  - `api.spec.ts` — smoke tests de todas as rotas de API
+  - `navegacao.spec.ts` — navegação global (header, links)
+  - `normas.spec.ts` — catálogo de normas (busca, lista, detalhes)
+  - `nr6.spec.ts` — página de análise NR-6 (formulário, validação)
+  - `pagina-inicial.spec.ts` — fluxo principal (upload, seletor, validação)
+- **Scripts de teste** em `package.json`: `test:e2e`, `test:e2e:ui`, `test:e2e:report`
+- **Campo `urlOficial`** na interface `NormaLocal` em `src/lib/data/normas.ts`
+- **`export const runtime = 'nodejs'`** e **`export const maxDuration = 120`** em `src/app/api/ia/analisar-conformidade/route.ts`
+
+### Corrigido
+
+- **Server Components com fetch relativo**: `src/app/normas/page.tsx` e `src/app/normas/[id]/page.tsx` usavam `fetch('/api/...')` (URL relativa), que falha silenciosamente em Server Components. Corrigido para import direto de `getNormasData()` e `getNormaById()` de `src/lib/data/normas.ts`
+- **Página `/normas/[id]`**: substituída lógica frágil baseada em `titulo.includes("REVOGADA")` por `norma.status === 'revogada'`. Link "Acessar texto oficial" agora usa `norma.urlOficial`
+- **404 nos links das NRs**: URLs estimadas com padrão `nr-XX-atualizada-YYYY.pdf` (inexistentes) substituídas por `URL_LISTAGEM_MTE` (confirmada pelo usuário)
+
+### Removido
+
+- **`@tanstack/react-query`** e **`@tanstack/react-query-devtools`**: dependências sem uso removidas
+- **`bcryptjs`** e **`@types/bcryptjs`**: dependências sem uso removidas
+- **`src/lib/cache/query-client.tsx`**: arquivo do provider React Query deletado
+- **Import de `QueryProvider`** em `src/app/layout.tsx`
+
+### UX/UI — `SeletorNormas.tsx`
+
+- Grid alterado de 3 para 2 colunas (títulos completos sem truncamento)
+- Removida classe `truncate` dos títulos das NRs
+- Adicionada seção de chips acima da lista (NRs selecionadas com botão de remoção individual)
+- Botão "Limpar" desativado quando nenhuma NR selecionada
+- Placeholder do filtro atualizado
+
+### UX/UI — `ResultadoAnalise.tsx`
+
+- Score exibido como indicador circular SVG animado (substituiu exibição simples)
+- Gaps ordenados por severidade (crítica > alta > média > baixa)
+- Borda colorida esquerda (`border-l-4`) por severidade nos cards de gaps
+- Adicionada seção de pontos de atenção (`pontosAtencao`) — estava ausente
+- Contagem de gaps por severidade no cabeçalho (ex: "2 críticos, 3 altos")
+- Numeração visual dos itens de "Próximos Passos"
+
+---
+
 ## [2026-02-13] - Refatoração single-user (Sessão 13)
 
 ### Removido

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, CheckSquare, Square } from 'lucide-react'
+import { Search, X, CheckSquare, Square } from 'lucide-react'
 
 interface Norma {
   id: string
@@ -21,18 +21,6 @@ interface SeletorNormasProps {
 function extrairCodigoCurto(codigo: string): string {
   const match = codigo.match(/NR[-\s]*(\d+)/i)
   return match ? `NR-${parseInt(match[1])}` : codigo.split(' - ')[0]
-}
-
-function extrairTituloCurto(codigo: string, titulo: string): string {
-  if (titulo && titulo !== codigo) {
-    return titulo.length > 60 ? titulo.substring(0, 57) + '...' : titulo
-  }
-  const parts = codigo.split(' - ')
-  if (parts.length > 1) {
-    const t = parts.slice(1).join(' - ')
-    return t.length > 60 ? t.substring(0, 57) + '...' : t
-  }
-  return ''
 }
 
 export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregando }: SeletorNormasProps) {
@@ -55,8 +43,18 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
     }
   }
 
+  const removerNorma = (e: React.MouseEvent, codigo: string) => {
+    e.stopPropagation()
+    onSelecaoChange(selecionadas.filter(c => c !== codigo))
+  }
+
   const selecionarTodas = () => onSelecaoChange(normas.map(n => n.codigo))
   const limparSelecao = () => onSelecaoChange([])
+
+  const normasSelecionadasObjetos = useMemo(
+    () => normas.filter(n => selecionadas.includes(n.codigo)),
+    [normas, selecionadas]
+  )
 
   if (carregando) {
     return (
@@ -77,34 +75,72 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
 
   return (
     <div className="space-y-3">
+      {/* Busca + ações */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Filtrar normas..."
+            placeholder="Filtrar por código ou nome..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             className="pl-9 h-9"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={selecionarTodas}>
             Todas
           </Button>
-          <Button variant="outline" size="sm" onClick={limparSelecao}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={limparSelecao}
+            disabled={selecionadas.length === 0}
+          >
             Limpar
           </Button>
         </div>
       </div>
 
-      <p className="text-sm text-gray-500">
-        {selecionadas.length} de {normas.length} normas selecionadas
-      </p>
+      {/* Chips das normas selecionadas */}
+      {normasSelecionadasObjetos.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            {selecionadas.length} selecionada{selecionadas.length !== 1 ? 's' : ''}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {normasSelecionadasObjetos.map((norma) => (
+              <span
+                key={norma.id}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+              >
+                <span className="font-semibold">{extrairCodigoCurto(norma.codigo)}</span>
+                <span className="text-blue-600 max-w-[140px] truncate">{norma.titulo}</span>
+                <button
+                  type="button"
+                  onClick={(e) => removerNorma(e, norma.codigo)}
+                  className="ml-0.5 rounded-full hover:bg-blue-200 p-0.5 transition-colors"
+                  aria-label={`Remover ${norma.codigo}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="border-t border-gray-100 pt-2" />
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[320px] overflow-y-auto pr-1">
+      {/* Contador quando nada selecionado */}
+      {selecionadas.length === 0 && (
+        <p className="text-sm text-gray-400">
+          Nenhuma norma selecionada
+        </p>
+      )}
+
+      {/* Lista de normas — 2 colunas, texto completo, sem truncamento */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[380px] overflow-y-auto pr-1">
         {normasFiltradas.map((norma) => {
           const codigoCurto = extrairCodigoCurto(norma.codigo)
-          const titulo = extrairTituloCurto(norma.codigo, norma.titulo)
           const selecionada = selecionadas.includes(norma.codigo)
 
           return (
@@ -113,21 +149,25 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
               type="button"
               onClick={() => toggleNorma(norma.codigo)}
               className={`
-                flex items-start gap-2 p-2.5 rounded-lg border text-left transition-all text-sm
+                flex items-start gap-2.5 p-3 rounded-lg border text-left transition-all text-sm
                 ${selecionada
                   ? 'border-blue-300 bg-blue-50 text-blue-900'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+                  : 'border-gray-200 hover:border-blue-200 hover:bg-gray-50 text-gray-700'
                 }
               `}
             >
               {selecionada
                 ? <CheckSquare className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                : <Square className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                : <Square className="h-4 w-4 text-gray-300 mt-0.5 flex-shrink-0" />
               }
               <div className="min-w-0">
-                <span className="font-semibold">{codigoCurto}</span>
-                {titulo && (
-                  <span className="text-xs block text-gray-500 truncate">{titulo}</span>
+                <span className={`font-semibold text-sm ${selecionada ? 'text-blue-700' : 'text-gray-800'}`}>
+                  {codigoCurto}
+                </span>
+                {norma.titulo && (
+                  <span className={`text-xs block leading-snug mt-0.5 ${selecionada ? 'text-blue-600' : 'text-gray-500'}`}>
+                    {norma.titulo}
+                  </span>
                 )}
               </div>
             </button>

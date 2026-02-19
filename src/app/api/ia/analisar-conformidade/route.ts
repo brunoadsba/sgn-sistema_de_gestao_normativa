@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server'
 import { analisarConformidade } from '@/lib/ia/groq'
+
+export const runtime = 'nodejs'
+export const maxDuration = 120
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 import { CreateAnaliseSchema } from '@/schemas'
 import { createSuccessResponse, createErrorResponse, validateRequestBody } from '@/middlewares/validation'
