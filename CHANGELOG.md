@@ -2,6 +2,32 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-19] - Redesign UX/UI completo e dark mode (Sessão 20)
+
+### Adicionado
+
+- **`src/components/ui/CanvasBackground.tsx`**: componente de fundo animado com Canvas API — partículas índigo interligadas por linhas em fundo escuro (`#0d1117 → #0f1525`), renderizado como Server Component via `'use client'`
+- **Dark mode forçado**: `className="dark"` adicionado ao `<html>` em `layout.tsx`. Tailwind configurado com `darkMode: ["class"]`
+- **`data-scroll-behavior="smooth"`**: atributo adicionado ao `<html>` para suprimir aviso do Next.js sobre transições de rota futuras
+
+### Alterado
+
+- **`src/app/globals.css`**: variáveis CSS do tema dark refinadas — background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`, primary `213 90% 60%`
+- **`src/app/layout.tsx`**: header com glassmorphism (`backdrop-blur-md`), `dark:bg-gray-950/80`, `dark:border-gray-800/80`. `CanvasBackground` adicionado ao body
+- **`src/app/page.tsx`**: títulos com gradiente `dark:from-gray-100`, cards `dark:bg-gray-900/60 backdrop-blur-xl`, progresso e erros com variantes dark
+- **`src/app/normas/page.tsx`**: grid de cards com `dark:bg-gray-900/70`, títulos dark, input de busca dark. Badge "Atualizado em tempo real" **removido** (informação inexistente no projeto)
+- **`src/app/normas/[id]/page.tsx`**: cabeçalho, seções e botões com variantes dark
+- **`src/components/analise/UploadDocumento.tsx`**: drop zone, arquivo selecionado e badges de formato com variantes dark
+- **`src/components/analise/SeletorNormas.tsx`**: input, botões, chips de NRs e lista de itens com variantes dark
+- **`src/components/analise/ResultadoAnalise.tsx`**: `CONFIG_RISCO` e `CONFIG_SEVERIDADE` atualizados com classes dark, score, cards de gaps, pontos positivos/atenção e próximos passos com variantes dark
+
+### Removido
+
+- **Badge "Atualizado em tempo real"** em `src/app/normas/page.tsx`: funcionalidade inexistente no projeto removida da UI
+- **Import `RefreshCw`** em `src/app/normas/page.tsx`: ícone sem uso removido
+
+---
+
 ## [2026-02-19] - Suporte a documentos grandes (Sessão 19)
 
 ### Corrigido

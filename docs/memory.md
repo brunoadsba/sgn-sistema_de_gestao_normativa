@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-19 (sessão 19: suporte a documentos grandes + extração PDF corrigida)
+> Atualizado em: 2026-02-19 (sessão 20: redesign UX/UI completo + dark mode)
 
 ---
 
@@ -35,6 +35,16 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 ---
 
+## Interface e Design (sessão 20)
+
+- **Dark mode forçado por padrão**: `<html className="dark">` em `layout.tsx`. Tailwind usa `darkMode: ["class"]`.
+- **Canvas Background animado**: `src/components/ui/CanvasBackground.tsx` — partículas índigo interligadas por linhas, fundo `#0d1117 → #0f1525`.
+- **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
+- **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
+- Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
+
+---
+
 ## Estrutura de Pastas
 
 ```
@@ -52,30 +62,30 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 │   │   │   ├── health/             # Health check (database + api)
 │   │   │   ├── ia/                 # Análise de conformidade com IA
 │   │   │   ├── normas/             # CRUD normas + stats
-│   │   │   ├── nr6/               # Análise específica NR-6
+│   │   │   ├── nr6/                # Análise específica NR-6
 │   │   │   └── search/             # Busca inteligente
 │   │   ├── normas/                 # Páginas de normas (lista + [id])
 │   │   ├── nr6/                    # Página análise NR-6
-│   │   ├── layout.tsx              # Root layout (nav: Analisar, Normas)
+│   │   ├── layout.tsx              # Root layout — nav, CanvasBackground, dark mode
 │   │   ├── page.tsx                # Página principal: análise de conformidade
 │   │   └── sitemap.ts              # Sitemap
 │   ├── components/
 │   │   ├── analise/                # UploadDocumento, SeletorNormas, ResultadoAnalise
 │   │   ├── dynamic/                # Lazy loading (DynamicComponents)
 │   │   ├── loading/                # LoadingSpinner
-│   │   └── ui/                     # shadcn/ui (16 componentes)
+│   │   └── ui/                     # shadcn/ui (16 componentes) + CanvasBackground.tsx
 │   ├── hooks/                      # use-toast
 │   ├── lib/
 │   │   ├── constants/              # tipos-documento.ts (60+ tipos SST)
-│   │   ├── data/                   # normas.ts (38 NRs locais + helpers + urlOficial)
+│   │   ├── data/                   # normas.ts (38 NRs locais + helpers + urlOficial + urlAnexos)
 │   │   ├── db/                     # schema.ts (Drizzle) + index.ts (cliente SQLite)
 │   │   ├── ia/                     # groq.ts, analisador-nr6.ts, persistencia-analise.ts, analise-mappers.ts
 │   │   ├── logger/                 # Pino logger
 │   │   ├── env.ts                  # Validação de env com Zod
 │   │   ├── errors.ts               # Classes de erro + handler centralizado
 │   │   └── utils.ts                # cn() helper
-│   ├── middlewares/                 # security, validation
-│   ├── schemas/                    # Zod schemas (norma, analise)
+│   ├── middlewares/                # security, validation
+│   ├── schemas/                    # Zod schemas (norma, analise) — documento.max = 2M chars
 │   └── types/                      # TypeScript types (ia.ts, conformidade.ts)
 ├── .env.example
 ├── playwright.config.ts
@@ -92,8 +102,10 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 ### Dados Estáticos (TypeScript)
 
 - 38 NRs armazenadas em `src/lib/data/normas.ts` (36 ativas, 2 revogadas)
-- Campo `urlOficial` em cada NR: link direto para o PDF no MTE (quando confirmado) ou URL da listagem geral como fallback
+- Campo `urlOficial`: link direto confirmado para o PDF no MTE em todas as 38 NRs
+- Campo `urlAnexos?: { label: string; url: string }[]`: 17 anexos mapeados (NR-11: 1, NR-15: 15, NR-17: 2)
 - Funções helper: `getNormas()`, `getNormaById()`, `searchNormas()`, `getNormasStats()`
+- Constantes de URL: `URL_BASE_PDF`, `URL_BASE_ARQUIVOS`, `URL_BASE_PORTARIAS`
 
 ### Tabelas SQLite (Drizzle ORM)
 
@@ -116,11 +128,11 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 ## O que funciona (implementado)
 
 1. **Página principal de análise com IA**
-   - Upload de documento com drag-and-drop (PDF, DOCX, TXT)
-   - Seletor de NRs: grid 2 colunas, chips de selecionadas, filtro por nome
+   - Upload de documento com drag-and-drop (PDF, DOCX, TXT) — até 100MB
+   - Seletor de NRs: lista vertical com filtro, chips de selecionadas, ações "Selecionar Todas" e "Limpar Seleção"
    - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
-   - Resultado: score circular animado, gaps ordenados por severidade com borda colorida, pontos de atenção, próximos passos numerados
-2. Catálogo de normas com busca e detalhes (link direto para PDF no MTE)
+   - Resultado: score circular SVG animado, gaps ordenados por severidade, pontos positivos/atenção, próximos passos em grid
+2. Catálogo de normas com busca (grid de cards) e detalhes (link direto para PDF no MTE + lista de anexos)
 3. Análise especializada NR-6 (EPIs)
 4. Persistência de análises no SQLite (documentos, jobs, resultados, gaps)
 5. Busca inteligente com ranking
@@ -130,21 +142,21 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 9. CI/CD com GitHub Actions (3 workflows: ci, deploy, release)
 10. Docker multi-stage build
 11. Validação de env com Zod
-12. Schemas Zod para APIs (camelCase)
+12. Schemas Zod para APIs (camelCase) — limite de documento: 2M chars
 13. **Testes E2E com Playwright** (5 suites: api, navegacao, normas, nr6, pagina-inicial)
+14. **Interface dark mode** forçada por padrão com Canvas Background animado
 
 ---
 
 ## O que NÃO funciona / está incompleto
 
 ### Prioridade Alta
-- **Links diretos das NRs**: apenas NR-1 tem URL específica confirmada. As demais (NR-2 a NR-38) usam a listagem geral como fallback. **Aguardando Bruno fornecer os links individuais** (ver "Próximos passos").
 - Worker assíncrono real não existe (processamento é síncrono)
 
 ### Prioridade Média
 - Testes unitários: zero cobertura de testes unitários/integração (E2E existe)
 - Monitoramento de produção inexistente (sem Sentry, sem métricas)
-- Virtualização de listas para grandes volumes
+- Virtualização de listas para grandes volumes de normas
 
 ### Prioridade Baixa
 - Timeline de análises realizadas
@@ -168,37 +180,19 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 11 | 2026-02-12 | README reescrito como guia de uso |
 | 12 | 2026-02-12 | Workflows e Guia-Vercel |
 | 13 | 2026-02-13 | Refatoração single-user: removidos empresas, Redis, conformidade, alertas, rate-limit, security, demo, seed. Schema DB simplificado (4 tabelas). Modelo IA trocado para Llama 4 Scout 17B (MoE). 0 erros TS. |
-| 14 | 2026-02-15 | Limite de documento para IA aumentado de 50k para 500k caracteres em `src/lib/ia/groq.ts`. Llama 4 Scout suporta 10M tokens (~150 páginas). |
-| 15 | 2026-02-18 | Removidos `@tanstack/react-query`, `bcryptjs` (não usados). Corrigido fetch em Server Components (URL relativa → import direto). Adicionados testes E2E com Playwright (5 suites). Melhorias UX/UI: SeletorNormas (chips, grid 2 colunas, sem truncamento), ResultadoAnalise (score circular, gaps por severidade, borda colorida, pontos de atenção). Corrigida página de detalhes NR (`/normas/[id]`). Adicionado campo `urlOficial` em `NormaLocal`. |
-| 16 | 2026-02-18 | Corrigido 404 nos links das NRs (URLs estimadas substituídas por listagem geral confirmada). NR-1 atualizada com link direto do PDF. Adicionada constante `URL_BASE_PDF`. Documentação completa atualizada (memory.md, CHANGELOG.md). |
-| 17 | 2026-02-19 | Links diretos de todas as NRs (NR-2 a NR-38) confirmados e inseridos em `normas.ts`. Adicionado campo `urlAnexos` na interface `NormaLocal` com 17 anexos mapeados (NR-11: 1, NR-15: 15, NR-17: 2). Página `/normas/[id]` atualizada para exibir lista de anexos. Removida constante `URL_LISTAGEM_MTE` (não mais necessária). |
-| 18 | 2026-02-19 | Corrigida extração de PDF (500 no `/api/extrair-texto`). Causa: `pdfjs-dist` sendo bundlado pelo webpack (`Object.defineProperty` em não-objeto) e worker sem configuração. Solução: `pdfjs-dist` + `mammoth` adicionados a `serverExternalPackages`; substituído `pdfjs-dist` por `pdf-parse` v2 com classe `PDFParse`; worker configurado via `file://` URL para `pdf.worker.mjs` (Node.js 18+ suporta workers com `file://` via `worker_threads`). |
-| 19 | 2026-02-19 | Suporte a documentos grandes: limite Zod `documento.max` aumentado de 50k para 2M chars (era o causador do 400 "Documento muito grande"). Limite de upload no frontend aumentado de 10MB para 100MB. `groq.ts` já trunca em 500k chars antes de enviar à IA — sem mudança necessária. |
+| 14 | 2026-02-15 | Limite de documento para IA aumentado de 50k para 500k caracteres em `src/lib/ia/groq.ts`. |
+| 15 | 2026-02-18 | Removidos `@tanstack/react-query`, `bcryptjs`. Corrigido fetch em Server Components. Testes E2E com Playwright (5 suites). Melhorias UX/UI: SeletorNormas (chips, grid), ResultadoAnalise (score circular, gaps por severidade). Corrigida `/normas/[id]`. Campo `urlOficial` em `NormaLocal`. |
+| 16 | 2026-02-18 | Corrigido 404 nos links das NRs. NR-1 com link direto do PDF. Constante `URL_BASE_PDF`. |
+| 17 | 2026-02-19 | Links diretos de todas as 38 NRs confirmados. Campo `urlAnexos` com 17 anexos mapeados (NR-11, NR-15, NR-17). Removida `URL_LISTAGEM_MTE`. |
+| 18 | 2026-02-19 | Corrigida extração de PDF (500 no `/api/extrair-texto`). Substituído `pdfjs-dist` por `pdf-parse` v2. `mammoth` e `pdf-parse` em `serverExternalPackages`. |
+| 19 | 2026-02-19 | Suporte a documentos grandes: limite Zod `documento.max` → 2M chars. Upload frontend → 100MB. |
+| 20 | 2026-02-19 | Redesign UX/UI completo: Canvas Background animado (partículas índigo em fundo escuro), glassmorphism nos cards e header, dark mode forçado por padrão (`<html class="dark">`), variáveis CSS dark refinadas, `dark:` variants em todos os componentes. Badge "Atualizado em tempo real" removido (informação inexistente). Aviso Next.js sobre `scroll-behavior: smooth` corrigido com `data-scroll-behavior="smooth"`. |
 
 ---
 
 ## Próximos passos para o LLM
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
-
-### Links diretos das NRs — CONCLUÍDO (Sessão 17)
-
-Todas as 38 NRs têm `urlOficial` com link direto confirmado para o PDF no MTE.
-NR-2 e NR-27 (revogadas) também têm links diretos para seus PDFs históricos.
-
-Adicionado campo `urlAnexos?: { label: string; url: string }[]` na interface `NormaLocal`.
-Anexos mapeados:
-- **NR-11**: Anexo I (transporte de sacas)
-- **NR-15**: 15 anexos (I ao XIV, incluindo XIII-A), com 2 apontando para Portaria MTP nº 426/2021
-- **NR-17**: Anexos I (checkout) e II (teleatendimento)
-
-Constantes de base utilizadas em `src/lib/data/normas.ts`:
-- `URL_BASE_PDF` — caminho `normas-regulamentadoras-vigentes/`
-- `URL_BASE_ARQUIVOS` — caminho `arquivos/normas-regulamentadoras/`
-- `URL_BASE_PORTARIAS` — caminho `sst-portarias/2021/` (usado pelos Anexos III e VIII da NR-15)
-- NR-37 usa URL completa própria (caminho `ctpp-nrs/`)
-
----
 
 ### Fase 5 - Qualidade
 
@@ -281,21 +275,23 @@ npm run docker:stop  # Para containers
 - Validação: Zod para inputs, schemas em `src/schemas/` (camelCase)
 - Erros: retornar `{ success: boolean, error?: string, data?: T }`
 - Logs: usar Pino via `@/lib/logger` (não console.log)
+- **Dark mode**: forçado via `class="dark"` no `<html>`. Sempre adicionar variantes `dark:` ao criar novos componentes.
 
 ## Fluxo Principal da Aplicação
 
 ```
 Página inicial (/)
-  ├── 1. Upload documento (drag-and-drop: PDF, DOCX, TXT)
-  ├── 2. Selecionar NRs aplicáveis (grid 2 colunas, chips de selecionadas)
+  ├── 1. Upload documento (drag-and-drop: PDF, DOCX, TXT — até 100MB)
+  ├── 2. Selecionar NRs aplicáveis (lista vertical com filtro e chips)
   ├── 3. Clicar "Analisar Conformidade com IA"
-  │     ├── POST /api/extrair-texto (extrai texto do arquivo)
-  │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout)
-  └── 4. Ver resultado (score circular, gaps por severidade, pontos de atenção, próximos passos)
+  │     ├── POST /api/extrair-texto (extrai texto do arquivo via pdf-parse/mammoth)
+  │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout 17B, trunca em 500k chars)
+  └── 4. Ver resultado (score circular SVG, gaps por severidade, pontos positivos/atenção, plano de ação)
 ```
 
 **Componentes do fluxo:**
-- `src/components/analise/UploadDocumento.tsx` — drag-and-drop com validação
-- `src/components/analise/SeletorNormas.tsx` — grid de NRs com filtro e chips
-- `src/components/analise/ResultadoAnalise.tsx` — exibição completa do resultado
+- `src/components/analise/UploadDocumento.tsx` — drag-and-drop com validação (100MB max)
+- `src/components/analise/SeletorNormas.tsx` — lista de NRs com filtro, chips e ações em lote
+- `src/components/analise/ResultadoAnalise.tsx` — exibição completa do resultado com dark mode
 - `src/app/page.tsx` — orquestra o fluxo completo
+- `src/components/ui/CanvasBackground.tsx` — background animado com canvas (partículas índigo)

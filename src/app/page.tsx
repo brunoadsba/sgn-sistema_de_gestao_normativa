@@ -142,10 +142,10 @@ export default function AnalisePage() {
       {/* Header */}
       <div className="text-center mb-12 relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-blue-500/20 blur-3xl -z-10 rounded-full"></div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 tracking-tight mb-4">
           Análise de Conformidade
         </h1>
-        <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
           Faça upload do seu documento SST, selecione as normas aplicáveis e deixe nossa IA identificar gaps e gerar recomendações precisas instantaneamente.
         </p>
       </div>
@@ -159,11 +159,11 @@ export default function AnalisePage() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             {/* Esquerda - Upload (Ocupa mais espaço) */}
             <div className="md:col-span-7">
-              <Card className="h-full border-white/40 shadow-xl shadow-blue-900/5 bg-white/70 backdrop-blur-xl transition-all duration-300 hover:shadow-blue-900/10">
-                <CardHeader className="pb-4 border-b border-gray-100/50">
+              <Card className="h-full border-white/10 dark:border-gray-700/40 shadow-xl shadow-blue-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl transition-all duration-300 hover:shadow-blue-900/10 dark:hover:shadow-black/20">
+                <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">1</div>
-                    <CardTitle className="text-xl">Envio do Documento</CardTitle>
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">1</div>
+                    <CardTitle className="text-xl dark:text-gray-100">Envio do Documento</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -178,11 +178,11 @@ export default function AnalisePage() {
 
             {/* Direita - Normas */}
             <div className="md:col-span-5">
-              <Card className="h-full border-white/40 shadow-xl shadow-indigo-900/5 bg-white/70 backdrop-blur-xl transition-all duration-300 hover:shadow-indigo-900/10">
-                <CardHeader className="pb-4 border-b border-gray-100/50">
+              <Card className="h-full border-white/10 dark:border-gray-700/40 shadow-xl shadow-indigo-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl transition-all duration-300 hover:shadow-indigo-900/10 dark:hover:shadow-black/20">
+                <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">2</div>
-                    <CardTitle className="text-xl">Normas Aplicáveis</CardTitle>
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">2</div>
+                    <CardTitle className="text-xl dark:text-gray-100">Normas Aplicáveis</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6 h-[calc(100%-5rem)]">
@@ -199,28 +199,28 @@ export default function AnalisePage() {
 
           {/* Erro */}
           {erro && (
-            <div className="animate-in fade-in zoom-in-95 duration-300 flex items-center gap-3 p-4 bg-red-50/90 backdrop-blur-md border border-red-200 shadow-sm shadow-red-100 rounded-2xl text-red-800">
-              <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
+            <div className="animate-in fade-in zoom-in-95 duration-300 flex items-center gap-3 p-4 bg-red-50/90 dark:bg-red-950/50 backdrop-blur-md border border-red-200 dark:border-red-900/60 shadow-sm rounded-2xl text-red-800 dark:text-red-300">
+              <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-500 dark:text-red-400" />
               <p className="text-sm font-medium">{erro}</p>
             </div>
           )}
 
           {/* Progresso */}
           {analisando && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 backdrop-blur-xl border border-blue-100 shadow-lg shadow-blue-100/50 rounded-2xl">
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/50 dark:to-indigo-950/50 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-lg rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-blue-400 rounded-full blur animate-pulse opacity-50"></div>
-                    <div className="relative h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+                    <div className="relative h-8 w-8 rounded-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 animate-spin" />
                   </div>
-                  <span className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">
+                  <span className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
                     {etapa}
                   </span>
                 </div>
-                <span className="text-sm font-bold text-blue-600">{progresso}%</span>
+                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{progresso}%</span>
               </div>
-              <Progress value={progresso} className="h-3 bg-blue-100" />
+              <Progress value={progresso} className="h-3 bg-blue-100 dark:bg-blue-950" />
             </div>
           )}
 

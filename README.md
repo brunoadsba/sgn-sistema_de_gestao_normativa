@@ -88,11 +88,18 @@ O sistema estará disponível em `http://localhost:3001`.
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM |
 | IA | GROQ SDK (Llama 4 Scout 17B) |
 | UI | React 19 + Tailwind CSS + shadcn/ui |
+| Extração de texto | pdf-parse v2 + mammoth |
+| Testes | Playwright (E2E) |
+
+## Interface
+
+O sistema utiliza **dark mode por padrão** com fundo animado (Canvas Background com partículas) e efeito glassmorphism nos cards. A interface é responsiva e otimizada para uso contínuo em tela escura.
 
 ## Dicas de uso
 
-- **Documentos suportados:** PDF, DOCX, TXT. O sistema extrai o texto automaticamente.
+- **Documentos suportados:** PDF, DOCX, TXT. O sistema extrai o texto automaticamente. Tamanho máximo: 100MB.
 - **Normas:** Comece com NR-6 (EPI), NR-5 (CIPA), NR-7 (PCMSO) ou NR-9 (PPRA) conforme o tipo de documento.
+- **Documentos grandes:** o sistema suporta arquivos pesados. A IA recebe até 500K caracteres por análise.
 
 ## Problemas comuns
 
@@ -101,9 +108,11 @@ O sistema estará disponível em `http://localhost:3001`.
 | Erro ao extrair texto | Verifique se o documento não está protegido ou corrompido. Tente um PDF sem senha. |
 | Análise demora muito | A IA pode levar alguns segundos. Aguarde a conclusão. |
 | GROQ_API_KEY inválida | Confirme que a chave está correta em `.env.local` e que a conta GROQ está ativa. |
+| Erro "Documento muito grande" | O arquivo excede 100MB ou 2M de caracteres extraídos. Divida o documento. |
 
 ## Documentação técnica
 
-- `docs/memory.md` — estado do projeto e próximos passos
+- `docs/memory.md` — estado completo do projeto, histórico de sessões e próximos passos
+- `CHANGELOG.md` — histórico detalhado de todas as mudanças
 - `SECURITY.md` — segurança
 - `CONTRIBUTING.md` — como contribuir

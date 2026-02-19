@@ -35,7 +35,7 @@ export function CanvasBackground() {
         this.size = Math.random() * 2 + 0.5
         this.speedX = (Math.random() - 0.5) * 0.5
         this.speedY = (Math.random() - 0.5) * 0.5
-        this.color = `rgba(59, 130, 246, ${Math.random() * 0.2 + 0.1})` // Blue-500 with low opacity
+        this.color = `rgba(99, 102, 241, ${Math.random() * 0.35 + 0.15})` // Indigo-500, more visible on dark bg
       }
 
       update() {
@@ -75,7 +75,7 @@ export function CanvasBackground() {
 
           if (distance < 150) {
             ctx!.beginPath()
-            ctx!.strokeStyle = `rgba(59, 130, 246, ${0.1 - distance / 1500})`
+            ctx!.strokeStyle = `rgba(99, 102, 241, ${0.18 - distance / 1500})`
             ctx!.lineWidth = 1
             ctx!.moveTo(particles[a].x, particles[a].y)
             ctx!.lineTo(particles[b].x, particles[b].y)
@@ -111,7 +111,7 @@ export function CanvasBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none -z-10"
-      style={{ background: 'linear-gradient(to bottom right, #f8fafc, #eff6ff)' }}
+      style={{ background: 'linear-gradient(to bottom right, #0d1117, #0f1525)' }}
     />
   )
 }

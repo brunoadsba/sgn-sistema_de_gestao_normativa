@@ -83,11 +83,11 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             placeholder="Buscar norma por código ou nome..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="pl-10 h-11 bg-white/50 border-indigo-100 focus-visible:ring-indigo-500 rounded-xl shadow-sm text-base"
+            className="pl-10 h-11 bg-white/50 dark:bg-gray-800/50 dark:text-gray-100 dark:placeholder:text-gray-500 border-indigo-100 dark:border-indigo-900/50 focus-visible:ring-indigo-500 rounded-xl shadow-sm text-base"
           />
         </div>
         <div className="flex gap-2 shrink-0 justify-between sm:justify-start">
-          <Button variant="secondary" size="sm" onClick={selecionarTodas} className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg h-8">
+          <Button variant="secondary" size="sm" onClick={selecionarTodas} className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg h-8">
             Selecionar Todas
           </Button>
           <Button
@@ -95,7 +95,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             size="sm"
             onClick={limparSelecao}
             disabled={selecionadas.length === 0}
-            className="text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg h-8"
+            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg h-8"
           >
             Limpar Seleção
           </Button>
@@ -114,13 +114,13 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
               {normasSelecionadasObjetos.map((norma) => (
                 <span
                   key={norma.id}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-800 border border-indigo-200/60 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/60 dark:to-blue-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/50 shadow-sm"
                 >
                   <span className="font-bold">{extrairCodigoCurto(norma.codigo)}</span>
                   <button
                     type="button"
                     onClick={(e) => removerNorma(e, norma.codigo)}
-                    className="ml-1 rounded-full hover:bg-indigo-200/50 p-1 text-indigo-500 hover:text-red-500 transition-colors"
+                    className="ml-1 rounded-full hover:bg-indigo-200/50 dark:hover:bg-indigo-800/50 p-1 text-indigo-500 dark:text-indigo-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     aria-label={`Remover ${norma.codigo}`}
                   >
                     <X className="h-3.5 w-3.5" />
@@ -152,21 +152,21 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
               className={`
                 w-full flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200
                 ${selecionada
-                  ? 'border-indigo-400 bg-indigo-50/80 text-indigo-900 shadow-sm shadow-indigo-100'
-                  : 'border-gray-200/80 hover:border-indigo-300 hover:bg-indigo-50/30 text-gray-700 bg-white/50'
+                  ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
+                  : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
                 }
               `}
             >
               <div className={`mt-0.5 rounded flex items-center justify-center h-5 w-5 border transition-colors
-                ${selecionada ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'}`}>
+                ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
                 {selecionada && <CheckSquare className="h-4 w-4 text-white" />}
               </div>
               <div className="min-w-0 flex-1">
-                <span className={`font-bold text-sm block mb-1 ${selecionada ? 'text-indigo-800' : 'text-gray-900'}`}>
+                <span className={`font-bold text-sm block mb-1 ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
                   {codigoCurto}
                 </span>
                 {norma.titulo && (
-                  <span className={`text-sm block leading-snug ${selecionada ? 'text-indigo-600 font-medium' : 'text-gray-500'}`}>
+                  <span className={`text-sm block leading-snug ${selecionada ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                     {norma.titulo}
                   </span>
                 )}
