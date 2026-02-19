@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-19 (sessão 17: links diretos de todas as NRs + anexos)
+> Atualizado em: 2026-02-19 (sessão 19: suporte a documentos grandes + extração PDF corrigida)
 
 ---
 
@@ -26,6 +26,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | IA | GROQ SDK (Llama 4 Scout 17B) | 0.32.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
+| Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
 | Testes E2E | Playwright | instalado (sessão 15) |
 | Deploy | Docker (self-hosted) | - |
 | Logging | Pino | 10.1.0 |
@@ -171,6 +172,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 15 | 2026-02-18 | Removidos `@tanstack/react-query`, `bcryptjs` (não usados). Corrigido fetch em Server Components (URL relativa → import direto). Adicionados testes E2E com Playwright (5 suites). Melhorias UX/UI: SeletorNormas (chips, grid 2 colunas, sem truncamento), ResultadoAnalise (score circular, gaps por severidade, borda colorida, pontos de atenção). Corrigida página de detalhes NR (`/normas/[id]`). Adicionado campo `urlOficial` em `NormaLocal`. |
 | 16 | 2026-02-18 | Corrigido 404 nos links das NRs (URLs estimadas substituídas por listagem geral confirmada). NR-1 atualizada com link direto do PDF. Adicionada constante `URL_BASE_PDF`. Documentação completa atualizada (memory.md, CHANGELOG.md). |
 | 17 | 2026-02-19 | Links diretos de todas as NRs (NR-2 a NR-38) confirmados e inseridos em `normas.ts`. Adicionado campo `urlAnexos` na interface `NormaLocal` com 17 anexos mapeados (NR-11: 1, NR-15: 15, NR-17: 2). Página `/normas/[id]` atualizada para exibir lista de anexos. Removida constante `URL_LISTAGEM_MTE` (não mais necessária). |
+| 18 | 2026-02-19 | Corrigida extração de PDF (500 no `/api/extrair-texto`). Causa: `pdfjs-dist` sendo bundlado pelo webpack (`Object.defineProperty` em não-objeto) e worker sem configuração. Solução: `pdfjs-dist` + `mammoth` adicionados a `serverExternalPackages`; substituído `pdfjs-dist` por `pdf-parse` v2 com classe `PDFParse`; worker configurado via `file://` URL para `pdf.worker.mjs` (Node.js 18+ suporta workers com `file://` via `worker_threads`). |
+| 19 | 2026-02-19 | Suporte a documentos grandes: limite Zod `documento.max` aumentado de 50k para 2M chars (era o causador do 400 "Documento muito grande"). Limite de upload no frontend aumentado de 10MB para 100MB. `groq.ts` já trunca em 500k chars antes de enviar à IA — sem mudança necessária. |
 
 ---
 

@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mammoth from 'mammoth'
+import { PDFParse } from 'pdf-parse'
+import { pathToFileURL } from 'url'
+import { resolve } from 'path'
 
-// Garantir Node runtime e execução dinâmica para lidar com pdfjs/mammoth e uploads
+// Node runtime obrigatório para lidar com Buffer, mammoth e pdf-parse
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+// Configura o worker do pdfjs-dist com file:// URL para funcionar em Node.js server-side.
+// PDFParse.setWorker() sem argumento é no-op nesta versão — o path explícito é obrigatório.
+PDFParse.setWorker(
+  pathToFileURL(
+    resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
+  ).href
+)
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -14,14 +26,12 @@ export async function OPTIONS() {
     },
   })
 }
-import mammoth from 'mammoth'
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
       return NextResponse.json(
         { success: false, error: 'Nenhum arquivo fornecido' },
@@ -32,76 +42,68 @@ export async function POST(request: NextRequest) {
     console.log('📁 Extraindo texto do arquivo:', {
       nome: file.name,
       tipo: file.type,
-      tamanho: file.size
+      tamanho: file.size,
+    })
+
+    const fileName = file.name.toLowerCase()
+    const isPDF =
+      file.type === 'application/pdf' || fileName.endsWith('.pdf')
+    const isDOCX =
+      file.type ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      file.type === 'application/msword' ||
+      fileName.endsWith('.docx') ||
+      fileName.endsWith('.doc')
+    const isTXT = file.type === 'text/plain' || fileName.endsWith('.txt')
+
+    console.log('🔍 Detectando formato:', {
+      fileName: file.name,
+      mimeType: file.type,
+      isPDF,
+      isDOCX,
+      isTXT,
     })
 
     let textoExtraido = ''
 
     try {
-      // Detectar formato pelo nome do arquivo e MIME type
-      const fileName = file.name.toLowerCase()
-      const isPDF = file.type === 'application/pdf' || fileName.endsWith('.pdf')
-      const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                    file.type === 'application/msword' || 
-                    fileName.endsWith('.docx') || 
-                    fileName.endsWith('.doc')
-      const isTXT = file.type === 'text/plain' || fileName.endsWith('.txt')
-
-      console.log('🔍 Detectando formato:', {
-        fileName: file.name,
-        mimeType: file.type,
-        isPDF,
-        isDOCX,
-        isTXT
-      })
-
       if (isPDF) {
-        // Extrair texto de PDF usando pdfjs-dist
         console.log('📄 Processando PDF...')
         const arrayBuffer = await file.arrayBuffer()
-        const uint8Array = new Uint8Array(arrayBuffer)
-        const pdf = await pdfjs.getDocument(uint8Array).promise
-        
-        let fullText = ''
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i)
-          const textContent = await page.getTextContent()
-          const pageText = textContent.items.map((item: any) => item.str).join(' ')
-          fullText += pageText + '\n'
-        }
-        textoExtraido = fullText
-        console.log('✅ PDF processado, texto extraído:', textoExtraido.length, 'caracteres')
-        
+        const buffer = Buffer.from(arrayBuffer)
+        const parser = new PDFParse({ data: buffer })
+        const result = await parser.getText()
+        textoExtraido = result.text
+        console.log('✅ PDF processado:', textoExtraido.length, 'caracteres')
+
       } else if (isDOCX) {
-        // Extrair texto de DOCX usando mammoth
         console.log('📄 Processando DOCX...')
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-        const result = await mammoth.extractRawText({ buffer: buffer })
+        const result = await mammoth.extractRawText({ buffer })
         textoExtraido = result.value
-        console.log('✅ DOCX processado, texto extraído:', textoExtraido.length, 'caracteres')
-        
+        console.log('✅ DOCX processado:', textoExtraido.length, 'caracteres')
+
       } else if (isTXT) {
-        // Extrair texto de TXT
         console.log('📄 Processando TXT...')
         textoExtraido = await file.text()
-        console.log('✅ TXT processado, texto extraído:', textoExtraido.length, 'caracteres')
-        
+        console.log('✅ TXT processado:', textoExtraido.length, 'caracteres')
+
       } else {
         return NextResponse.json(
-          { success: false, error: `Formato de arquivo não suportado: ${file.type} (${file.name})` },
+          {
+            success: false,
+            error: `Formato não suportado: ${file.type} (${file.name})`,
+          },
           { status: 400 }
         )
       }
 
-      // Limpar e formatar o texto (preservar estrutura do Markdown)
-      textoExtraido = textoExtraido
-        .replace(/\n{3,}/g, '\n\n') // Limitar quebras de linha excessivas
-        .trim()
+      textoExtraido = textoExtraido.replace(/\n{3,}/g, '\n\n').trim()
 
-      console.log('📝 Texto final extraído:', {
+      console.log('📝 Texto final:', {
         tamanho: textoExtraido.length,
-        preview: textoExtraido.substring(0, 200) + '...'
+        preview: textoExtraido.substring(0, 200) + '...',
       })
 
       return NextResponse.json({
@@ -110,29 +112,31 @@ export async function POST(request: NextRequest) {
           texto: textoExtraido,
           tamanho: textoExtraido.length,
           nomeArquivo: file.name,
-          tipoArquivo: file.type
-        }
+          tipoArquivo: file.type,
+        },
       })
-
     } catch (extractionError) {
       console.error('❌ Erro na extração:', extractionError)
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Erro ao extrair texto do arquivo',
-          details: extractionError instanceof Error ? extractionError.message : 'Erro desconhecido'
+          details:
+            extractionError instanceof Error
+              ? extractionError.message
+              : 'Erro desconhecido',
         },
         { status: 500 }
       )
     }
-
   } catch (error) {
     console.error('❌ Erro geral:', error)
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Erro interno do servidor',
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
+        details:
+          error instanceof Error ? error.message : 'Erro desconhecido',
       },
       { status: 500 }
     )

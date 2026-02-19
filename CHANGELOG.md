@@ -2,6 +2,38 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-19] - Suporte a documentos grandes (Sessão 19)
+
+### Corrigido
+
+- **`src/schemas/index.ts`**: limite `documento.max` aumentado de 50.000 para 2.000.000 caracteres — eliminado o erro 400 "Documento muito grande" para PDFs extensos
+
+### Alterado
+
+- **`src/components/analise/UploadDocumento.tsx`**: `TAMANHO_MAXIMO` aumentado de 10MB para 100MB; mensagem e texto da UI atualizados
+
+### Notas
+
+- `groq.ts` já trunca o documento em 500k chars antes de enviar à IA (proteção contra timeout na GROQ free tier, 30K TPM). Sem alteração necessária.
+
+---
+
+## [2026-02-19] - Extração de PDF corrigida (Sessão 18)
+
+### Corrigido
+
+- **`src/app/api/extrair-texto/route.ts`**: erro 500 ao processar PDFs. Causa: `pdfjs-dist` bundlado pelo webpack causava `TypeError: Object.defineProperty called on non-object`. Solução: substituído por `pdf-parse` v2 com classe `PDFParse`; worker configurado com `file://` URL para `pdf.worker.mjs`
+
+### Adicionado
+
+- **`pdf-parse@2.4.5`**: nova dependência para extração de texto de PDFs no server-side
+
+### Alterado
+
+- **`next.config.js`**: adicionados `mammoth` e `pdf-parse` a `serverExternalPackages` (evita bundling por webpack); removido `pdfjs-dist` (não mais utilizado diretamente)
+
+---
+
 ## [2026-02-19] - Links de todas as NRs e anexos (Sessão 17)
 
 ### Adicionado

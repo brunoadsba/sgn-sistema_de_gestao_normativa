@@ -14,7 +14,8 @@ export const NormaSchema = z.object({
 // Schema para Análise de Conformidade
 export const AnaliseConformidadeSchema = z.object({
   id: z.string().uuid().optional(),
-  documento: z.string().min(1, 'Documento é obrigatório').max(50000, 'Documento muito grande'),
+  // 2M caracteres (~1.400 páginas). Documentos maiores são truncados em groq.ts antes de chegar à IA.
+  documento: z.string().min(1, 'Documento é obrigatório').max(2_000_000, 'Documento excede o limite de 2 milhões de caracteres'),
   tipoDocumento: z.enum(['PGR', 'NR-1-GRO', 'PCMSO', 'LTCAT', 'ASO', 'PPRA', 'OUTRO']),
   normasAplicaveis: z.array(z.string()).min(1, 'Pelo menos uma norma deve ser aplicável'),
   score: z.number().min(0).max(100).optional(),

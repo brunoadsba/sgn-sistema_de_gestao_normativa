@@ -16,8 +16,11 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
   },
-  // better-sqlite3 é módulo nativo, precisa ser external no serverless
-  serverExternalPackages: ['better-sqlite3'],
+  // Módulos que não devem ser bundlados pelo webpack no server-side
+  // better-sqlite3: módulo nativo Node.js
+  // mammoth: leitura de DOCX, depende de Node.js fs
+  // pdf-parse: extração de texto de PDFs, depende de Node.js fs
+  serverExternalPackages: ['better-sqlite3', 'mammoth', 'pdf-parse'],
   
   // Security headers
   async headers() {

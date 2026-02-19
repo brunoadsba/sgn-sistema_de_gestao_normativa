@@ -16,7 +16,7 @@ const TIPOS_VALIDOS = [
   'text/plain',
 ]
 const EXTENSOES_VALIDAS = ['.pdf', '.docx', '.txt']
-const TAMANHO_MAXIMO = 10 * 1024 * 1024 // 10MB
+const TAMANHO_MAXIMO = 100 * 1024 * 1024 // 100MB
 
 function formatarTamanho(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -33,7 +33,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
     const nome = file.name.toLowerCase()
     const tipoValido = TIPOS_VALIDOS.includes(file.type) || EXTENSOES_VALIDAS.some(ext => nome.endsWith(ext))
     if (!tipoValido) return 'Formato não suportado. Use PDF, DOCX ou TXT.'
-    if (file.size > TAMANHO_MAXIMO) return 'Arquivo muito grande. Máximo 10MB.'
+    if (file.size > TAMANHO_MAXIMO) return 'Arquivo muito grande. Máximo 100MB.'
     return null
   }, [])
 
@@ -98,7 +98,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
             {dragging ? 'Solte o arquivo aqui' : 'Arraste o documento ou clique para selecionar'}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            PDF, DOCX ou TXT — máximo 10MB
+            PDF, DOCX ou TXT — máximo 100MB
           </p>
         </div>
       ) : (
