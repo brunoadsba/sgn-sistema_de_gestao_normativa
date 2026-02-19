@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-19 (sessão 20: redesign UX/UI completo + dark mode)
+> Atualizado em: 2026-02-19 (sessão 21: refatoração Server/Client Components + filtro dinâmico com nuqs)
 
 ---
 
@@ -22,6 +22,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | Framework | Next.js (App Router) | 15.5.2 |
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
+| URL State | nuqs (query string state) | latest |
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM | 0.45.1 |
 | IA | GROQ SDK (Llama 4 Scout 17B) | 0.32.0 |
 | Validação | Zod | 4.1.5 |
@@ -33,15 +34,20 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 **Arquitetura simplificada:** Next.js + SQLite local (Drizzle ORM) + GROQ. Sem Redis, sem Supabase, sem React Query, sem autenticação. NRs armazenadas em arquivo TypeScript local (`src/lib/data/normas.ts`). Deploy via Docker com volume persistente para dados.
 
+**Padrão de componentes (sessão 21):** Server Components buscam dados → Client Components recebem via props e gerenciam interatividade. Features organizadas em `src/features/[nome]/components/`. URL state gerenciado com `nuqs` (query strings, sem useState para estados compartilháveis).
+
 ---
 
-## Interface e Design (sessão 20)
+## Interface e Design (sessão 20-21)
 
 - **Dark mode forçado por padrão**: `<html className="dark">` em `layout.tsx`. Tailwind usa `darkMode: ["class"]`.
 - **Canvas Background animado**: `src/components/ui/CanvasBackground.tsx` — partículas índigo interligadas por linhas, fundo `#0d1117 → #0f1525`.
 - **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
 - **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
 - Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
+- **Títulos com `bg-clip-text`**: usar `leading-normal` e `pb-2`+ para evitar corte de descendentes (g, j, p). Gradiente dark: `dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100` para visibilidade.
+- **NuqsAdapter** global em `layout.tsx`: obrigatório para `nuqs` funcionar com App Router.
+- **Busca dinâmica** no catálogo de normas: client-side com debounce 300ms, estado na URL (`?search=`).
 
 ---
 
@@ -64,11 +70,14 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 │   │   │   ├── normas/             # CRUD normas + stats
 │   │   │   ├── nr6/                # Análise específica NR-6
 │   │   │   └── search/             # Busca inteligente
-│   │   ├── normas/                 # Páginas de normas (lista + [id])
+│   │   ├── normas/                 # Páginas de normas (lista + [id]) — Server Component
 │   │   ├── nr6/                    # Página análise NR-6
-│   │   ├── layout.tsx              # Root layout — nav, CanvasBackground, dark mode
-│   │   ├── page.tsx                # Página principal: análise de conformidade
+│   │   ├── layout.tsx              # Root layout — nav, CanvasBackground, dark mode, NuqsAdapter
+│   │   ├── page.tsx                # Server Component: busca normas e renderiza AnaliseCliente
 │   │   └── sitemap.ts              # Sitemap
+│   ├── features/                   # Feature modules (sessão 21+)
+│   │   ├── analise/components/     # AnaliseCliente.tsx (Client Component — upload, análise, resultado)
+│   │   └── normas/components/      # ListaNormasDinamica.tsx (Client Component — busca com nuqs)
 │   ├── components/
 │   │   ├── analise/                # UploadDocumento, SeletorNormas, ResultadoAnalise
 │   │   ├── dynamic/                # Lazy loading (DynamicComponents)
@@ -127,12 +136,12 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 ## O que funciona (implementado)
 
-1. **Página principal de análise com IA**
+1. **Página principal de análise com IA** (Server Component + Client Component)
    - Upload de documento com drag-and-drop (PDF, DOCX, TXT) — até 100MB
-   - Seletor de NRs: lista vertical com filtro, chips de selecionadas, ações "Selecionar Todas" e "Limpar Seleção"
+   - Seletor de NRs: grid 2 colunas com filtro, chips de selecionadas, ações em lote
    - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
    - Resultado: score circular SVG animado, gaps ordenados por severidade, pontos positivos/atenção, próximos passos em grid
-2. Catálogo de normas com busca (grid de cards) e detalhes (link direto para PDF no MTE + lista de anexos)
+2. **Catálogo de normas com busca dinâmica** (filtro client-side instantâneo com `nuqs`, estado na URL `?search=`)
 3. Análise especializada NR-6 (EPIs)
 4. Persistência de análises no SQLite (documentos, jobs, resultados, gaps)
 5. Busca inteligente com ranking
@@ -145,6 +154,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 12. Schemas Zod para APIs (camelCase) — limite de documento: 2M chars
 13. **Testes E2E com Playwright** (5 suites: api, navegacao, normas, nr6, pagina-inicial)
 14. **Interface dark mode** forçada por padrão com Canvas Background animado
+15. **Arquitetura Server/Client Components** com data fetching server-side e interatividade isolada em Client Components
 
 ---
 
@@ -187,6 +197,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 18 | 2026-02-19 | Corrigida extração de PDF (500 no `/api/extrair-texto`). Substituído `pdfjs-dist` por `pdf-parse` v2. `mammoth` e `pdf-parse` em `serverExternalPackages`. |
 | 19 | 2026-02-19 | Suporte a documentos grandes: limite Zod `documento.max` → 2M chars. Upload frontend → 100MB. |
 | 20 | 2026-02-19 | Redesign UX/UI completo: Canvas Background animado (partículas índigo em fundo escuro), glassmorphism nos cards e header, dark mode forçado por padrão (`<html class="dark">`), variáveis CSS dark refinadas, `dark:` variants em todos os componentes. Badge "Atualizado em tempo real" removido (informação inexistente). Aviso Next.js sobre `scroll-behavior: smooth` corrigido com `data-scroll-behavior="smooth"`. |
+| 21 | 2026-02-19 | Refatoração Server/Client Components: `page.tsx` (análise) e `normas/page.tsx` convertidos para Server Components. Criados `AnaliseCliente.tsx` e `ListaNormasDinamica.tsx` como Client Components em `src/features/`. Adicionado `nuqs` para estado de busca via URL. `NuqsAdapter` global no layout. Corrigido título "Análise de Conformidade" apagado em dark mode. Corrigido corte da letra 'g' em títulos com `bg-clip-text`. Botão "Analisar" restaurado para gradiente vivo. |
 
 ---
 
@@ -280,18 +291,27 @@ npm run docker:stop  # Para containers
 ## Fluxo Principal da Aplicação
 
 ```
-Página inicial (/)
-  ├── 1. Upload documento (drag-and-drop: PDF, DOCX, TXT — até 100MB)
-  ├── 2. Selecionar NRs aplicáveis (lista vertical com filtro e chips)
-  ├── 3. Clicar "Analisar Conformidade com IA"
-  │     ├── POST /api/extrair-texto (extrai texto do arquivo via pdf-parse/mammoth)
-  │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout 17B, trunca em 500k chars)
-  └── 4. Ver resultado (score circular SVG, gaps por severidade, pontos positivos/atenção, plano de ação)
+Página inicial (/) — Server Component
+  └── AnaliseCliente (Client Component, recebe normas via props)
+      ├── 1. Upload documento (drag-and-drop: PDF, DOCX, TXT — até 100MB)
+      ├── 2. Selecionar NRs aplicáveis (grid 2 colunas com filtro e chips)
+      ├── 3. Clicar "Analisar Conformidade com IA"
+      │     ├── POST /api/extrair-texto (extrai texto do arquivo via pdf-parse/mammoth)
+      │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout 17B, trunca em 500k chars)
+      └── 4. Ver resultado (score circular SVG, gaps por severidade, pontos positivos/atenção, plano de ação)
+
+Página de normas (/normas) — Server Component
+  └── ListaNormasDinamica (Client Component, recebe normas via props)
+      ├── Busca instantânea client-side com debounce 300ms
+      ├── Estado persistido na URL via nuqs (?search=)
+      └── Grid de cards com detalhes e navegação
 ```
 
 **Componentes do fluxo:**
+- `src/app/page.tsx` — Server Component: busca normas, renderiza AnaliseCliente
+- `src/features/analise/components/AnaliseCliente.tsx` — Client Component: upload, seleção, análise, resultado
+- `src/features/normas/components/ListaNormasDinamica.tsx` — Client Component: busca dinâmica com nuqs
 - `src/components/analise/UploadDocumento.tsx` — drag-and-drop com validação (100MB max)
-- `src/components/analise/SeletorNormas.tsx` — lista de NRs com filtro, chips e ações em lote
+- `src/components/analise/SeletorNormas.tsx` — grid de NRs com filtro, chips e ações em lote
 - `src/components/analise/ResultadoAnalise.tsx` — exibição completa do resultado com dark mode
-- `src/app/page.tsx` — orquestra o fluxo completo
 - `src/components/ui/CanvasBackground.tsx` — background animado com canvas (partículas índigo)

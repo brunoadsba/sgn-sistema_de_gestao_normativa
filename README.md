@@ -6,10 +6,8 @@ Aplicação single-user, executada localmente. A única dependência externa é 
 
 ## O que você pode fazer
 
-| Funcionalidade | Descrição |
-|----------------|-----------|
 | **Analisar** | Envie um documento (PDF, DOCX, TXT), escolha as NRs aplicáveis e receba uma análise automática com IA. O sistema indica conformidades, gaps e recomendações. |
-| **Normas** | Consulte o catálogo de 38 NRs disponíveis para análise. |
+| **Normas** | Consulte o catálogo de 38 NRs disponíveis com busca instantânea via URL. |
 | **NR-6** | Análise específica para EPIs (Equipamentos de Proteção Individual): documentação, treinamento e adequação às exigências da NR-6. |
 
 ## Como usar
@@ -28,8 +26,8 @@ Aplicação single-user, executada localmente. A única dependência externa é 
 ### 2. Consultar normas
 
 1. Acesse **Normas** no menu.
-2. Use a busca para encontrar NRs.
-3. Clique em uma norma para ver detalhes e conteúdo.
+2. Use a busca para encontrar NRs instantaneamente (o filtro é aplicado enquanto você digita e o critério fica salvo na URL).
+3. Clique em uma norma para ver detalhes, texto oficial e anexos.
 
 ### 3. Análise NR-6 (EPIs)
 
@@ -81,12 +79,11 @@ O sistema estará disponível em `http://localhost:3001`.
 
 ## Stack técnica
 
-| Camada | Tecnologia |
-|--------|-----------|
 | Framework | Next.js 15 (App Router) |
 | Linguagem | TypeScript (strict mode) |
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM |
-| IA | GROQ SDK (Llama 4 Scout 17B) |
+| IA | GROQ SDK (Llama 4 Scout 17B MoE) |
+| URL State | nuqs (gerenciamento de estado na URL) |
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 | Extração de texto | pdf-parse v2 + mammoth |
 | Testes | Playwright (E2E) |
@@ -98,7 +95,7 @@ O sistema utiliza **dark mode por padrão** com fundo animado (Canvas Background
 ## Dicas de uso
 
 - **Documentos suportados:** PDF, DOCX, TXT. O sistema extrai o texto automaticamente. Tamanho máximo: 100MB.
-- **Normas:** Comece com NR-6 (EPI), NR-5 (CIPA), NR-7 (PCMSO) ou NR-9 (PPRA) conforme o tipo de documento.
+- **Busca:** A busca na página de normas é reativa e utiliza a URL para manter o estado. Você pode compartilhar o link da busca diretamente.
 - **Documentos grandes:** o sistema suporta arquivos pesados. A IA recebe até 500K caracteres por análise.
 
 ## Problemas comuns

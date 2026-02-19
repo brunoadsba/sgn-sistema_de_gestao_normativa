@@ -66,6 +66,7 @@
     "lucide-react": "^0.542.0",
     "mammoth": "^1.10.0",
     "next": "15.5.2",
+    "nuqs": "^2.8.8",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.4.149",
     "pino": "^10.1.0",

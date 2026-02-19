@@ -138,42 +138,46 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       </div>
 
       {/* Lista de normas — Scroll customizado */}
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-2 
+      <div className="flex-1 overflow-y-auto pr-2 -mr-2 
         scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300">
-        {normasFiltradas.map((norma) => {
-          const codigoCurto = extrairCodigoCurto(norma.codigo)
-          const selecionada = selecionadas.includes(norma.codigo)
+        <div className="grid grid-cols-2 gap-2">
+          {normasFiltradas.map((norma) => {
+            const codigoCurto = extrairCodigoCurto(norma.codigo)
+            const selecionada = selecionadas.includes(norma.codigo)
 
-          return (
-            <button
-              key={norma.id}
-              type="button"
-              onClick={() => toggleNorma(norma.codigo)}
-              className={`
-                w-full flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200
-                ${selecionada
-                  ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
-                  : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
-                }
-              `}
-            >
-              <div className={`mt-0.5 rounded flex items-center justify-center h-5 w-5 border transition-colors
-                ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
-                {selecionada && <CheckSquare className="h-4 w-4 text-white" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`font-bold text-sm block mb-1 ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                  {codigoCurto}
-                </span>
+            return (
+              <button
+                key={norma.id}
+                type="button"
+                onClick={() => toggleNorma(norma.codigo)}
+                title={norma.titulo}
+                className={`
+                  relative flex flex-col items-start p-2.5 rounded-xl border text-left transition-all duration-200
+                  ${selecionada
+                    ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
+                    : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
+                  }
+                `}
+              >
+                <div className="flex items-start justify-between w-full mb-1">
+                  <span className={`font-bold text-sm leading-none ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                    {codigoCurto}
+                  </span>
+                  <div className={`shrink-0 ml-2 rounded flex items-center justify-center h-4 w-4 border transition-colors
+                    ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
+                    {selecionada && <CheckSquare className="h-3 w-3 text-white" />}
+                  </div>
+                </div>
                 {norma.titulo && (
-                  <span className={`text-sm block leading-snug ${selecionada ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <span className={`text-[11px] leading-tight block truncate w-full ${selecionada ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                     {norma.titulo}
                   </span>
                 )}
-              </div>
-            </button>
-          )
-        })}
+              </button>
+            )
+          })}
+        </div>
+
         {normasFiltradas.length === 0 && filtro && (
           <div className="text-center py-10">
             <Search className="h-8 w-8 text-gray-300 mx-auto mb-3" />

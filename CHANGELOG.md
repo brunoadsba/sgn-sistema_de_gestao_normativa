@@ -2,6 +2,30 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-19] - Refatoração Server/Client Components + Filtro dinâmico com nuqs (Sessão 21)
+
+### Adicionado
+
+- **`nuqs`**: novo pacote para gerenciamento de estado via URL (query strings) — busca dinâmica sem reload
+- **`NuqsAdapter`** em `src/app/layout.tsx`: provider global obrigatório para o nuqs funcionar com Next.js 15 App Router
+- **`src/features/analise/components/AnaliseCliente.tsx`**: Client Component que encapsula toda a lógica interativa da página de análise (upload, seleção de normas, progresso, resultado). Recebe `normasIniciais` como prop do Server Component pai
+- **`src/features/normas/components/ListaNormasDinamica.tsx`**: Client Component que implementa busca instantânea (client-side) no catálogo de normas com debounce de 300ms e estado persistido na URL via `nuqs` (`?search=`)
+
+### Alterado
+
+- **`src/app/page.tsx`**: refatorado de Client Component para **Server Component**. Data fetching das normas agora é server-side via `getNormas()`. Componente renderiza `AnaliseCliente` passando normas como prop
+- **`src/app/normas/page.tsx`**: refatorado de busca server-side (via `searchParams`) para busca client-side dinâmica via `ListaNormasDinamica`. Título `h1` corrigido com `leading-normal pb-4` para evitar corte da letra 'g' em `bg-clip-text`. Envolvido com `Suspense` para compatibilidade com nuqs
+- **`src/app/layout.tsx`**: adicionado `NuqsAdapter` envolvendo todo o conteúdo do body (header + main)
+- **Título "Análise de Conformidade"** em `AnaliseCliente.tsx`: gradiente dark corrigido de `dark:from-gray-100 dark:to-gray-400` (apagado) para `dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100` (brilhante e legível)
+- **Botão "Analisar Conformidade com IA"**: restaurado para design com gradiente vivo (`from-blue-600 to-indigo-600`), shadow e hover animado. Versão flat `#263673` descartada por parecer permanentemente desabilitada
+
+### Arquitetura
+
+- Padrão estabelecido: **Server Component busca dados → Client Component recebe via props e gerencia interatividade**
+- Features organizadas em `src/features/[nome]/components/` conforme regra do projeto
+
+---
+
 ## [2026-02-19] - Redesign UX/UI completo e dark mode (Sessão 20)
 
 ### Adicionado
