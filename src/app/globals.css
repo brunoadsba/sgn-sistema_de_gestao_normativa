@@ -119,3 +119,19 @@ html {
   transition: box-shadow 0.15s ease-in-out;
   will-change: box-shadow;
 }
+
+/* Custom Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--tw-scrollbar-thumb, #cbd5e1);
+  border-radius: 20px;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background-color: var(--tw-scrollbar-thumb-hover, #94a3b8);
+}

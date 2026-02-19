@@ -138,79 +138,104 @@ export default function AnalisePage() {
   const podeAnalisar = arquivo && normasSelecionadas.length > 0 && !analisando
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 max-w-5xl">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+      <div className="text-center mb-12 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-blue-500/20 blur-3xl -z-10 rounded-full"></div>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight mb-4">
           Análise de Conformidade
         </h1>
-        <p className="text-gray-500 mt-2 max-w-lg mx-auto">
-          Faça upload do documento SST, selecione as NRs aplicáveis e receba a análise com IA
+        <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          Faça upload do seu documento SST, selecione as normas aplicáveis e deixe nossa IA identificar gaps e gerar recomendações precisas instantaneamente.
         </p>
       </div>
 
       {resultado ? (
-        <ResultadoAnalise resultado={resultado} onNovaAnalise={novaAnalise} />
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <ResultadoAnalise resultado={resultado} onNovaAnalise={novaAnalise} />
+        </div>
       ) : (
-        <div className="space-y-6">
-          {/* 1. Upload */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">1. Documento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UploadDocumento
-                arquivo={arquivo}
-                onArquivoChange={(f) => { setArquivo(f); setErro(null) }}
-                desabilitado={analisando}
-              />
-            </CardContent>
-          </Card>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            {/* Esquerda - Upload (Ocupa mais espaço) */}
+            <div className="md:col-span-7">
+              <Card className="h-full border-white/40 shadow-xl shadow-blue-900/5 bg-white/70 backdrop-blur-xl transition-all duration-300 hover:shadow-blue-900/10">
+                <CardHeader className="pb-4 border-b border-gray-100/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold">1</div>
+                    <CardTitle className="text-xl">Envio do Documento</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <UploadDocumento
+                    arquivo={arquivo}
+                    onArquivoChange={(f) => { setArquivo(f); setErro(null) }}
+                    desabilitado={analisando}
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* 2. Seleção de NRs */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">2. Normas Regulamentadoras</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SeletorNormas
-                normas={normas}
-                selecionadas={normasSelecionadas}
-                onSelecaoChange={(s) => { setNormasSelecionadas(s); setErro(null) }}
-                carregando={carregandoNormas}
-              />
-            </CardContent>
-          </Card>
+            {/* Direita - Normas */}
+            <div className="md:col-span-5">
+              <Card className="h-full border-white/40 shadow-xl shadow-indigo-900/5 bg-white/70 backdrop-blur-xl transition-all duration-300 hover:shadow-indigo-900/10">
+                <CardHeader className="pb-4 border-b border-gray-100/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">2</div>
+                    <CardTitle className="text-xl">Normas Aplicáveis</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6 h-[calc(100%-5rem)]">
+                  <SeletorNormas
+                    normas={normas}
+                    selecionadas={normasSelecionadas}
+                    onSelecaoChange={(s) => { setNormasSelecionadas(s); setErro(null) }}
+                    carregando={carregandoNormas}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
           {/* Erro */}
           {erro && (
-            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">{erro}</p>
+            <div className="animate-in fade-in zoom-in-95 duration-300 flex items-center gap-3 p-4 bg-red-50/90 backdrop-blur-md border border-red-200 shadow-sm shadow-red-100 rounded-2xl text-red-800">
+              <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-500" />
+              <p className="text-sm font-medium">{erro}</p>
             </div>
           )}
 
           {/* Progresso */}
           {analisando && (
-            <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
-                <span className="text-sm font-medium text-blue-800">{etapa}</span>
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 backdrop-blur-xl border border-blue-100 shadow-lg shadow-blue-100/50 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-400 rounded-full blur animate-pulse opacity-50"></div>
+                    <div className="relative h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+                  </div>
+                  <span className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">
+                    {etapa}
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-blue-600">{progresso}%</span>
               </div>
-              <Progress value={progresso} />
+              <Progress value={progresso} className="h-3 bg-blue-100" />
             </div>
           )}
 
           {/* Botão Analisar */}
-          <Button
-            onClick={executarAnalise}
-            disabled={!podeAnalisar}
-            size="xl"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-base"
-          >
-            <Brain className="h-5 w-5 mr-2" />
-            {analisando ? 'Analisando...' : 'Analisar Conformidade com IA'}
-          </Button>
+          <div className="pt-4">
+            <Button
+              onClick={executarAnalise}
+              disabled={!podeAnalisar}
+              size="lg"
+              className="w-full h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg font-bold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            >
+              <Brain className="h-6 w-6 mr-3 animate-pulse" />
+              {analisando ? 'Processando com Inteligência Artificial...' : 'Analisar Conformidade com IA'}
+            </Button>
+          </div>
         </div>
       )}
     </div>

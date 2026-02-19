@@ -3,50 +3,61 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FileText, Search, Filter, Download, RefreshCw } from "lucide-react"
+import { FileText, Search, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { getNormas as getNormasData, NormaLocal } from "@/lib/data/normas"
 
 function NormasList({ normas }: { normas: NormaLocal[] }) {
   if (!normas || normas.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Nenhuma norma encontrada.</p>
+      <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Search className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Nenhuma norma encontrada</h3>
+        <p className="text-gray-500">Tente ajustar seus filtros de busca.</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {normas.map((norma) => (
-        <Card key={norma.id} className="hover:shadow-lg transition-all duration-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-lg font-semibold text-gray-900">
-                  {norma.codigo}
-                </CardTitle>
-                <CardDescription className="text-sm text-gray-600">
-                  {norma.titulo}
-                </CardDescription>
-              </div>
+        <Card key={norma.id} className="group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 border-white/40 bg-white/70 backdrop-blur-xl flex flex-col h-full hover:-translate-y-1 overflow-hidden">
+          <div className={`h-2 w-full ${norma.status === 'ativa' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`}></div>
+          <CardHeader className="pb-4 grow">
+            <div className="flex items-start justify-between gap-4 mb-3">
               <Badge
                 variant={norma.status === 'ativa' ? 'default' : 'destructive'}
-                className="ml-4 shrink-0"
+                className={`px-3 py-1 font-bold tracking-wide text-xs shadow-sm ${
+                  norma.status === 'ativa' 
+                  ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' 
+                  : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
+                }`}
               >
-                {norma.status === 'ativa' ? 'Ativa' : 'Revogada'}
+                {norma.status === 'ativa' ? 'ATIVA' : 'REVOGADA'}
               </Badge>
+              <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+                <FileText className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              </div>
             </div>
+            <CardTitle className="text-2xl font-black text-gray-900 tracking-tight mb-2 group-hover:text-blue-700 transition-colors">
+              {norma.codigo}
+            </CardTitle>
+            <CardDescription className="text-base text-gray-600 font-medium leading-relaxed line-clamp-3">
+              {norma.titulo}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="pt-1">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-500">
-                <span className="font-medium">Categoria:</span> {norma.categoria}
+          <CardContent className="pt-0 pb-6 border-t border-gray-100/50 mt-auto">
+            <div className="pt-4 flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Categoria</span>
+                <span className="text-sm font-semibold text-gray-700">{norma.categoria}</span>
               </div>
               <Link href={`/normas/${norma.id}`}>
-                <Button size="sm" variant="outline">
-                  <FileText className="w-4 h-4 mr-1" />
+                <Button className="rounded-full bg-gray-900 text-white hover:bg-blue-600 hover:scale-105 transition-all shadow-md">
                   Ver Detalhes
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
@@ -56,6 +67,8 @@ function NormasList({ normas }: { normas: NormaLocal[] }) {
     </div>
   )
 }
+
+import { ArrowRight } from "lucide-react"
 
 export default async function NormasPage({
   searchParams,
@@ -75,70 +88,55 @@ export default async function NormasPage({
     : todasNormas
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="container mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Normas Regulamentadoras
-                </h1>
-                <p className="text-lg text-gray-600 mb-4">
-                  Sistema de Gestão Normativa - Base de dados atualizada
-                </p>
-                <div className="flex items-center space-x-4">
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    <FileText className="w-4 h-4 mr-1" />
-                    {normas.length} normas ativas
-                  </Badge>
-                  <Badge variant="outline" className="text-green-600 border-green-200">
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    Atualizado em tempo real
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex space-x-3">
-                <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar
-                </Button>
-              </div>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="space-y-10">
+        {/* Header */}
+        <div className="text-center relative py-8">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[10rem] bg-indigo-500/10 blur-[100px] -z-10 rounded-full"></div>
+          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 tracking-tighter mb-6">
+            Normas Regulamentadoras
+          </h1>
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium mb-8">
+            Explore nossa base de dados completa e atualizada com todas as NRs de Segurança e Saúde no Trabalho.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-sm rounded-full border border-gray-200 shadow-sm">
+              <span className="flex h-3 w-3 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+              </span>
+              <span className="text-sm font-bold text-gray-700">{normas.length} NRs Disponíveis</span>
+            </div>
+            <div className="flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-sm rounded-full border border-gray-200 shadow-sm">
+              <RefreshCw className="w-4 h-4 text-green-500" />
+              <span className="text-sm font-bold text-gray-700">Atualizado em tempo real</span>
             </div>
           </div>
+        </div>
 
-          {/* Busca */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-              <CardTitle className="flex items-center text-xl">
-                <Filter className="w-5 h-5 mr-2 text-blue-600" />
-                Filtros e Busca
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <Input
-                    placeholder="Buscar por código, título ou descrição..."
-                    className="w-full h-12 text-lg"
-                  />
-                </div>
-                <div className="flex space-x-2">
-                  <Button className="bg-blue-600 hover:bg-blue-700 h-12 px-6">
-                    <Search className="w-5 h-5 mr-2" />
-                    Buscar
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Busca e Lista combinados para melhor fluidez */}
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="relative max-w-3xl mx-auto">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search className="h-6 w-6 text-gray-400" />
+            </div>
+            <Input
+              placeholder="Digite o código ou palavra-chave (ex: NR-01, EPI, CIPA)..."
+              defaultValue={busca}
+              className="w-full h-16 pl-14 pr-4 text-lg bg-white/80 backdrop-blur-md border-2 border-gray-200 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 rounded-2xl shadow-lg shadow-gray-200/50 transition-all"
+            />
+            {/* O ideal seria converter isso para um Client Component para busca em tempo real, 
+                mas mantemos o design atual por enquanto para simplificar a refatoração */}
+          </div>
 
-          {/* Lista de Normas */}
           <Suspense
             fallback={
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+                  <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+                <p className="text-gray-500 font-medium animate-pulse">Carregando normas...</p>
               </div>
             }
           >

@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   CheckCircle, AlertTriangle, Shield,
@@ -44,35 +43,37 @@ function ScoreIndicador({ score }: { score: number }) {
     : 'text-red-600'
 
   const bgCor =
-    score >= 80 ? 'bg-green-50 border-green-200'
-    : score >= 60 ? 'bg-yellow-50 border-yellow-200'
-    : score >= 40 ? 'bg-orange-50 border-orange-200'
-    : 'bg-red-50 border-red-200'
+    score >= 80 ? 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-200 shadow-green-100/50'
+    : score >= 60 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100/50 border-yellow-200 shadow-yellow-100/50'
+    : score >= 40 ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200 shadow-orange-100/50'
+    : 'bg-gradient-to-br from-red-50 to-red-100/50 border-red-200 shadow-red-100/50'
 
   const porcentagem = Math.min(100, Math.max(0, score))
-  const circunferencia = 2 * Math.PI * 36
+  const circunferencia = 2 * Math.PI * 40
   const offset = circunferencia - (porcentagem / 100) * circunferencia
   const corTraco = score >= 80 ? '#16a34a' : score >= 60 ? '#ca8a04' : score >= 40 ? '#ea580c' : '#dc2626'
 
   return (
-    <div className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 ${bgCor} min-w-[140px]`}>
-      <div className="relative w-20 h-20">
-        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="36" fill="none" stroke="#e5e7eb" strokeWidth="7" />
+    <div className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 ${bgCor} min-w-[160px] shadow-lg relative overflow-hidden group`}>
+      <div className="absolute inset-0 bg-white/40 group-hover:bg-white/20 transition-colors duration-500"></div>
+      <div className="relative w-28 h-28">
+        <svg className="w-28 h-28 -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="8" />
           <circle
-            cx="40" cy="40" r="36"
+            cx="50" cy="50" r="40"
             fill="none"
             stroke={corTraco}
-            strokeWidth="7"
+            strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={circunferencia}
             strokeDashoffset={offset}
-            className="transition-all duration-700"
+            className="transition-all duration-1000 ease-out"
+            style={{ filter: `drop-shadow(0 0 4px ${corTraco}40)` }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-2xl font-bold leading-none ${cor}`}>{score}</span>
-          <span className="text-xs text-gray-400 leading-none mt-0.5">/ 100</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center animate-in zoom-in duration-500 delay-300">
+          <span className={`text-4xl font-black tracking-tighter leading-none ${cor} drop-shadow-sm`}>{score}</span>
+          <span className="text-xs font-bold text-gray-500/80 uppercase tracking-widest mt-1">Score</span>
         </div>
       </div>
     </div>
@@ -83,38 +84,48 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
   const config = CONFIG_SEVERIDADE[gap.severidade] || CONFIG_SEVERIDADE.media
 
   return (
-    <div className={`p-3.5 border rounded-lg border-l-4 ${config.border} bg-white`}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-start gap-2">
-          <span className="text-xs font-bold text-gray-400 mt-0.5 w-5 shrink-0">#{index + 1}</span>
-          <h4 className="font-medium text-gray-900 text-sm leading-snug">{gap.descricao}</h4>
+    <div className="flex gap-4 group">
+      <div className="flex flex-col items-center mt-1">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border ${config.badge} ${config.border.replace('border-l-', 'border-')}`}>
+          {index + 1}
         </div>
-        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${config.badge}`}>
-          {gap.severidade}
-        </span>
+        <div className="w-px h-full bg-gray-200 mt-2 group-last:hidden"></div>
       </div>
+      <div className={`flex-1 pb-6`}>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h4 className="font-semibold text-gray-900 text-base leading-snug">{gap.descricao}</h4>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shrink-0 shadow-sm border ${config.badge} ${config.border.replace('border-l-', 'border-')}`}>
+            {gap.severidade}
+          </span>
+        </div>
 
-      <p className="text-sm text-gray-600 leading-relaxed ml-7 mb-2">{gap.recomendacao}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-3">
+          <div className="flex items-start gap-2">
+            <Shield className={`h-4 w-4 shrink-0 mt-0.5 ${config.icon}`} />
+            <p className="text-sm text-gray-700 leading-relaxed font-medium">{gap.recomendacao}</p>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-3 ml-7 text-xs text-gray-400">
-        {gap.categoria && (
-          <span className="inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-            {gap.categoria}
-          </span>
-        )}
-        {gap.prazo && (
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Prazo: {gap.prazo}
-          </span>
-        )}
-        {gap.normasRelacionadas && gap.normasRelacionadas.length > 0 && (
-          <span className="inline-flex items-center gap-1">
-            <Shield className="h-3 w-3" />
-            {gap.normasRelacionadas.join(', ')}
-          </span>
-        )}
+        <div className="flex flex-wrap gap-2 text-xs font-medium text-gray-500">
+          {gap.categoria && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+              {gap.categoria}
+            </span>
+          )}
+          {gap.prazo && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-gray-600">
+              <Clock className="h-3.5 w-3.5" />
+              Prazo: {gap.prazo}
+            </span>
+          )}
+          {gap.normasRelacionadas && gap.normasRelacionadas.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
+              <Shield className="h-3.5 w-3.5" />
+              {gap.normasRelacionadas.join(', ')}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -138,48 +149,48 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
   }), [gapsOrdenados])
 
   return (
-    <div className="space-y-5 animate-fadeInUp">
+    <div className="space-y-6">
       {/* Score + Cabeçalho */}
-      <div className="flex flex-col sm:flex-row gap-4 p-5 rounded-2xl border bg-gray-50">
+      <div className="flex flex-col md:flex-row gap-6 p-8 rounded-3xl border bg-white/70 backdrop-blur-xl shadow-xl shadow-blue-900/5 hover:shadow-blue-900/10 transition-shadow duration-300">
         <ScoreIndicador score={resultado.score} />
 
-        <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border ${riscoConfig.bg} ${riscoConfig.border} ${riscoConfig.text}`}>
-              <Shield className="h-3.5 w-3.5" />
+        <div className="flex-1 space-y-4 flex flex-col justify-center">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold border-2 ${riscoConfig.bg} ${riscoConfig.border} ${riscoConfig.text} shadow-sm`}>
+              <Shield className="h-4 w-4" />
               {riscoConfig.label}
             </span>
 
             {resultado.tempoProcessamento > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs text-gray-400 border rounded-full px-2.5 py-1">
-                <Clock className="h-3 w-3" />
-                {(resultado.tempoProcessamento / 1000).toFixed(1)}s
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 border-2 border-gray-100 bg-gray-50/50 rounded-full px-3 py-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                {(resultado.tempoProcessamento / 1000).toFixed(1)}s de processamento
               </span>
             )}
           </div>
 
-          <p className="text-gray-700 leading-relaxed text-sm">{resultado.resumo}</p>
+          <p className="text-gray-700 leading-relaxed text-base font-medium">{resultado.resumo}</p>
 
           {/* Contagem de gaps por severidade */}
           {resultado.gaps.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100/50">
               {gapsPorSeveridade.critica > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-medium">
+                <span className="text-sm px-3 py-1 rounded-full bg-red-100 text-red-800 font-bold border border-red-200">
                   {gapsPorSeveridade.critica} crítico{gapsPorSeveridade.critica !== 1 ? 's' : ''}
                 </span>
               )}
               {gapsPorSeveridade.alta > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 font-medium">
+                <span className="text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
                   {gapsPorSeveridade.alta} alto{gapsPorSeveridade.alta !== 1 ? 's' : ''}
                 </span>
               )}
               {gapsPorSeveridade.media > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+                <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-bold border border-yellow-200">
                   {gapsPorSeveridade.media} médio{gapsPorSeveridade.media !== 1 ? 's' : ''}
                 </span>
               )}
               {gapsPorSeveridade.baixa > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">
+                <span className="text-sm px-3 py-1 rounded-full bg-green-100 text-green-800 font-bold border border-green-200">
                   {gapsPorSeveridade.baixa} baixo{gapsPorSeveridade.baixa !== 1 ? 's' : ''}
                 </span>
               )}
@@ -188,64 +199,76 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
         </div>
       </div>
 
-      {/* Pontos Positivos */}
-      {resultado.pontosPositivos?.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-              Pontos Positivos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-1.5">
-              {resultado.pontosPositivos.map((ponto, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-green-500 mt-0.5 font-bold shrink-0">+</span>
-                  {ponto}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Pontos Positivos */}
+        {resultado.pontosPositivos?.length > 0 && (
+          <Card className="border-green-100 bg-gradient-to-br from-white to-green-50/30 shadow-md shadow-green-100/20">
+            <CardHeader className="pb-3 border-b border-green-100/50">
+              <CardTitle className="text-base font-bold flex items-center gap-2 text-green-800">
+                <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+                Pontos Positivos Identificados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-3">
+                {resultado.pontosPositivos.map((ponto, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600 text-sm font-bold shrink-0 mt-0.5">
+                      ✓
+                    </span>
+                    <span className="leading-relaxed font-medium">{ponto}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Pontos de Atenção */}
-      {resultado.pontosAtencao?.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
-              Pontos de Atenção
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-1.5">
-              {resultado.pontosAtencao.map((ponto, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-yellow-500 mt-0.5 font-bold shrink-0">!</span>
-                  {ponto}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+        {/* Pontos de Atenção */}
+        {resultado.pontosAtencao?.length > 0 && (
+          <Card className="border-yellow-100 bg-gradient-to-br from-white to-yellow-50/30 shadow-md shadow-yellow-100/20">
+            <CardHeader className="pb-3 border-b border-yellow-100/50">
+              <CardTitle className="text-base font-bold flex items-center gap-2 text-yellow-800">
+                <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0" />
+                Pontos de Atenção Observados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-3">
+                {resultado.pontosAtencao.map((ponto, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-yellow-100 text-yellow-600 text-sm font-bold shrink-0 mt-0.5">
+                      !
+                    </span>
+                    <span className="leading-relaxed font-medium">{ponto}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Gaps — ordenados por severidade */}
       {gapsOrdenados.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
-              Gaps de Conformidade ({gapsOrdenados.length})
-              <span className="text-xs font-normal text-gray-400 ml-1">— ordenados por severidade</span>
+        <Card className="border-red-100 shadow-lg shadow-red-100/20 overflow-hidden">
+          <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-white border-b border-red-100/50">
+            <CardTitle className="text-lg font-bold flex items-center gap-3 text-red-900">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+              </div>
+              Detalhes das Inconformidades
+              <span className="text-sm font-medium px-3 py-1 bg-white border border-red-200 text-red-600 rounded-full shadow-sm ml-auto">
+                {gapsOrdenados.length} gaps encontrados
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2.5">
+          <CardContent className="p-0 bg-gray-50/50">
+            <div className="divide-y divide-gray-100">
               {gapsOrdenados.map((gap, i) => (
-                <GapItem key={gap.id || i} gap={gap} index={i} />
+                <div key={gap.id || i} className="p-6 transition-colors hover:bg-white">
+                  <GapItem gap={gap} index={i} />
+                </div>
               ))}
             </div>
           </CardContent>
@@ -254,33 +277,42 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
 
       {/* Próximos Passos */}
       {resultado.proximosPassos?.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <ArrowRight className="h-4 w-4 text-blue-600 shrink-0" />
-              Próximos Passos
+        <Card className="border-indigo-100 shadow-lg shadow-indigo-100/20 bg-gradient-to-br from-indigo-50/50 to-white">
+          <CardHeader className="pb-4 border-b border-indigo-100/50">
+            <CardTitle className="text-lg font-bold flex items-center gap-3 text-indigo-900">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <ArrowRight className="h-5 w-5 text-indigo-600 shrink-0" />
+              </div>
+              Plano de Ação Recomendado
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ol className="space-y-2">
+          <CardContent className="pt-6">
+            <div className="grid gap-4 md:grid-cols-2">
               {resultado.proximosPassos.map((passo, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold shrink-0 mt-0.5">
+                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white border border-indigo-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-white font-bold shrink-0 shadow-inner">
                     {i + 1}
                   </span>
-                  {passo}
-                </li>
+                  <p className="text-gray-700 font-medium leading-relaxed mt-0.5">
+                    {passo}
+                  </p>
+                </div>
               ))}
-            </ol>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Ação */}
-      <div className="flex justify-center pt-2">
-        <Button onClick={onNovaAnalise} size="lg" variant="outline">
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Nova Análise
+      <div className="flex justify-center pt-8 pb-4">
+        <Button 
+          onClick={onNovaAnalise} 
+          size="lg" 
+          variant="outline"
+          className="h-14 px-8 rounded-2xl border-2 border-gray-200 text-gray-700 hover:text-indigo-700 hover:border-indigo-300 hover:bg-indigo-50 font-bold text-base transition-all hover:-translate-y-1 shadow-sm hover:shadow-md"
+        >
+          <RotateCcw className="h-5 w-5 mr-3" />
+          Realizar Nova Análise
         </Button>
       </div>
     </div>
