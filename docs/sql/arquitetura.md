@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 26 - otimizações de performance web/mobile)
+> Atualizado em: 2026-02-20 (sessão 27 - identidade mobile PWA e splash web por sessão)
 
 ## Visão Geral
 
@@ -82,6 +82,7 @@ Responsabilidade:
 5. Fluxo incremental opcional por chunks com validação por evidência em cada etapa.
 6. CSP de produção alinhada com hidratação do App Router para evitar loading infinito na página raiz.
 7. Seção de histórico sob demanda e otimizações de animação para reduzir custo em dispositivos móveis.
+8. Abertura full-screen exibida apenas no primeiro acesso de sessão (gate client-side), preservando fluidez em navegações internas.
 
 ## APIs Ativas
 
@@ -119,6 +120,7 @@ Responsabilidade:
 6. Qualidade validada com lint/build e suíte E2E estável.
 7. Histórico otimizado sem N+1 com ordenação/paginação em SQL.
 8. Análise incremental processada com concorrência limitada por chunk.
+9. Identidade PWA de marca aplicada com ícones próprios e splash nativa escura para mobile.
 
 ### Débito técnico aberto
 

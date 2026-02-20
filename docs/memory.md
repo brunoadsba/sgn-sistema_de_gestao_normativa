@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 26: otimizações de performance web/mobile)
+> Atualizado em: 2026-02-20 (sessão 27: identidade mobile PWA e splash web por sessão)
 
 ---
 
@@ -42,6 +42,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 - **Dark mode forçado por padrão**: `<html className="dark">` em `layout.tsx`. Tailwind usa `darkMode: ["class"]`.
 - **Canvas Background animado**: `src/components/ui/CanvasBackground.tsx` — partículas índigo interligadas por linhas, fundo `#0d1117 → #0f1525`.
+- **Identidade PWA SGN**: ícones gerados em `src/app/icon.tsx` e `src/app/apple-icon.tsx` com tema escuro no manifest.
+- **Abertura web padronizada**: splash visual exibida apenas no primeiro acesso da sessão via `SessionSplashGate`; loading interno em navegação usa skeleton leve.
 - **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
 - **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
 - Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
@@ -72,7 +74,10 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 │   │   │   └── search/             # Busca inteligente
 │   │   ├── normas/                 # Páginas de normas (lista + [id]) — Server Component
 │   │   ├── nr6/                    # Página análise NR-6
-│   │   ├── layout.tsx              # Root layout — nav, CanvasBackground, dark mode, NuqsAdapter
+│   │   ├── layout.tsx              # Root layout — nav, CanvasBackground, dark mode, NuqsAdapter, SessionSplashGate
+│   │   ├── icon.tsx                # Icone PWA SGN (512x512)
+│   │   ├── apple-icon.tsx          # Icone PWA SGN para iOS (180x180)
+│   │   ├── manifest.ts             # Manifest com tema escuro e icones de marca
 │   │   ├── page.tsx                # Server Component: busca normas e renderiza AnaliseCliente
 │   │   └── sitemap.ts              # Sitemap
 │   ├── features/                   # Feature modules (sessão 21+)
@@ -81,7 +86,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 │   ├── components/
 │   │   ├── analise/                # UploadDocumento, SeletorNormas, ResultadoAnalise
 │   │   ├── dynamic/                # Lazy loading (DynamicComponents)
-│   │   ├── loading/                # LoadingSpinner
+│   │   ├── loading/                # LoadingSpinner, AppOpeningScreen, SessionSplashGate
 │   │   └── ui/                     # shadcn/ui (16 componentes) + CanvasBackground.tsx
 │   ├── hooks/                      # use-toast
 │   ├── lib/
@@ -160,6 +165,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados de processamento
 19. **Deploy Vercel estabilizado**: correções de `vercel.json`, `GROQ_API_KEY` em todos ambientes, upgrade para Next.js 16.1.6 e correção de CSP para destravar hidratação da home
 20. **Performance web/mobile otimizada**: Canvas com perfil de baixo consumo no mobile, histórico sob demanda, remoção de N+1 em histórico, paginação/ordenação em SQL, paralelismo controlado no incremental e cache de leitura da KB local
+21. **Abertura e branding modernizados**: ícones PWA de marca SGN, splash nativa escura no mobile, abertura web full-screen somente no primeiro acesso da sessão e loading interno substituído por skeleton leve
 
 ---
 
@@ -208,6 +214,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 24 | 2026-02-20 | Estratégia para documentos grandes: adicionados contratos backward-compatible (`estrategiaProcessamento`), chunking com overlap, orquestração incremental no endpoint de análise, consolidação/deduplicação de gaps com score ponderado, persistência de metadados por chunk e testes unitários específicos. |
 | 25 | 2026-02-20 | Investigação forense de deploy e runtime em produção: removida configuração inválida no `vercel.json`, configurada `GROQ_API_KEY` em todos ambientes Vercel, upgrade para Next.js 16.1.6 por bloqueio de segurança no provider, ajuste de `eslint.config.mjs`/`next.config.js` para compatibilidade e correção de CSP que bloqueava scripts de hidratação (home presa em "Carregando SGN..."). |
 | 26 | 2026-02-20 | Implementação do plano de performance web/mobile: CanvasBackground otimizado para mobile/reduced-motion e lazy-load via shell, AnaliseCliente refatorado com histórico sob demanda e `dynamic import` de resultado, otimização de bundle para `lucide-react`, remoção de N+1 no histórico com paginação/ordenação em SQL, criação de índices SQLite (`analise_resultados.created_at`, `analise_resultados.score_geral`, `conformidade_gaps.analise_resultado_id`), paralelização do incremental com limite de concorrência e cache em memória para leitura da base normativa por `mtime`. |
+| 27 | 2026-02-20 | Modernização da abertura mobile/web: criação de ícones PWA de marca (`/icon`, `/apple-icon`), tema nativo escuro no manifest (`background_color/theme_color`), nova abertura visual com canvas (`AppOpeningScreen`), gate de splash somente no primeiro acesso da sessão (`SessionSplashGate`, 1100ms), loading global substituído por skeleton leve para navegação interna, ajustes responsivos adicionais em `/normas/[id]` (overflow/chips/CTA/botões) e teste unitário dedicado (`session-splash-gate.test.tsx`). |
 
 ---
 

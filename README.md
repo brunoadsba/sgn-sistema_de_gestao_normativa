@@ -33,6 +33,11 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Idempotência em análise de IA
    - Sentry integrado (server, edge e client)
    - Health check com status de banco, API e LLM
+6. **Experiência mobile/web de abertura**
+   - Ícone PWA da marca SGN (`/icon` e `/apple-icon`)
+   - Splash nativa com tema escuro (manifest)
+   - Tela de abertura visual (canvas) apenas no primeiro acesso da sessão web
+   - Navegação interna com loading leve (skeleton), sem splash full-screen repetitiva
 
 ## Stack Técnica
 
@@ -136,6 +141,7 @@ npm run docker:stop
 | Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
 | Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
 | Home travada em "Carregando SGN..." | Revisar CSP (`script-src`) em `next.config.js` para não bloquear hidratação do Next.js |
+| Atalho mobile não atualiza ícone/splash | Remover atalho antigo, limpar cache do navegador e adicionar novamente à tela inicial |
 
 ## Documentação
 

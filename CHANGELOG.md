@@ -2,6 +2,40 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-20] - Identidade mobile PWA e abertura web por sessão
+
+### Adicionado
+
+- **Ícones de marca SGN para PWA**: `src/app/icon.tsx` (512x512) e `src/app/apple-icon.tsx` (180x180)
+- **Tela de abertura premium com canvas** em `src/components/loading/AppOpeningScreen.tsx`
+- **Gate de splash por sessão** em `src/components/loading/SessionSplashGate.tsx`:
+  - splash full-screen apenas no primeiro acesso da sessão
+  - duração curta (1100ms) com persistência em `sessionStorage`
+- **Teste unitário de comportamento da abertura** em `src/__tests__/session-splash-gate.test.tsx`
+
+### Alterado
+
+- **Manifest PWA** (`src/app/manifest.ts`):
+  - `background_color` e `theme_color` ajustados para escuro (`#050b1b`)
+  - troca de `favicon.ico` para ícones SGN (`/icon`, `/apple-icon`)
+- **Metadata global** (`src/app/layout.tsx`):
+  - manifest declarado explicitamente
+  - `icons` e `appleWebApp` configurados
+  - conteúdo principal envolvido com `SessionSplashGate`
+- **Loading global** (`src/app/loading.tsx`):
+  - removida splash full-screen recorrente
+  - adotado skeleton leve por seção para navegação interna
+- **Página de detalhe da norma responsiva**:
+  - `src/app/normas/[id]/page.tsx`: correções de overflow horizontal e wrapping em chips/CTA
+  - `src/app/normas/[id]/components/BotoesSeguranca.tsx`: botões empilhados no mobile e full width
+- **Jest config** (`jest.config.js`): ignorado `/.next/standalone/` para evitar colisão de módulo em testes direcionados
+
+### Validado
+
+- `npm test -- session-splash-gate.test.tsx` sem falhas
+- `npm run build` sem erros
+- Deploy em produção Vercel concluído com alias principal atualizado
+
 ## [2026-02-20] - Performance web/mobile (fase 1-4)
 
 ### Adicionado

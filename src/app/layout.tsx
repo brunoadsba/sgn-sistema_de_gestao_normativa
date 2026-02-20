@@ -1,17 +1,28 @@
 import { Inter } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { CanvasBackgroundShell } from "@/components/ui/CanvasBackgroundShell";
+import { SessionSplashGate } from "@/components/loading/SessionSplashGate";
 
 const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "SGN - Sistema de Gestão Normativa",
   description: "Análise de conformidade com IA para normas regulamentadoras de SST",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icon", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "SGN",
+  },
 };
 
 export default function RootLayout({
@@ -54,7 +65,7 @@ export default function RootLayout({
           </header>
 
           <main className="min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] relative z-10 py-6 sm:py-10">
-            {children}
+            <SessionSplashGate>{children}</SessionSplashGate>
           </main>
         </NuqsAdapter>
       </body>

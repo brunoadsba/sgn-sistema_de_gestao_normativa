@@ -22,7 +22,7 @@ export default async function NormaDetalhes({
   const isRevogada = norma.status === 'revogada'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-transparent">
+    <div className="min-h-screen bg-gray-50 dark:bg-transparent overflow-x-hidden">
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-3xl">
 
         {/* Navegação */}
@@ -115,7 +115,7 @@ export default async function NormaDetalhes({
                     {norma.palavrasChave.map((palavra) => (
                       <span
                         key={palavra}
-                        className="px-4 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-default"
+                        className="max-w-full break-words px-3 sm:px-4 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-default"
                       >
                         {palavra}
                       </span>
@@ -130,7 +130,7 @@ export default async function NormaDetalhes({
                   href={norma.urlOficial}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 p-4 w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40"
+                  className="inline-flex items-center gap-3 p-4 w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base leading-relaxed shadow-lg shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40"
                 >
                   <ExternalLink className="h-5 w-5" />
                   Acessar texto oficial no site do MTE

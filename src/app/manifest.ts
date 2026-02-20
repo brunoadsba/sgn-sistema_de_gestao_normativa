@@ -7,16 +7,22 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Sistema empresarial para monitoramento de normas regulamentadoras',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#1e40af',
+    background_color: '#050b1b',
+    theme_color: '#050b1b',
     orientation: 'portrait',
     categories: ['business', 'productivity'],
     icons: [
       {
-        src: '/favicon.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
-      }
+        src: '/icon',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/apple-icon',
+        sizes: '180x180',
+        type: 'image/png',
+      },
     ],
     // 🚀 PERFORMANCE PWA
     prefer_related_applications: false,
@@ -26,14 +32,14 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Home',
         description: 'Acessar dashboard principal',
         url: '/',
-        icons: [{ src: '/favicon.ico', sizes: '192x192' }]
+        icons: [{ src: '/icon', sizes: '512x512', type: 'image/png' }]
       },
       {
         name: 'Normas',
         short_name: 'Normas',
         description: 'Explorar normas',
         url: '/normas',
-        icons: [{ src: '/favicon.ico', sizes: '192x192' }]
+        icons: [{ src: '/icon', sizes: '512x512', type: 'image/png' }]
       }
     ]
   }

@@ -119,10 +119,10 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
   }
 
   return (
-    <div className="flex gap-3 pt-4 border-t">
+    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
       <Button
         variant="outline"
-        className="flex-1 gap-2"
+        className="w-full sm:flex-1 gap-2"
         onClick={handleExportar}
         disabled={exportando}
       >
@@ -131,7 +131,7 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
       </Button>
       <Button
         variant="outline"
-        className="flex-1 gap-2"
+        className="w-full sm:flex-1 gap-2"
         onClick={handleCompartilhar}
         disabled={compartilhando}
       >

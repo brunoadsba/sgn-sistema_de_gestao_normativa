@@ -92,6 +92,10 @@ Observações:
    - `POST /api/ia/analisar-conformidade`
 3. Validar integração GROQ (resposta e latência aceitável) e confirmar `llm: ok` no health check.
 4. Verificar logs de erro e taxa de falha.
+5. Validar experiência mobile PWA:
+   - ícone SGN aplicado na tela inicial
+   - splash nativa sem fundo branco (tema escuro do manifest)
+   - em caso de cache antigo, remover atalho e adicionar novamente
 
 ## Gate de Qualidade Recomendado
 
@@ -147,6 +151,17 @@ Ações:
 1. Validar header `content-security-policy` em produção.
 2. Garantir `script-src` compatível com hidratação do App Router.
 3. Publicar novo deploy e confirmar via hard reload (`Ctrl+F5`).
+
+### Ícone ou splash nativa não atualiza no smartphone
+
+Causa provável:
+1. Manifest/ícone em cache no navegador ou launcher do dispositivo.
+
+Ações:
+1. Remover atalho da tela inicial.
+2. Limpar cache/dados do navegador.
+3. Abrir novamente a URL de produção.
+4. Adicionar o app à tela inicial outra vez.
 
 ### Comando correto de redeploy em produção
 
