@@ -19,13 +19,16 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 5. Estrutura padronizada de retorno de erro/sucesso nas APIs.
 6. Validação de variáveis de ambiente em `src/lib/env.ts`.
 7. Armazenamento local com SQLite (sem credenciais remotas de banco).
+8. Observabilidade com Sentry (server, edge e client).
+9. Error boundaries globais e por rota para captura de falhas de renderização.
+10. Retry com timeout e idempotência em rotas críticas de análise IA.
 
 ## Riscos Conhecidos (Estado Atual)
 
 1. APIs sem autenticação/autorização (aceito para uso local).
-2. Ausência de monitoramento centralizado (Sentry não implementado).
-3. Ausência de rate limiting específico para rotas de IA.
-4. Dependência de serviço externo GROQ para etapa crítica de análise.
+2. Ausência de rate limiting específico para rotas de IA.
+3. Dependência de serviço externo GROQ para etapa crítica de análise.
+4. Uso de SQLite local limita cenários multiusuário e alta concorrência.
 
 ## Requisitos de Hardening para Deploy Público
 

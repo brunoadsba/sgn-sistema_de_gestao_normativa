@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-19 (sessão 22: padronização documental)
+> Atualizado em: 2026-02-20 (sessão 23: confiabilidade, observabilidade e estabilização E2E)
 
 ---
 
@@ -65,7 +65,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 │   │   ├── api/
 │   │   │   ├── export/             # Exportação CSV/JSON
 │   │   │   ├── extrair-texto/      # Extração de texto PDF/DOCX
-│   │   │   ├── health/             # Health check (database + api)
+│   │   │   ├── health/             # Health check (database + api + llm)
 │   │   │   ├── ia/                 # Análise de conformidade com IA
 │   │   │   ├── normas/             # CRUD normas + stats
 │   │   │   ├── nr6/                # Análise específica NR-6
@@ -155,6 +155,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 13. **Testes E2E com Playwright** (5 suites: api, navegacao, normas, nr6, pagina-inicial)
 14. **Interface dark mode** forçada por padrão com Canvas Background animado
 15. **Arquitetura Server/Client Components** com data fetching server-side e interatividade isolada em Client Components
+16. **Observabilidade e resiliência**: Sentry integrado + retry/timeout + idempotência
+17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
 
 ---
 
@@ -165,7 +167,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 ### Prioridade Média
 - Testes unitários: zero cobertura de testes unitários/integração (E2E existe)
-- Monitoramento de produção inexistente (sem Sentry, sem métricas)
+- Monitoramento ainda básico (Sentry ativo; falta telemetria de negócio e alertas operacionais)
 - Virtualização de listas para grandes volumes de normas
 
 ### Prioridade Baixa
@@ -199,6 +201,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 20 | 2026-02-19 | Redesign UX/UI completo: Canvas Background animado (partículas índigo em fundo escuro), glassmorphism nos cards e header, dark mode forçado por padrão (`<html class="dark">`), variáveis CSS dark refinadas, `dark:` variants em todos os componentes. Badge "Atualizado em tempo real" removido (informação inexistente). Aviso Next.js sobre `scroll-behavior: smooth` corrigido com `data-scroll-behavior="smooth"`. |
 | 21 | 2026-02-19 | Refatoração Server/Client Components: `page.tsx` (análise) e `normas/page.tsx` convertidos para Server Components. Criados `AnaliseCliente.tsx` e `ListaNormasDinamica.tsx` como Client Components em `src/features/`. Adicionado `nuqs` para estado de busca via URL. `NuqsAdapter` global no layout. Corrigido título "Análise de Conformidade" apagado em dark mode. Corrigido corte da letra 'g' em títulos com `bg-clip-text`. Botão "Analisar" restaurado para gradiente vivo. |
 | 22 | 2026-02-19 | Padronização de documentação: `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/Guia-Vercel.md` e `docs/sql/arquitetura.md` reorganizados em formato operacional e de engenharia. |
+| 23 | 2026-02-20 | Confiabilidade operacional: retry/timeout em chamadas críticas, idempotência em análise IA, health check ampliado (db/api/llm), Sentry integrado (server/edge/client), error boundaries por rota e global. Histórico evoluído com filtros/paginação/ordenação/busca/export CSV em horário de Brasília e persistência em URL (`nuqs`). Qualidade validada com `lint`, `build` e E2E (29/29). |
 
 ---
 
@@ -213,15 +216,11 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
   - Usar Jest (já configurado no projeto)
   - Testar com banco SQLite in-memory para isolamento
 
-- **Adicionar Error Boundaries nas páginas**
-  - `src/app/normas/error.tsx`, `src/app/nr6/error.tsx`
-  - Componente reutilizável com retry
-
 ### Fase 6 - Produção
 
-- **Configurar Sentry para error tracking**
-  - Instalar `@sentry/nextjs`, configurar DSN
-  - Capturar erros de API e client-side
+- **Evoluir observabilidade além de erro**
+  - Definir alertas operacionais (falha de API, timeout IA, fila de processamento)
+  - Adicionar métricas de negócio e dashboards
 
 - **Otimizar Docker para produção**
   - Testar `docker-compose.prod.yml` end-to-end

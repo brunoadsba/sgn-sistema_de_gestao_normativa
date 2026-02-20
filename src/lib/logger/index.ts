@@ -1,4 +1,6 @@
 import pino from 'pino';
+import { randomUUID } from 'crypto';
+import type { NextRequest } from 'next/server';
 
 // Configuração do logger Pino para produção
 const pinoOptions: pino.LoggerOptions = {
@@ -25,6 +27,16 @@ const logger = pino(pinoOptions);
 export const createLogger = (context: string) => {
   return logger.child({ context });
 };
+
+export function getCorrelationId(request?: NextRequest): string {
+  if (!request) return randomUUID();
+  return request.headers.get('x-request-id') || request.headers.get('x-correlation-id') || randomUUID();
+}
+
+export function createRequestLogger(request: NextRequest, context = 'api') {
+  const correlationId = getCorrelationId(request);
+  return logger.child({ context, correlationId });
+}
 
 // Logger padrão para uso geral
 export const log = logger;

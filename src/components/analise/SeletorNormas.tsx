@@ -182,7 +182,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
           <div className="text-center py-10">
             <Search className="h-8 w-8 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-medium">
-              Nenhuma norma encontrada para "{filtro}"
+              Nenhuma norma encontrada para &quot;{filtro}&quot;
             </p>
           </div>
         )}

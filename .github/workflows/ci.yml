@@ -1,11 +1,14 @@
 name: CI
 
-# Desativado: executa apenas manualmente (Actions > CI > Run workflow)
 on:
-  workflow_dispatch:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master]
 
 env:
   NODE_VERSION: "20"
+  GROQ_API_KEY: "ci_dummy_key"
 
 jobs:
   quality:
@@ -28,10 +31,16 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
 
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 
-  tests:
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+  unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
 
@@ -50,3 +59,26 @@ jobs:
 
       - name: Run tests
         run: npm run test:ci
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e

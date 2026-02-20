@@ -12,19 +12,19 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
 
   test('exibe a descrição da página', async ({ page }) => {
     await expect(
-      page.getByText('Faça upload do documento SST, selecione as NRs aplicáveis')
+      page.getByText(/Faça upload do seu documento SST, selecione as normas aplicáveis/i)
     ).toBeVisible()
   })
 
   test('exibe a seção de upload de documento', async ({ page }) => {
-    await expect(page.getByText('1. Documento')).toBeVisible()
+    await expect(page.getByText('Envio do Documento')).toBeVisible()
     await expect(
-      page.getByText('Arraste o documento ou clique para selecionar')
+      page.getByText('Arraste seu documento SST aqui')
     ).toBeVisible()
   })
 
   test('exibe a seção de seleção de normas', async ({ page }) => {
-    await expect(page.getByText('2. Normas Regulamentadoras')).toBeVisible()
+    await expect(page.getByText('Normas Aplicáveis', { exact: true })).toBeVisible()
   })
 
   test('botão Analisar está desabilitado sem documento e sem normas', async ({ page }) => {

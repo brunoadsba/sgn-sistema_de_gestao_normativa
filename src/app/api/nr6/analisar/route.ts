@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analisarNR6 } from '@/lib/ia/analisador-nr6'
 import { AnaliseNR6Request } from '@/lib/ia/analisador-nr6'
+import { createRequestLogger } from '@/lib/logger'
 
 // POST /api/nr6/analisar
 export async function POST(request: NextRequest) {
+  const logger = createRequestLogger(request, 'api.nr6')
   try {
     const body = await request.json()
 
@@ -38,12 +40,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Log específico da NR-6
-    console.log('Análise NR-6 concluída:', {
+    logger.info({
       score: resultado.score,
       gaps: resultado.gaps.length,
       conformidadeNR6: resultado.conformidadeNR6,
       tempoProcessamento
-    })
+    }, 'Análise NR-6 concluída')
 
     // Salvar análise no banco (implementar depois)
 
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Erro na análise NR-6:', error)
+    logger.error({ error: error instanceof Error ? error.message : 'Erro desconhecido' }, 'Erro na análise NR-6')
 
     return NextResponse.json(
       {
@@ -71,7 +73,12 @@ export async function POST(request: NextRequest) {
 }
 
 // Validação específica para NR-6
-function validarEntradaNR6(body: any): { valida: boolean; erros: string[] } {
+type EntradaNR6Parcial = {
+  documento?: unknown;
+  tipoDocumento?: unknown;
+};
+
+function validarEntradaNR6(body: EntradaNR6Parcial): { valida: boolean; erros: string[] } {
   const erros: string[] = []
 
   if (!body.documento || typeof body.documento !== 'string') {
@@ -85,14 +92,14 @@ function validarEntradaNR6(body: any): { valida: boolean; erros: string[] } {
   const tiposValidos = ['ficha_entrega_epi', 'treinamento_epi', 'inspecao_epi', 'pgr', 'nr1_gro', 'ppra', 'outro']
   // PGR e NR-1-GRO são os documentos principais (NR-1 GRO substituiu PPRA)
   // PPRA mantido para compatibilidade com documentos legados
-  if (body.tipoDocumento && !tiposValidos.includes(body.tipoDocumento)) {
+  if (typeof body.tipoDocumento === 'string' && !tiposValidos.includes(body.tipoDocumento)) {
     erros.push(`Tipo de documento inválido. Tipos válidos: ${tiposValidos.join(', ')}`)
   }
 
 
 
   // Validar tamanho específico para NR-6
-  if (body.documento && body.documento.length > 30000) {
+  if (typeof body.documento === 'string' && body.documento.length > 30000) {
     erros.push('Documento muito grande para análise NR-6. Máximo 30.000 caracteres')
   }
 

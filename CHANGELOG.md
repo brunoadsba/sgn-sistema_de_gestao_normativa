@@ -2,6 +2,32 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-20] - Confiabilidade operacional, observabilidade e estabilidade E2E
+
+### Adicionado
+
+- **Observabilidade com Sentry**: instrumentação server, edge e client com hooks oficiais (`onRequestError`, `onRouterTransitionStart`) e `global-error` para captura de erros de renderização no App Router
+- **Error boundaries e loading states por rota**: cobertura para `/normas`, `/normas/[id]` e `/nr6` com fallback de erro e carregamento
+- **Resiliência de chamadas HTTP**: utilitário `fetch-with-retry` com timeout e backoff para chamadas críticas
+- **Idempotência em análise IA**: suporte a `Idempotency-Key` para evitar reprocessamento de requisições repetidas
+- **Base de conhecimento local de normas (anti-alucinação)**: retrieval local com evidências normativas e script de sincronização (`npm run kb:sync`)
+- **Rotina operacional de backup/restore**: scripts `db:backup` e `db:restore` para SQLite
+- **ESLint v9 flat config**: migração para `eslint.config.mjs`
+
+### Alterado
+
+- **Histórico de análises**: filtros por período, ordenação por score/data, busca por nome, paginação visual e persistência em URL (`nuqs`)
+- **Exportação CSV do histórico**: horário de Brasília e colunas extras (`tempoProcessamento`, `modeloUsado`)
+- **Health check**: ampliado para status de `database`, `api` e `llm`
+- **Configuração Sentry no Next.js**: opções deprecadas removidas e substituídas pelas chaves atuais de `webpack`
+- **Páginas de análise e normas**: ajustes de estabilidade e separação Server/Client Components com foco em previsibilidade
+
+### Validado
+
+- `npm run lint` sem erros
+- `npm run build` sem erros
+- `npm run test:e2e` com **29/29 testes passando**
+
 ## [2026-02-19] - Padronização de documentação (Sessão 22)
 
 ### Alterado

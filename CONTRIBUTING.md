@@ -49,10 +49,12 @@ Exemplos:
    ```bash
    npm run test:e2e
    ```
+   - Resultado esperado: suíte verde, sem cenários flaky.
 4. Revisar documentação:
    - `README.md`
    - `docs/memory.md`
    - `docs/sql/arquitetura.md`
+   - `docs/Guia-Vercel.md` (quando houver impacto operacional/deploy)
    - `CHANGELOG.md`
    - `SECURITY.md` (quando houver impacto)
 5. Verificar segredos:
@@ -82,4 +84,5 @@ Exemplos:
 1. Não quebrar fluxo principal (`/`, `/normas`, `/normas/[id]`, `/nr6`).
 2. Não introduzir regressão em extração de arquivos (`PDF`, `DOCX`, `TXT`).
 3. Não introduzir warnings/erros TypeScript.
-4. Atualizar `CHANGELOG.md` para mudanças relevantes.
+4. Não introduzir regressão em estabilidade E2E.
+5. Atualizar `CHANGELOG.md` para mudanças relevantes.

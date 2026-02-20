@@ -47,6 +47,10 @@ NODE_ENV=production
 PORT=3001
 LOG_LEVEL=info
 DATABASE_PATH=./data/sgn.db
+GROQ_TIMEOUT_MS=45000
+GROQ_RETRY_ATTEMPTS=3
+SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
 ```
 
 Observações:
@@ -82,8 +86,33 @@ Observações:
    - `GET /api/health`
    - `POST /api/extrair-texto`
    - `POST /api/ia/analisar-conformidade`
-3. Validar integração GROQ (resposta e latência aceitável).
+3. Validar integração GROQ (resposta e latência aceitável) e confirmar `llm: ok` no health check.
 4. Verificar logs de erro e taxa de falha.
+
+## Gate de Qualidade Recomendado
+
+Antes de promover para produção:
+
+1. `npm run lint`
+2. `npm run build`
+3. `npm run test:e2e`
+
+Resultado esperado: execução sem erros e suíte E2E totalmente verde.
+
+## Runbook de Backup e Restore (SQLite)
+
+1. Criar backup:
+   ```bash
+   npm run db:backup
+   ```
+2. Restaurar backup:
+   ```bash
+   npm run db:restore -- ./backups/sgn-YYYYMMDD-HHMMSS.db.gz
+   ```
+3. Política recomendada:
+   - Backup diário
+   - Retenção mínima de 7 dias
+   - Teste de restore ao menos 1x por semana
 
 ## Troubleshooting
 

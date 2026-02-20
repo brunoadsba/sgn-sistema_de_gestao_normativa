@@ -1,14 +1,18 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Brain, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Brain, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { useQueryState } from 'nuqs'
 import { UploadDocumento } from '@/components/analise/UploadDocumento'
 import { SeletorNormas } from '@/components/analise/SeletorNormas'
 import { ResultadoAnalise } from '@/components/analise/ResultadoAnalise'
 import { AnaliseConformidadeResponse } from '@/types/ia'
+import { fetchWithRetry } from '@/lib/fetch-with-retry'
+import { ErrorDisplay } from '@/components/error/ErrorDisplay'
 
 export interface NormaReduzida {
     id: string
@@ -20,6 +24,27 @@ interface AnaliseClienteProps {
     normasIniciais: NormaReduzida[]
 }
 
+interface HistoricoAnalise {
+    id: string
+    nomeDocumento: string
+    tipoDocumento: string
+    score: number
+    nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico'
+    timestamp: string
+    tempoProcessamento: number
+    modeloUsado: string
+}
+
+interface PaginacaoHistorico {
+    pagina: number
+    totalPaginas: number
+    temProxima: boolean
+    temAnterior: boolean
+}
+
+type PeriodoHistorico = 'today' | '7d' | '30d'
+type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc'
+
 export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [arquivo, setArquivo] = useState<File | null>(null)
     const [normasSelecionadas, setNormasSelecionadas] = useState<string[]>([])
@@ -28,6 +53,93 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [etapa, setEtapa] = useState('')
     const [erro, setErro] = useState<string | null>(null)
     const [resultado, setResultado] = useState<AnaliseConformidadeResponse | null>(null)
+    const [historico, setHistorico] = useState<HistoricoAnalise[]>([])
+    const [carregandoHistorico, setCarregandoHistorico] = useState(true)
+    const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('hist_page', {
+        defaultValue: '1',
+        shallow: true,
+    })
+    const [periodoHistoricoQuery, setPeriodoHistoricoQuery] = useQueryState('hist_periodo', {
+        defaultValue: '30d',
+        shallow: true,
+    })
+    const [ordenacaoHistoricoQuery, setOrdenacaoHistoricoQuery] = useQueryState('hist_sort', {
+        defaultValue: 'data_desc',
+        shallow: true,
+    })
+    const [buscaDocumentoQuery, setBuscaDocumentoQuery] = useQueryState('hist_busca', {
+        defaultValue: '',
+        shallow: true,
+    })
+    const paginaHistorico = Math.max(parseInt(paginaHistoricoQuery || '1', 10) || 1, 1)
+    const periodoHistorico: PeriodoHistorico =
+        periodoHistoricoQuery === 'today' || periodoHistoricoQuery === '7d' || periodoHistoricoQuery === '30d'
+            ? periodoHistoricoQuery
+            : '30d'
+    const ordenacaoHistorico: OrdenacaoHistorico =
+        ordenacaoHistoricoQuery === 'data_desc' ||
+        ordenacaoHistoricoQuery === 'data_asc' ||
+        ordenacaoHistoricoQuery === 'score_desc' ||
+        ordenacaoHistoricoQuery === 'score_asc'
+            ? ordenacaoHistoricoQuery
+            : 'data_desc'
+    const buscaDocumento = buscaDocumentoQuery || ''
+    const [buscaDebounced, setBuscaDebounced] = useState('')
+    const [paginacao, setPaginacao] = useState<PaginacaoHistorico>({
+        pagina: 1,
+        totalPaginas: 0,
+        temProxima: false,
+        temAnterior: false,
+    })
+
+    const carregarHistorico = useCallback(async (
+        pagina: number,
+        periodo: PeriodoHistorico,
+        ordenacao: OrdenacaoHistorico,
+        busca: string
+    ) => {
+        setCarregandoHistorico(true)
+        try {
+            const params = new URLSearchParams({
+                limite: '8',
+                pagina: String(pagina),
+                periodo,
+                ordenacao,
+            })
+            if (busca.trim()) {
+                params.set('busca', busca.trim())
+            }
+
+            const response = await fetchWithRetry(`/api/ia/analisar-conformidade?${params.toString()}`, {
+                method: 'GET',
+            }, { retries: 2, timeoutMs: 20_000 })
+
+            const payload = await response.json().catch(() => null)
+            if (!response.ok || !payload?.success) {
+                return
+            }
+
+            const itens = Array.isArray(payload.data?.historico) ? payload.data.historico : []
+            setHistorico(itens)
+            setPaginacao({
+                pagina: payload.data?.paginacao?.pagina ?? pagina,
+                totalPaginas: payload.data?.paginacao?.totalPaginas ?? 0,
+                temProxima: Boolean(payload.data?.paginacao?.temProxima),
+                temAnterior: Boolean(payload.data?.paginacao?.temAnterior),
+            })
+        } finally {
+            setCarregandoHistorico(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        const timeout = setTimeout(() => setBuscaDebounced(buscaDocumento), 300)
+        return () => clearTimeout(timeout)
+    }, [buscaDocumento])
+
+    useEffect(() => {
+        void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
+    }, [carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
     const executarAnalise = useCallback(async () => {
         if (!arquivo) {
@@ -52,10 +164,10 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             const formData = new FormData()
             formData.append('file', arquivo)
 
-            const extractRes = await fetch('/api/extrair-texto', {
+            const extractRes = await fetchWithRetry('/api/extrair-texto', {
                 method: 'POST',
                 body: formData,
-            })
+            }, { retries: 3, timeoutMs: 60_000 })
 
             if (!extractRes.ok) {
                 const err = await extractRes.json().catch(() => ({}))
@@ -79,7 +191,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                 return match ? `NR-${parseInt(match[1])}` : codigo
             })
 
-            const analysisRes = await fetch('/api/ia/analisar-conformidade', {
+            const analysisRes = await fetchWithRetry('/api/ia/analisar-conformidade', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -87,7 +199,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                     tipoDocumento: 'OUTRO',
                     normasAplicaveis: codigosNR,
                 }),
-            })
+            }, { retries: 3, timeoutMs: 90_000 })
 
             setProgresso(85)
 
@@ -104,12 +216,13 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             setProgresso(100)
             setEtapa('Concluída')
             setResultado(analysisData.data)
+            await carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
         } catch (err) {
             setErro(err instanceof Error ? err.message : 'Erro desconhecido na análise')
         } finally {
             setAnalisando(false)
         }
-    }, [arquivo, normasSelecionadas])
+    }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
     const novaAnalise = () => {
         setArquivo(null)
@@ -121,6 +234,36 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     }
 
     const podeAnalisar = arquivo && normasSelecionadas.length > 0 && !analisando
+    const formatarDataHoraBrasilia = (isoDate: string) =>
+        new Intl.DateTimeFormat('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            dateStyle: 'short',
+            timeStyle: 'medium',
+        }).format(new Date(isoDate))
+    const labelPeriodo: Record<PeriodoHistorico, string> = {
+        today: 'Hoje',
+        '7d': '7 dias',
+        '30d': '30 dias',
+    }
+    const periodos: PeriodoHistorico[] = ['today', '7d', '30d']
+    const opcoesOrdenacao: { value: OrdenacaoHistorico; label: string }[] = [
+        { value: 'data_desc', label: 'Data (mais recente)' },
+        { value: 'data_asc', label: 'Data (mais antiga)' },
+        { value: 'score_desc', label: 'Score (maior)' },
+        { value: 'score_asc', label: 'Score (menor)' },
+    ]
+    const exportarHistoricoCsv = () => {
+        const params = new URLSearchParams({
+            format: 'csv',
+            periodo: periodoHistorico,
+            ordenacao: ordenacaoHistorico,
+        })
+        if (buscaDebounced.trim()) {
+            params.set('busca', buscaDebounced.trim())
+        }
+        const url = `/api/ia/analisar-conformidade?${params.toString()}`
+        window.open(url, '_blank', 'noopener,noreferrer')
+    }
 
     return (
         <div className="container mx-auto px-4 max-w-5xl">
@@ -184,15 +327,14 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
 
                     {/* Erro */}
                     {erro && (
-                        <div className="animate-in fade-in zoom-in-95 duration-300 flex items-center gap-3 p-4 bg-red-50/90 dark:bg-red-950/50 backdrop-blur-md border border-red-200 dark:border-red-900/60 shadow-sm rounded-2xl text-red-800 dark:text-red-300">
-                            <AlertCircle className="h-6 w-6 flex-shrink-0 text-red-500 dark:text-red-400" />
-                            <p className="text-sm font-medium">{erro}</p>
+                        <div className="animate-in fade-in zoom-in-95 duration-300">
+                            <ErrorDisplay message={erro} onRetry={executarAnalise} compact />
                         </div>
                     )}
 
                     {/* Progresso */}
                     {analisando && (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/50 dark:to-indigo-950/50 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-lg rounded-2xl">
+                        <div aria-live="polite" className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/50 dark:to-indigo-950/50 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-lg rounded-2xl">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
@@ -221,6 +363,136 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                             {analisando ? 'Processando com Inteligência Artificial...' : 'Analisar Conformidade com IA'}
                         </Button>
                     </div>
+
+                    <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-emerald-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
+                        <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle className="text-xl dark:text-gray-100">Histórico de análises</CardTitle>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Data e hora exibidas no padrão Brasil (Horário de Brasília).
+                                    </p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportarHistoricoCsv}
+                                    className="border-gray-300 dark:border-gray-600"
+                                >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Exportar CSV
+                                </Button>
+                            </div>
+                            <div className="mt-3 flex items-center gap-2">
+                                {periodos.map((periodo) => (
+                                    <Button
+                                        key={periodo}
+                                        type="button"
+                                        size="sm"
+                                        variant={periodoHistorico === periodo ? 'default' : 'outline'}
+                                        onClick={() => {
+                                            setPeriodoHistoricoQuery(periodo)
+                                            setPaginaHistoricoQuery('1')
+                                        }}
+                                        className={periodoHistorico === periodo ? '' : 'border-gray-300 dark:border-gray-600'}
+                                    >
+                                        {labelPeriodo[periodo]}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                                <Input
+                                    value={buscaDocumento}
+                                    onChange={(event) => {
+                                        const value = event.target.value
+                                        setBuscaDocumentoQuery(value || null)
+                                        setPaginaHistoricoQuery('1')
+                                    }}
+                                    placeholder="Buscar por nome do documento..."
+                                    className="border-gray-300 dark:border-gray-600"
+                                />
+                                <select
+                                    value={ordenacaoHistorico}
+                                    onChange={(event) => {
+                                        setOrdenacaoHistoricoQuery(event.target.value as OrdenacaoHistorico)
+                                        setPaginaHistoricoQuery('1')
+                                    }}
+                                    className="h-10 rounded-md border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200"
+                                >
+                                    {opcoesOrdenacao.map((opcao) => (
+                                        <option key={opcao.value} value={opcao.value} className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+                                            {opcao.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            {carregandoHistorico ? (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Carregando histórico...</p>
+                            ) : historico.length === 0 ? (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Nenhuma análise registrada ainda.
+                                </p>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="space-y-3">
+                                        {historico.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 px-4 py-3"
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                        {item.nomeDocumento}
+                                                    </p>
+                                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                                                        Score {item.score}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-1 flex items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    <span>{item.tipoDocumento} · Risco {item.nivelRisco}</span>
+                                                    <span>{formatarDataHoraBrasilia(item.timestamp)}</span>
+                                                </div>
+                                                <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                                    {item.modeloUsado} · {item.tempoProcessamento}ms
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Página {paginacao.pagina} de {Math.max(paginacao.totalPaginas, 1)}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={!paginacao.temAnterior}
+                                                onClick={() => setPaginaHistoricoQuery(String(Math.max(paginaHistorico - 1, 1)))}
+                                                className="border-gray-300 dark:border-gray-600"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={!paginacao.temProxima}
+                                                onClick={() => setPaginaHistoricoQuery(String(paginaHistorico + 1))}
+                                                className="border-gray-300 dark:border-gray-600"
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>

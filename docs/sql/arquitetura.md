@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-19 (sessão 22 - padronização documental)
+> Atualizado em: 2026-02-20 (sessão 23 - confiabilidade e estabilidade)
 
 ## Visão Geral
 
@@ -25,6 +25,7 @@ Princípios arquiteturais ativos:
 | IA | GROQ SDK (`meta-llama/llama-4-scout-17b-16e-instruct`) |
 | Extração | `pdf-parse` v2 (PDF) + `mammoth` (DOCX) |
 | Logging | Pino |
+| Observabilidade | Sentry (server/edge/client) |
 | Testes | Playwright (E2E) |
 
 ## Organização de Componentes
@@ -72,6 +73,13 @@ Responsabilidade:
 3. `POST /api/ia/analisar-conformidade` chama GROQ e persiste resultado.
 4. UI renderiza score, gaps e plano de ação.
 
+### Confiabilidade no fluxo
+
+1. Chamadas críticas usam retry com timeout e backoff controlado.
+2. Endpoint de análise suporta idempotência por `Idempotency-Key`.
+3. Persistência de análise usa transação para manter consistência de dados.
+4. Histórico e exportação usam filtros determinísticos (período, busca, ordenação).
+
 ## APIs Ativas
 
 | Rota | Método | Objetivo |
@@ -103,9 +111,11 @@ Responsabilidade:
 2. Catálogo de normas estável com busca dinâmica e URL state.
 3. UI dark mode padronizada com Canvas Background.
 4. Persistência e histórico funcionando no SQLite.
+5. Observabilidade com Sentry e error boundaries de rota.
+6. Qualidade validada com lint/build e suíte E2E estável.
 
 ### Débito técnico aberto
 
 1. Worker assíncrono real para processamento.
 2. Testes unitários e integração para APIs críticas.
-3. Monitoramento de produção (Sentry/telemetria).
+3. Evoluir base normativa local para cobertura completa e atualização automatizada contínua.

@@ -4,6 +4,12 @@ export interface AnaliseConformidadeRequest {
   documento: string
   tipoDocumento: string
   normasAplicaveis?: string[]
+  evidenciasNormativas?: EvidenciaNormativa[]
+  contextoBaseConhecimento?: {
+    versaoBase: string
+    totalChunks: number
+    fonte: 'local'
+  }
   prioridade?: 'baixa' | 'media' | 'alta' | 'critica'
 }
 
@@ -31,6 +37,16 @@ export interface GapConformidade {
   custoEstimado?: number
   responsavelSugerido?: string
   normasRelacionadas?: string[]
+  evidencias?: EvidenciaNormativa[]
+}
+
+export interface EvidenciaNormativa {
+  chunkId: string
+  normaCodigo: string
+  secao: string
+  conteudo: string
+  score: number
+  fonte: 'local'
 }
 
 export interface ConfiguracaoIA {

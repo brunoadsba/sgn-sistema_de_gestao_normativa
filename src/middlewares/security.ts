@@ -400,7 +400,7 @@ export function validateSecurityConfig() {
   };
 }
 
-export default {
+const securityMiddlewares = {
   withCORS,
   withSecurityHeaders,
   withRequestValidation,
@@ -412,3 +412,5 @@ export default {
   CSP_CONFIG,
   SECURITY_HEADERS,
 };
+
+export default securityMiddlewares;

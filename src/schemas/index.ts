@@ -33,6 +33,14 @@ export const GapConformidadeSchema = z.object({
   recomendacao: z.string().min(1, 'Recomendação é obrigatória'),
   prazo: z.string().optional(),
   normaRelacionada: z.string().optional(),
+  evidencias: z.array(z.object({
+    chunkId: z.string(),
+    normaCodigo: z.string(),
+    secao: z.string(),
+    conteudo: z.string(),
+    score: z.number().min(0).max(1),
+    fonte: z.literal('local'),
+  })).optional(),
 });
 
 // Schemas para APIs

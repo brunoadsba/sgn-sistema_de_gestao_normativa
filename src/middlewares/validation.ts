@@ -39,7 +39,7 @@ export async function validateRequestBody<T>(
   try {
     const body = await request.json();
     return validateRequest(schema, body);
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Body da requisição inválido ou ausente' };
   }
 }

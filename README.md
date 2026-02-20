@@ -10,6 +10,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 - `Arquitetura`: monolito Next.js (App Router)
 - `Modelo operacional`: single-user local
 - `Branch principal`: `master`
+- `Qualidade atual`: `lint`, `build` e `test:e2e` verdes (29/29)
 
 ## Capacidades
 
@@ -25,6 +26,12 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Fluxo dedicado para EPIs
 4. **Persistência e histórico**
    - SQLite + Drizzle (`documentos`, `analise_jobs`, `analise_resultados`, `conformidade_gaps`)
+   - Histórico com filtros, ordenação, busca, paginação e exportação CSV (horário de Brasília)
+5. **Confiabilidade e observabilidade**
+   - Retry com timeout para chamadas críticas
+   - Idempotência em análise de IA
+   - Sentry integrado (server, edge e client)
+   - Health check com status de banco, API e LLM
 
 ## Stack Técnica
 
@@ -125,11 +132,13 @@ npm run docker:stop
 | Erro de extração de texto | Validar arquivo (sem senha/corrupção) e formato suportado |
 | Chave GROQ inválida | Revisar `GROQ_API_KEY` em `.env.local` |
 | Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
+| Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
 
 ## Documentação
 
 - `docs/memory.md` - contexto operacional completo e histórico de sessões
 - `docs/sql/arquitetura.md` - arquitetura técnica consolidada
+- `docs/Guia-Vercel.md` - guia operacional de deploy e checklist
 - `CHANGELOG.md` - histórico de mudanças
 - `SECURITY.md` - modelo de segurança e hardening
 - `CONTRIBUTING.md` - fluxo de contribuição
