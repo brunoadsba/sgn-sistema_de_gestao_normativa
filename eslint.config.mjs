@@ -1,19 +1,14 @@
-import { FlatCompat } from "@eslint/eslintrc";
-import path from "path";
-import { fileURLToPath } from "url";
+import { defineConfig } from "eslint/config";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const config = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+const config = defineConfig(
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     ignores: [
       ".next/**",
+      ".vercel/**",
       "node_modules/**",
       "coverage/**",
       "dist/**",
@@ -27,6 +22,6 @@ const config = [
       "@typescript-eslint/no-require-imports": "off",
     },
   },
-];
+);
 
 export default config;

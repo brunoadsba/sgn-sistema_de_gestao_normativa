@@ -54,10 +54,10 @@ function ScoreIndicador({ score }: { score: number }) {
   const corTraco = score >= 80 ? '#16a34a' : score >= 60 ? '#ca8a04' : score >= 40 ? '#ea580c' : '#dc2626'
 
   return (
-    <div className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 ${bgCor} min-w-[160px] shadow-lg relative overflow-hidden group`}>
+    <div className={`flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl border-2 ${bgCor} min-w-[132px] sm:min-w-[160px] shadow-lg relative overflow-hidden group`}>
       <div className="absolute inset-0 bg-white/40 group-hover:bg-white/20 transition-colors duration-500"></div>
-      <div className="relative w-28 h-28">
-        <svg className="w-28 h-28 -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
+      <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+        <svg className="w-24 h-24 sm:w-28 sm:h-28 -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="8" />
           <circle
             cx="50" cy="50" r="40"
@@ -72,7 +72,7 @@ function ScoreIndicador({ score }: { score: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center animate-in zoom-in duration-500 delay-300">
-          <span className={`text-4xl font-black tracking-tighter leading-none ${cor} drop-shadow-sm`}>{score}</span>
+          <span className={`text-3xl sm:text-4xl font-black tracking-tighter leading-none ${cor} drop-shadow-sm`}>{score}</span>
           <span className="text-xs font-bold text-gray-500/80 uppercase tracking-widest mt-1">Score</span>
         </div>
       </div>
@@ -92,9 +92,9 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
         <div className="w-px h-full bg-gray-200 dark:bg-gray-700 mt-2 group-last:hidden"></div>
       </div>
       <div className={`flex-1 pb-6`}>
-        <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
           <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-base leading-snug">{gap.descricao}</h4>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shrink-0 shadow-sm border ${config.badge} ${config.border.replace('border-l-', 'border-')}`}>
+          <span className={`self-start px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shrink-0 shadow-sm border ${config.badge} ${config.border.replace('border-l-', 'border-')}`}>
             {gap.severidade}
           </span>
         </div>
@@ -151,7 +151,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
   return (
     <div className="space-y-6">
       {/* Score + Cabeçalho */}
-      <div className="flex flex-col md:flex-row gap-6 p-8 rounded-3xl border border-white/10 dark:border-gray-700/50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl shadow-xl shadow-blue-900/5 dark:shadow-black/30 hover:shadow-blue-900/10 transition-shadow duration-300">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-6 p-4 sm:p-8 rounded-3xl border border-white/10 dark:border-gray-700/50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl shadow-xl shadow-blue-900/5 dark:shadow-black/30 hover:shadow-blue-900/10 transition-shadow duration-300">
         <ScoreIndicador score={resultado.score} />
 
         <div className="flex-1 space-y-4 flex flex-col justify-center">
@@ -199,7 +199,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Pontos Positivos */}
         {resultado.pontosPositivos?.length > 0 && (
           <Card className="border-green-100 dark:border-green-900/40 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-900 dark:to-green-950/20 shadow-md shadow-green-100/20">
@@ -251,14 +251,14 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
 
       {/* Gaps — ordenados por severidade */}
       {gapsOrdenados.length > 0 && (
-        <Card className="border-red-100 dark:border-red-900/40 shadow-lg shadow-red-100/20 overflow-hidden">
+          <Card className="border-red-100 dark:border-red-900/40 shadow-lg shadow-red-100/20 overflow-hidden">
           <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-white dark:from-red-950/30 dark:to-gray-900/0 border-b border-red-100/50 dark:border-red-900/30">
-            <CardTitle className="text-lg font-bold flex items-center gap-3 text-red-900 dark:text-red-300">
+            <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2 sm:gap-3 text-red-900 dark:text-red-300">
               <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
               </div>
               Detalhes das Inconformidades
-              <span className="text-sm font-medium px-3 py-1 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full shadow-sm ml-auto">
+              <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full shadow-sm ml-auto">
                 {gapsOrdenados.length} gaps encontrados
               </span>
             </CardTitle>
@@ -266,7 +266,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
           <CardContent className="p-0 bg-gray-50/50 dark:bg-gray-900/30">
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {gapsOrdenados.map((gap, i) => (
-                <div key={gap.id || i} className="p-6 transition-colors hover:bg-white dark:hover:bg-gray-800/30">
+                <div key={gap.id || i} className="p-4 sm:p-6 transition-colors hover:bg-white dark:hover:bg-gray-800/30">
                   <GapItem gap={gap} index={i} />
                 </div>
               ))}

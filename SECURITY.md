@@ -22,6 +22,7 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 8. Observabilidade com Sentry (server, edge e client).
 9. Error boundaries globais e por rota para captura de falhas de renderização.
 10. Retry com timeout e idempotência em rotas críticas de análise IA.
+11. Política CSP ativa em produção e revisada para compatibilidade com hidratação do Next.js App Router.
 
 ## Riscos Conhecidos (Estado Atual)
 
@@ -29,6 +30,7 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 2. Ausência de rate limiting específico para rotas de IA.
 3. Dependência de serviço externo GROQ para etapa crítica de análise.
 4. Uso de SQLite local limita cenários multiusuário e alta concorrência.
+5. CSP atual usa `script-src 'unsafe-inline'` como mitigação de disponibilidade para evitar bloqueio de hidratação; reduzir esse risco exige implementação dedicada de nonce/hash alinhada ao App Router.
 
 ## Requisitos de Hardening para Deploy Público
 

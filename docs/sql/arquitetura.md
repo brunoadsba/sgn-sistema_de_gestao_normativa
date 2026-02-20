@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 24 - processamento incremental para documentos grandes)
+> Atualizado em: 2026-02-20 (sessão 25 - estabilização de deploy Vercel e correção de hidratação)
 
 ## Visão Geral
 
@@ -17,7 +17,7 @@ Princípios arquiteturais ativos:
 
 | Camada | Tecnologia |
 |--------|------------|
-| Framework | Next.js 15.5.2 |
+| Framework | Next.js 16.1.6 |
 | Linguagem | TypeScript 5.9.2 (strict) |
 | UI | React 19 + Tailwind + shadcn/ui |
 | Estado em URL | nuqs |
@@ -80,6 +80,7 @@ Responsabilidade:
 3. Persistência de análise usa transação para manter consistência de dados.
 4. Histórico e exportação usam filtros determinísticos (período, busca, ordenação).
 5. Fluxo incremental opcional por chunks com validação por evidência em cada etapa.
+6. CSP de produção alinhada com hidratação do App Router para evitar loading infinito na página raiz.
 
 ## APIs Ativas
 

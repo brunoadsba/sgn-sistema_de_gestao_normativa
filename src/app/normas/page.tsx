@@ -6,15 +6,15 @@ export default function NormasPage() {
   const todasNormas = getNormasData()
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-7xl">
       <div className="space-y-10">
         {/* Header */}
-        <div className="text-center relative py-8">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[10rem] bg-indigo-500/10 blur-[100px] -z-10 rounded-full"></div>
-          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-4 pb-4 leading-normal">
+        <div className="text-center relative py-6 sm:py-8">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[18rem] sm:w-[30rem] h-[8rem] sm:h-[10rem] bg-indigo-500/10 blur-[100px] -z-10 rounded-full"></div>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-4 pb-4 leading-normal">
             Normas Regulamentadoras
           </h1>
-          <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-medium mb-8">
+          <p className="text-base sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-medium mb-6 sm:mb-8">
             Explore nossa base de dados completa e atualizada com todas as NRs de Segurança e Saúde no Trabalho.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">

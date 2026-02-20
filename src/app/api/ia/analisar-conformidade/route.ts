@@ -9,6 +9,7 @@ import { createSuccessResponse, createErrorResponse, validateRequestBody } from 
 import { createRequestLogger } from '@/lib/logger'
 import {
   exportarHistoricoCsv,
+  limparHistoricoAnalises,
   listarAnalisesConformidade,
   OrdenacaoHistorico,
   PeriodoHistorico,
@@ -270,6 +271,26 @@ export async function GET(request: NextRequest) {
 
     return createErrorResponse(
       'Erro ao listar análises',
+      500,
+      error instanceof Error ? error.message : 'Erro desconhecido'
+    )
+  }
+}
+
+// DELETE /api/ia/analisar-conformidade - Limpar histórico de análises
+export async function DELETE(request: NextRequest) {
+  const log = createRequestLogger(request, 'api.ia.analisar-conformidade.limpar')
+  try {
+    const resultado = await limparHistoricoAnalises()
+    log.info(resultado, 'Histórico de análises removido com sucesso')
+    return createSuccessResponse(resultado, 'Histórico removido com sucesso')
+  } catch (error) {
+    log.error({
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    }, 'Erro ao limpar histórico de análises')
+
+    return createErrorResponse(
+      'Erro ao limpar histórico de análises',
       500,
       error instanceof Error ? error.message : 'Erro desconhecido'
     )

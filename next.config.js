@@ -5,9 +5,6 @@ const nextConfig = {
   // Enable standalone output for Docker
   output: 'standalone',
   
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -27,10 +24,6 @@ const nextConfig = {
   // Security headers
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production';
-    
-    // CSP nonce gerado com crypto para segurança
-    const crypto = require('crypto');
-    const cspNonce = `'nonce-${crypto.randomBytes(16).toString('base64')}'`;
     
     return [
       {
@@ -73,7 +66,7 @@ const nextConfig = {
           { 
             key: 'Content-Security-Policy', 
             value: isProduction
-              ? `default-src 'self'; script-src 'self' ${cspNonce}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;`
+              ? `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;`
               : `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' ws: wss: https:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';`
           },
           

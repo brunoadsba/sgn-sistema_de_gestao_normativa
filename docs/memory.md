@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 24: estratégia incremental para arquivos grandes)
+> Atualizado em: 2026-02-20 (sessão 25: correções forenses de deploy e hidratação em produção)
 
 ---
 
@@ -19,7 +19,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 | Camada | Tecnologia | Versão |
 |--------|-----------|--------|
-| Framework | Next.js (App Router) | 15.5.2 |
+| Framework | Next.js (App Router) | 16.1.6 |
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
@@ -158,6 +158,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 16. **Observabilidade e resiliência**: Sentry integrado + retry/timeout + idempotência
 17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
 18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados de processamento
+19. **Deploy Vercel estabilizado**: correções de `vercel.json`, `GROQ_API_KEY` em todos ambientes, upgrade para Next.js 16.1.6 e correção de CSP para destravar hidratação da home
 
 ---
 
@@ -204,6 +205,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 22 | 2026-02-19 | Padronização de documentação: `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/Guia-Vercel.md` e `docs/sql/arquitetura.md` reorganizados em formato operacional e de engenharia. |
 | 23 | 2026-02-20 | Confiabilidade operacional: retry/timeout em chamadas críticas, idempotência em análise IA, health check ampliado (db/api/llm), Sentry integrado (server/edge/client), error boundaries por rota e global. Histórico evoluído com filtros/paginação/ordenação/busca/export CSV em horário de Brasília e persistência em URL (`nuqs`). Qualidade validada com `lint`, `build` e E2E (29/29). |
 | 24 | 2026-02-20 | Estratégia para documentos grandes: adicionados contratos backward-compatible (`estrategiaProcessamento`), chunking com overlap, orquestração incremental no endpoint de análise, consolidação/deduplicação de gaps com score ponderado, persistência de metadados por chunk e testes unitários específicos. |
+| 25 | 2026-02-20 | Investigação forense de deploy e runtime em produção: removida configuração inválida no `vercel.json`, configurada `GROQ_API_KEY` em todos ambientes Vercel, upgrade para Next.js 16.1.6 por bloqueio de segurança no provider, ajuste de `eslint.config.mjs`/`next.config.js` para compatibilidade e correção de CSP que bloqueava scripts de hidratação (home presa em "Carregando SGN..."). |
 
 ---
 

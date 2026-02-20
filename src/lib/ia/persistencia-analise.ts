@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, like, sql } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
 import { log } from '@/lib/logger';
@@ -307,4 +307,32 @@ export async function exportarHistoricoCsv(
   ]);
 
   return [header.join(','), ...rows.map((row) => row.join(','))].join('\n');
+}
+
+export async function limparHistoricoAnalises(): Promise<{
+  analisesRemovidas: number
+  jobsRemovidos: number
+  documentosRemovidos: number
+  gapsRemovidos: number
+}> {
+  const [analisesCount, jobsCount, documentosCount, gapsCount] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(schema.analiseResultados),
+    db.select({ count: sql<number>`count(*)` }).from(schema.analiseJobs),
+    db.select({ count: sql<number>`count(*)` }).from(schema.documentos).where(like(schema.documentos.nomeArquivo, 'analise-ia-%')),
+    db.select({ count: sql<number>`count(*)` }).from(schema.conformidadeGaps),
+  ])
+
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.conformidadeGaps)
+    await tx.delete(schema.analiseResultados)
+    await tx.delete(schema.analiseJobs)
+    await tx.delete(schema.documentos).where(like(schema.documentos.nomeArquivo, 'analise-ia-%'))
+  })
+
+  return {
+    analisesRemovidas: Number(analisesCount[0]?.count ?? 0),
+    jobsRemovidos: Number(jobsCount[0]?.count ?? 0),
+    documentosRemovidos: Number(documentosCount[0]?.count ?? 0),
+    gapsRemovidos: Number(gapsCount[0]?.count ?? 0),
+  }
 }

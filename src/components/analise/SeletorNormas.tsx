@@ -86,8 +86,8 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             className="pl-10 h-11 bg-white/50 dark:bg-gray-800/50 dark:text-gray-100 dark:placeholder:text-gray-500 border-indigo-100 dark:border-indigo-900/50 focus-visible:ring-indigo-500 rounded-xl shadow-sm text-base"
           />
         </div>
-        <div className="flex gap-2 shrink-0 justify-between sm:justify-start">
-          <Button variant="secondary" size="sm" onClick={selecionarTodas} className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg h-8">
+        <div className="flex flex-wrap gap-2 shrink-0 justify-between sm:justify-start">
+          <Button variant="secondary" size="sm" onClick={selecionarTodas} className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg h-8 text-xs sm:text-sm">
             Selecionar Todas
           </Button>
           <Button
@@ -95,7 +95,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             size="sm"
             onClick={limparSelecao}
             disabled={selecionadas.length === 0}
-            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg h-8"
+            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg h-8 text-xs sm:text-sm"
           >
             Limpar Seleção
           </Button>
@@ -140,7 +140,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       {/* Lista de normas — Scroll customizado */}
       <div className="flex-1 overflow-y-auto pr-2 -mr-2 
         scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {normasFiltradas.map((norma) => {
             const codigoCurto = extrairCodigoCurto(norma.codigo)
             const selecionada = selecionadas.includes(norma.codigo)

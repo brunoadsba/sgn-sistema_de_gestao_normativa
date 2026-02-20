@@ -2,6 +2,28 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-20] - Estabilização de deploy Vercel e correção forense de loading infinito
+
+### Corrigido
+
+- **Deploy bloqueado por configuração inválida na Vercel**: removida combinação incompatível de `builds` + `functions` em `vercel.json`
+- **Falha de build por variável obrigatória ausente**: `GROQ_API_KEY` configurada nos ambientes `production`, `preview` e `development`
+- **Bloqueio de deploy por vulnerabilidade**: atualização de `next` para `16.1.6` e `eslint-config-next` para `16.1.6` (mitigação de bloqueio por CVE no provider)
+- **Tela inicial travada em "Carregando SGN..."**: correção de CSP em `next.config.js` para permitir scripts inline de hidratação do App Router em produção
+
+### Alterado
+
+- **`eslint.config.mjs`**: migração para configuração flat compatível com `eslint-config-next` mais recente
+- **`next.config.js`**: removido bloco `eslint` depreciado para compatibilidade com Next.js 16
+- **`vercel.json`**: simplificado para preset Next.js moderno e remoção de configuração que gerava warning de `manifest.webmanifest/route`
+
+### Validado
+
+- `npm run lint` sem erros
+- `npm run build` sem erros
+- `vercel build --prod` sem warning de mapeamento de `functions` para `manifest.webmanifest/route`
+- Deploy de produção concluído com status `Ready` e alias principal atualizado
+
 ## [2026-02-20] - Confiabilidade operacional, observabilidade e estabilidade E2E
 
 ## [2026-02-20] - Estratégia incremental para documentos grandes

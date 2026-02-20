@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
-import { Brain, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { Brain, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react'
 import { useQueryState } from 'nuqs'
 import { UploadDocumento } from '@/components/analise/UploadDocumento'
 import { SeletorNormas } from '@/components/analise/SeletorNormas'
@@ -55,6 +55,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [resultado, setResultado] = useState<AnaliseConformidadeResponse | null>(null)
     const [historico, setHistorico] = useState<HistoricoAnalise[]>([])
     const [carregandoHistorico, setCarregandoHistorico] = useState(true)
+    const [limpandoHistorico, setLimpandoHistorico] = useState(false)
     const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('hist_page', {
         defaultValue: '1',
         shallow: true,
@@ -264,16 +265,42 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         const url = `/api/ia/analisar-conformidade?${params.toString()}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
+    const limparHistorico = async () => {
+        if (historico.length === 0) return
+
+        const confirmou = window.confirm(
+            'Deseja realmente apagar todo o histórico de análises? Esta ação não pode ser desfeita.'
+        )
+        if (!confirmou) return
+
+        setLimpandoHistorico(true)
+        setErro(null)
+        try {
+            const response = await fetchWithRetry('/api/ia/analisar-conformidade', {
+                method: 'DELETE',
+            }, { retries: 2, timeoutMs: 20_000 })
+            const payload = await response.json().catch(() => null)
+            if (!response.ok || !payload?.success) {
+                throw new Error(payload?.error || 'Falha ao limpar histórico')
+            }
+            await setPaginaHistoricoQuery('1')
+            await carregarHistorico(1, periodoHistorico, ordenacaoHistorico, buscaDebounced)
+        } catch (err) {
+            setErro(err instanceof Error ? err.message : 'Erro desconhecido ao limpar histórico')
+        } finally {
+            setLimpandoHistorico(false)
+        }
+    }
 
     return (
-        <div className="container mx-auto px-4 max-w-5xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
             {/* Header */}
-            <div className="text-center mb-12 relative">
+            <div className="text-center mb-8 sm:mb-12 relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-blue-500/20 blur-3xl -z-10 rounded-full"></div>
-                <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-4 pb-2 leading-normal">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-3 sm:mb-4 pb-2 leading-normal">
                     Análise de Conformidade
                 </h1>
-                <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
                     Faça upload do seu documento SST, selecione as normas aplicáveis e deixe nossa IA identificar gaps e gerar recomendações precisas instantaneamente.
                 </p>
             </div>
@@ -291,7 +318,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">1</div>
-                                        <CardTitle className="text-xl dark:text-gray-100">Envio do Documento</CardTitle>
+                                        <CardTitle className="text-lg sm:text-xl dark:text-gray-100">Envio do Documento</CardTitle>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-6">
@@ -310,7 +337,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">2</div>
-                                        <CardTitle className="text-xl dark:text-gray-100">Normas Aplicáveis</CardTitle>
+                                        <CardTitle className="text-lg sm:text-xl dark:text-gray-100">Normas Aplicáveis</CardTitle>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-6 h-[calc(100%-5rem)]">
@@ -336,12 +363,12 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                     {analisando && (
                         <div aria-live="polite" className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/50 dark:to-indigo-950/50 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-lg rounded-2xl">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-blue-400 rounded-full blur animate-pulse opacity-50"></div>
                                         <div className="relative h-8 w-8 rounded-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 animate-spin" />
                                     </div>
-                                    <span className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
+                                    <span className="text-sm sm:text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 truncate">
                                         {etapa}
                                     </span>
                                 </div>
@@ -357,7 +384,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                             onClick={executarAnalise}
                             disabled={!podeAnalisar}
                             size="lg"
-                            className="w-full h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg font-bold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                            className="w-full h-14 sm:h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base sm:text-lg font-bold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
                         >
                             <Brain className={`h-6 w-6 mr-3 ${analisando ? 'animate-pulse' : ''}`} />
                             {analisando ? 'Processando com Inteligência Artificial...' : 'Analisar Conformidade com IA'}
@@ -366,25 +393,38 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
 
                     <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-emerald-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
                         <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <div>
                                     <CardTitle className="text-xl dark:text-gray-100">Histórico de análises</CardTitle>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
                                         Data e hora exibidas no padrão Brasil (Horário de Brasília).
                                     </p>
                                 </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={exportarHistoricoCsv}
-                                    className="border-gray-300 dark:border-gray-600"
-                                >
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Exportar CSV
-                                </Button>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={exportarHistoricoCsv}
+                                        className="border-gray-300 dark:border-gray-600"
+                                    >
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Exportar CSV
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={limparHistorico}
+                                        disabled={limpandoHistorico || historico.length === 0}
+                                        className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        {limpandoHistorico ? 'Limpando...' : 'Limpar Histórico'}
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="mt-3 flex items-center gap-2">
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
                                 {periodos.map((periodo) => (
                                     <Button
                                         key={periodo}
@@ -443,7 +483,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                                 key={item.id}
                                                 className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 px-4 py-3"
                                             >
-                                                <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-start justify-between gap-3">
                                                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                                         {item.nomeDocumento}
                                                     </p>
@@ -451,18 +491,18 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                                         Score {item.score}
                                                     </span>
                                                 </div>
-                                                <div className="mt-1 flex items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                                    <span>{item.tipoDocumento} · Risco {item.nivelRisco}</span>
+                                                <div className="mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    <span className="truncate">{item.tipoDocumento} · Risco {item.nivelRisco}</span>
                                                     <span>{formatarDataHoraBrasilia(item.timestamp)}</span>
                                                 </div>
-                                                <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                                <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500 break-all sm:break-normal">
                                                     {item.modeloUsado} · {item.tempoProcessamento}ms
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             Página {paginacao.pagina} de {Math.max(paginacao.totalPaginas, 1)}
                                         </p>

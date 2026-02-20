@@ -85,7 +85,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           onDragLeave={handleDragLeave}
           onClick={() => !desabilitado && fileInputRef.current?.click()}
           className={`
-            relative rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[280px]
+            relative rounded-2xl border-2 border-dashed p-6 sm:p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[240px] sm:min-h-[280px]
             ${desabilitado ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             ${dragging
               ? 'border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 scale-[1.02] shadow-inner'
@@ -102,7 +102,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             ou clique para buscar no seu computador
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">PDF</span>
             <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">DOCX</span>
             <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">TXT</span>
@@ -110,13 +110,13 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 font-medium">Máximo: 100MB</p>
         </div>
       ) : (
-        <div className="flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800/50 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800/50 rounded-2xl shadow-sm">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
             <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-blue-100 dark:border-blue-900/50">
               <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[200px] sm:max-w-xs" title={arquivo.name}>
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[180px] sm:max-w-xs" title={arquivo.name}>
                 {arquivo.name}
               </p>
               <div className="flex items-center gap-2 mt-1">
@@ -130,7 +130,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
             variant="ghost"
             size="icon"
             onClick={() => onArquivoChange(null)}
-            className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 h-10 w-10 rounded-full transition-colors"
+            className="self-end sm:self-auto text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 h-10 w-10 rounded-full transition-colors"
             disabled={desabilitado}
           >
             <X className="h-5 w-5" />

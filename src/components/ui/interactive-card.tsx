@@ -75,7 +75,7 @@ export function InteractiveCard({
     }
   }
 
-  const CardContent = () => (
+  return (
     <div
       className={cn(
         'relative text-center p-6 rounded-xl border border-gray-200 transition-all duration-300 cursor-pointer group hover:shadow-lg hover:border-gray-300 bg-white',
@@ -123,6 +123,4 @@ export function InteractiveCard({
       )}
     </div>
   )
-
-  return <CardContent />
 }

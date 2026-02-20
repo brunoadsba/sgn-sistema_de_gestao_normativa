@@ -94,9 +94,9 @@ export function NR6Cliente() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
+    <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           MVP NR-6 - Análise de EPIs
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -134,7 +134,7 @@ export function NR6Cliente() {
                 value={documento}
                 onChange={(e) => setDocumento(e.target.value)}
                 placeholder="Cole aqui o conteúdo do documento para análise..."
-                rows={10}
+                rows={8}
               />
             </div>
 
@@ -161,7 +161,7 @@ export function NR6Cliente() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="flex items-center gap-2">
                   {resultado.conformidadeNR6.ca_valido ?
                     <CheckCircle className="h-4 w-4 text-green-500" /> :

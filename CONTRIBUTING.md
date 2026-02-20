@@ -61,6 +61,10 @@ Exemplos:
    ```bash
    git grep -i "api_key\|password\|secret"
    ```
+6. Quando houver impacto de deploy na Vercel:
+   - Confirmar `GROQ_API_KEY` em `production`, `preview` e `development`
+   - Confirmar `Framework Preset: Next.js`
+   - Usar `vercel redeploy <deployment-url> --target production` para reexecução controlada
 
 ## Convenções de Engenharia
 

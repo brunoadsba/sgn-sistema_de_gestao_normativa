@@ -41,16 +41,16 @@ export function ListaNormasDinamica({ normasIniciais }: ListaNormasDinamicaProps
     }, [textoBusca, normasIniciais])
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="relative max-w-3xl mx-auto">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Search className="h-6 w-6 text-gray-400" />
+                <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
                 </div>
                 <Input
                     placeholder="Digite o código ou palavra-chave (ex: NR-01, EPI, CIPA)..."
                     value={textoBusca}
                     onChange={(e) => setTextoBusca(e.target.value)}
-                    className="w-full h-16 pl-14 pr-4 text-lg bg-white/80 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 backdrop-blur-md border-2 border-gray-200 dark:border-gray-700 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-black/20 transition-all"
+                    className="w-full h-12 sm:h-16 pl-10 sm:pl-14 pr-3 sm:pr-4 text-sm sm:text-lg bg-white/80 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 backdrop-blur-md border-2 border-gray-200 dark:border-gray-700 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 rounded-xl sm:rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-black/20 transition-all"
                 />
             </div>
 
@@ -63,7 +63,7 @@ export function ListaNormasDinamica({ normasIniciais }: ListaNormasDinamicaProps
                     <p className="text-gray-500 dark:text-gray-400">Tente ajustar seus filtros de busca.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                     {normasFiltradas.map((norma) => (
                         <Card key={norma.id} className="group hover:shadow-xl hover:shadow-blue-900/5 dark:hover:shadow-black/30 transition-all duration-300 border-white/20 dark:border-gray-700/50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl flex flex-col h-full hover:-translate-y-1 overflow-hidden">
                             <div className={`h-2 w-full ${norma.status === 'ativa' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`}></div>

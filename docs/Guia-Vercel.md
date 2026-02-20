@@ -34,7 +34,7 @@ Para uso real em produção, escolha uma destas opções:
 1. Framework preset: `Next.js`
 2. Root directory: raiz do repositório
 3. Build command: `npm run build`
-4. Install command: `npm install`
+4. Install command: `npm ci`
 5. Output: padrão do Next.js
 
 ## Variáveis de Ambiente
@@ -59,6 +59,7 @@ NEXT_PUBLIC_SENTRY_DSN=
 Observações:
 - `GROQ_API_KEY` é obrigatória.
 - `DATABASE_PATH` em Vercel não garante persistência entre execuções.
+- Configurar `GROQ_API_KEY` nos três ambientes (`Production`, `Preview` e `Development`) para evitar falha de build em coleta de dados de rotas.
 
 ## Fluxo Recomendado de Deploy
 
@@ -136,6 +137,22 @@ Ação:
 
 1. Revisar `GROQ_API_KEY`.
 2. Confirmar ambiente correto (`Preview` vs `Production`).
+
+### Home presa em "Carregando SGN..."
+
+Causa provável:
+1. Política CSP bloqueando scripts inline de hidratação do Next.js.
+
+Ações:
+1. Validar header `content-security-policy` em produção.
+2. Garantir `script-src` compatível com hidratação do App Router.
+3. Publicar novo deploy e confirmar via hard reload (`Ctrl+F5`).
+
+### Comando correto de redeploy em produção
+
+```bash
+vercel redeploy <deployment-url> --target production
+```
 
 ## Governança
 

@@ -10,7 +10,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 - `Arquitetura`: monolito Next.js (App Router)
 - `Modelo operacional`: single-user local
 - `Branch principal`: `master`
-- `Qualidade atual`: `lint`, `build` e `test:e2e` verdes (29/29)
+- `Qualidade atual`: `lint` e `build` verdes no estado atual
 
 ## Capacidades
 
@@ -38,7 +38,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 
 | Camada | Tecnologia |
 |--------|------------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Linguagem | TypeScript (strict) |
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 | Estado em URL | nuqs |
@@ -135,6 +135,7 @@ npm run docker:stop
 | Chave GROQ inválida | Revisar `GROQ_API_KEY` em `.env.local` |
 | Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
 | Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
+| Home travada em "Carregando SGN..." | Revisar CSP (`script-src`) em `next.config.js` para não bloquear hidratação do Next.js |
 
 ## Documentação
 
