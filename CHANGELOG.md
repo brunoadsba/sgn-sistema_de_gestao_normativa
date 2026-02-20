@@ -2,6 +2,47 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-20] - Performance web/mobile (fase 1-4)
+
+### Adicionado
+
+- **Componente de histórico desacoplado** em `src/features/analise/components/HistoricoAnalisesCard.tsx` para reduzir re-render da tela principal
+- **Shell lazy para canvas** em `src/components/ui/CanvasBackgroundShell.tsx`
+- **Migration de índices de performance** em `drizzle/0001_perf_historico_indices.sql`
+
+### Alterado
+
+- **Canvas background otimizado** (`src/components/ui/CanvasBackground.tsx`):
+  - redução de partículas para mobile/perfis de baixo consumo
+  - pausa automática quando a aba perde foco (`visibilitychange`)
+  - redução do custo de conexão entre partículas
+- **Home mais leve** (`src/app/layout.tsx` + `src/features/analise/components/AnaliseCliente.tsx`):
+  - canvas carregado via lazy shell client-side
+  - resultado carregado via `dynamic import`
+  - histórico movido para exibição sob demanda (`Mostrar Histórico`)
+- **Bundle optimization** (`next.config.js`):
+  - `optimizePackageImports` ampliado para `lucide-react`
+- **Histórico mais eficiente** (`src/lib/ia/persistencia-analise.ts`):
+  - remoção de padrão N+1 para gaps
+  - ordenação/paginação movidas para SQL (`orderBy + limit + offset`)
+- **Análise incremental paralelizada** (`src/app/api/ia/analisar-conformidade/route.ts`):
+  - processamento concorrente de chunks com limite (`INCREMENTAL_CONCURRENCY`)
+- **Cache de KB local** (`src/lib/normas/kb.ts`):
+  - cache em memória com invalidação por `mtime`
+
+### Validado
+
+- `npm run lint` sem erros
+- `npm run build` sem erros
+- `npm run test:e2e` com **29/29 testes passando**
+- Deploy de produção concluído com alias atualizado
+
+### Métricas (produção, mesma janela de teste)
+
+- **JS total home**: `916.554 bytes` -> `903.780 bytes` (~`-1,39%`)
+- **Latência histórico (página 1, média 5 amostras)**: `498,4ms` -> `448,4ms` (~`-10,0%`)
+- **Latência histórico (página 2, média 5 amostras)**: `267,6ms` -> `259,8ms` (~`-2,9%`)
+
 ## [2026-02-20] - Estabilização de deploy Vercel e correção forense de loading infinito
 
 ### Corrigido

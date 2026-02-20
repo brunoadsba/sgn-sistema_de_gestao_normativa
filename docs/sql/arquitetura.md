@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 25 - estabilização de deploy Vercel e correção de hidratação)
+> Atualizado em: 2026-02-20 (sessão 26 - otimizações de performance web/mobile)
 
 ## Visão Geral
 
@@ -81,6 +81,7 @@ Responsabilidade:
 4. Histórico e exportação usam filtros determinísticos (período, busca, ordenação).
 5. Fluxo incremental opcional por chunks com validação por evidência em cada etapa.
 6. CSP de produção alinhada com hidratação do App Router para evitar loading infinito na página raiz.
+7. Seção de histórico sob demanda e otimizações de animação para reduzir custo em dispositivos móveis.
 
 ## APIs Ativas
 
@@ -116,6 +117,8 @@ Responsabilidade:
 4. Persistência e histórico funcionando no SQLite.
 5. Observabilidade com Sentry e error boundaries de rota.
 6. Qualidade validada com lint/build e suíte E2E estável.
+7. Histórico otimizado sem N+1 com ordenação/paginação em SQL.
+8. Análise incremental processada com concorrência limitada por chunk.
 
 ### Débito técnico aberto
 

@@ -9,7 +9,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   experimental: {
-    optimizePackageImports: ['groq-sdk'],
+    optimizePackageImports: ['groq-sdk', 'lucide-react'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],

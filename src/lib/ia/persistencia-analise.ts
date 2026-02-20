@@ -1,4 +1,4 @@
-import { and, eq, like, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, like, sql } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
 import { log } from '@/lib/logger';
@@ -134,6 +134,7 @@ export async function listarAnalisesConformidade(
 ): Promise<AnaliseListagem> {
   const offset = (pagina - 1) * limite;
   const whereClause = buildWhereClause(periodo, buscaDocumento);
+  const orderByClause = buildOrderByClause(ordenacao)
 
   const [countResult, resultados] = await Promise.all([
     db
@@ -154,39 +155,47 @@ export async function listarAnalisesConformidade(
       .from(schema.analiseResultados)
       .leftJoin(schema.documentos, eq(schema.analiseResultados.documentoId, schema.documentos.id))
       .where(whereClause)
-      .limit(5000),
+      .orderBy(orderByClause)
+      .limit(limite)
+      .offset(offset),
   ]);
 
   const total = Number(countResult[0]?.count ?? 0);
-  const resultadosOrdenados = ordenarResultados(resultados, ordenacao);
-  const resultadosPaginados = resultadosOrdenados.slice(offset, offset + limite);
+  const resultadoIds = resultados.map((item) => item.id)
+  const gapsRaw =
+    resultadoIds.length > 0
+      ? await db
+          .select()
+          .from(schema.conformidadeGaps)
+          .where(inArray(schema.conformidadeGaps.analiseResultadoId, resultadoIds))
+      : []
 
-  const analises = await Promise.all(
-    resultadosPaginados.map(async (item) => {
-      const gapsRaw = await db
-        .select()
-        .from(schema.conformidadeGaps)
-        .where(eq(schema.conformidadeGaps.analiseResultadoId, item.id));
+  const gapsPorResultado = new Map<string, typeof gapsRaw>()
+  for (const gap of gapsRaw) {
+    const lista = gapsPorResultado.get(gap.analiseResultadoId) ?? []
+    lista.push(gap)
+    gapsPorResultado.set(gap.analiseResultadoId, lista)
+  }
 
-      const metadata = (item.metadata ?? {}) as Record<string, unknown>;
+  const analises = resultados.map((item) => {
+    const metadata = (item.metadata ?? {}) as Record<string, unknown>;
 
-      return {
-        score: item.scoreGeral ?? 0,
-        nivelRisco: (item.nivelRisco as AnaliseConformidadeResponse['nivelRisco']) ?? 'medio',
-        gaps: gapsRaw.map(normalizarGap),
-        resumo: toStringValue(metadata.resumo),
-        pontosPositivos: toStringArray(metadata.pontosPositivos),
-        pontosAtencao: toStringArray(metadata.pontosAtencao),
-        proximosPassos: toStringArray(metadata.proximosPassos),
-        timestamp: toStringValue(metadata.timestamp, item.createdAt),
-        modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
-        tempoProcessamento:
-          typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
-      } satisfies AnaliseConformidadeResponse;
-    })
-  );
+    return {
+      score: item.scoreGeral ?? 0,
+      nivelRisco: (item.nivelRisco as AnaliseConformidadeResponse['nivelRisco']) ?? 'medio',
+      gaps: (gapsPorResultado.get(item.id) ?? []).map(normalizarGap),
+      resumo: toStringValue(metadata.resumo),
+      pontosPositivos: toStringArray(metadata.pontosPositivos),
+      pontosAtencao: toStringArray(metadata.pontosAtencao),
+      proximosPassos: toStringArray(metadata.proximosPassos),
+      timestamp: toStringValue(metadata.timestamp, item.createdAt),
+      modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
+      tempoProcessamento:
+        typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
+    } satisfies AnaliseConformidadeResponse;
+  });
 
-  const historico = resultadosPaginados.map((item) => {
+  const historico = resultados.map((item) => {
     const metadata = (item.metadata ?? {}) as Record<string, unknown>;
     const nomeDocumento = toStringValue(
       item.nomeArquivo ?? toStringValue(metadata.nomeArquivo),
@@ -244,23 +253,17 @@ function buildPeriodoWhere(periodo: PeriodoHistorico) {
   }
 }
 
-function ordenarResultados<
-  T extends {
-    createdAt: string;
-    scoreGeral: number | null;
-  }
->(resultados: T[], ordenacao: OrdenacaoHistorico): T[] {
-  const clone = [...resultados];
+function buildOrderByClause(ordenacao: OrdenacaoHistorico) {
   switch (ordenacao) {
     case 'data_asc':
-      return clone.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      return asc(schema.analiseResultados.createdAt)
     case 'score_desc':
-      return clone.sort((a, b) => (b.scoreGeral ?? 0) - (a.scoreGeral ?? 0));
+      return desc(schema.analiseResultados.scoreGeral)
     case 'score_asc':
-      return clone.sort((a, b) => (a.scoreGeral ?? 0) - (b.scoreGeral ?? 0));
+      return asc(schema.analiseResultados.scoreGeral)
     case 'data_desc':
     default:
-      return clone.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return desc(schema.analiseResultados.createdAt)
   }
 }
 

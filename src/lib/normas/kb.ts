@@ -23,6 +23,7 @@ type ResultadoRecuperacao = {
 const KB_DIR = path.join(process.cwd(), 'data', 'normas')
 const CHUNK_SIZE = 1400
 const CHUNK_OVERLAP = 200
+const normaFileCache = new Map<string, { mtimeMs: number; content: string }>()
 
 function sanitizeCode(code: string): string {
   return code.toLowerCase().replace(/[^a-z0-9-]/g, '')
@@ -77,7 +78,16 @@ function readLocalNormaText(normaCodigo: string): string | null {
   for (const fileName of candidates) {
     const fullPath = path.join(KB_DIR, fileName)
     if (fs.existsSync(fullPath)) {
-      return fs.readFileSync(fullPath, 'utf8')
+      const stats = fs.statSync(fullPath)
+      const cached = normaFileCache.get(fullPath)
+
+      if (cached && cached.mtimeMs === stats.mtimeMs) {
+        return cached.content
+      }
+
+      const content = fs.readFileSync(fullPath, 'utf8')
+      normaFileCache.set(fullPath, { mtimeMs: stats.mtimeMs, content })
+      return content
     }
   }
 

@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 25: correções forenses de deploy e hidratação em produção)
+> Atualizado em: 2026-02-20 (sessão 26: otimizações de performance web/mobile)
 
 ---
 
@@ -159,6 +159,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
 18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados de processamento
 19. **Deploy Vercel estabilizado**: correções de `vercel.json`, `GROQ_API_KEY` em todos ambientes, upgrade para Next.js 16.1.6 e correção de CSP para destravar hidratação da home
+20. **Performance web/mobile otimizada**: Canvas com perfil de baixo consumo no mobile, histórico sob demanda, remoção de N+1 em histórico, paginação/ordenação em SQL, paralelismo controlado no incremental e cache de leitura da KB local
 
 ---
 
@@ -206,6 +207,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 23 | 2026-02-20 | Confiabilidade operacional: retry/timeout em chamadas críticas, idempotência em análise IA, health check ampliado (db/api/llm), Sentry integrado (server/edge/client), error boundaries por rota e global. Histórico evoluído com filtros/paginação/ordenação/busca/export CSV em horário de Brasília e persistência em URL (`nuqs`). Qualidade validada com `lint`, `build` e E2E (29/29). |
 | 24 | 2026-02-20 | Estratégia para documentos grandes: adicionados contratos backward-compatible (`estrategiaProcessamento`), chunking com overlap, orquestração incremental no endpoint de análise, consolidação/deduplicação de gaps com score ponderado, persistência de metadados por chunk e testes unitários específicos. |
 | 25 | 2026-02-20 | Investigação forense de deploy e runtime em produção: removida configuração inválida no `vercel.json`, configurada `GROQ_API_KEY` em todos ambientes Vercel, upgrade para Next.js 16.1.6 por bloqueio de segurança no provider, ajuste de `eslint.config.mjs`/`next.config.js` para compatibilidade e correção de CSP que bloqueava scripts de hidratação (home presa em "Carregando SGN..."). |
+| 26 | 2026-02-20 | Implementação do plano de performance web/mobile: CanvasBackground otimizado para mobile/reduced-motion e lazy-load via shell, AnaliseCliente refatorado com histórico sob demanda e `dynamic import` de resultado, otimização de bundle para `lucide-react`, remoção de N+1 no histórico com paginação/ordenação em SQL, criação de índices SQLite (`analise_resultados.created_at`, `analise_resultados.score_geral`, `conformidade_gaps.analise_resultado_id`), paralelização do incremental com limite de concorrência e cache em memória para leitura da base normativa por `mtime`. |
 
 ---
 

@@ -22,6 +22,7 @@ import { dividirDocumentoEmChunks } from '@/lib/ia/chunking'
 import { consolidarResultadosIncrementais } from '@/lib/ia/consolidacao-incremental'
 
 const MAX_CHUNKS_INCREMENTAL = 8
+const INCREMENTAL_CONCURRENCY = 3
 
 // Função principal para análise de IA
 async function analisarConformidadeHandler(request: NextRequest) {
@@ -76,56 +77,59 @@ async function analisarConformidadeHandler(request: NextRequest) {
         )
       }
 
-      const resultadosPorChunk = [] as {
-        chunk: (typeof chunks)[number]
-        resultado: AnaliseConformidadeResponse
-        tempoMs: number
-      }[]
-      const versoesBase = new Set<string>()
-      const chunkIdsValidos: string[] = []
+      const resultadosPorChunk = await mapComConcorrencia(
+        chunks,
+        INCREMENTAL_CONCURRENCY,
+        async (chunk) => {
+          const inicioChunk = Date.now()
+          log.info(
+            {
+              requestId,
+              chunkId: chunk.chunkId,
+              indice: chunk.indice,
+              totalChunks: chunk.totalChunks,
+              tamanhoCaracteres: chunk.tamanhoCaracteres,
+            },
+            'Iniciando análise de chunk incremental'
+          )
 
-      for (const chunk of chunks) {
-        const inicioChunk = Date.now()
-        log.info(
-          {
-            requestId,
-            chunkId: chunk.chunkId,
-            indice: chunk.indice,
-            totalChunks: chunk.totalChunks,
-            tamanhoCaracteres: chunk.tamanhoCaracteres,
-          },
-          'Iniciando análise de chunk incremental'
-        )
+          const evidenciasChunk = await recuperarEvidenciasNormativas(body.normasAplicaveis ?? [], chunk.conteudo)
+          const chunkIdsLocais = evidenciasChunk.evidencias.map((e) => e.chunkId)
 
-        const evidenciasChunk = await recuperarEvidenciasNormativas(body.normasAplicaveis ?? [], chunk.conteudo)
-        versoesBase.add(evidenciasChunk.contexto.versaoBase)
-        evidenciasPersistencia.push(...evidenciasChunk.evidencias)
-        chunkIdsValidos.push(...evidenciasChunk.evidencias.map((e) => e.chunkId))
+          const resultadoChunk = await analisarConformidade({
+            ...body,
+            documento: chunk.conteudo,
+            estrategiaProcessamento: 'completo',
+            chunkMetadados: [chunk],
+            evidenciasNormativas: evidenciasChunk.evidencias,
+            contextoBaseConhecimento: evidenciasChunk.contexto,
+          })
 
-        const resultadoChunk = await analisarConformidade({
-          ...body,
-          documento: chunk.conteudo,
-          estrategiaProcessamento: 'completo',
-          chunkMetadados: [chunk],
-          evidenciasNormativas: evidenciasChunk.evidencias,
-          contextoBaseConhecimento: evidenciasChunk.contexto,
-        })
+          validarEvidenciasDaResposta(resultadoChunk, chunkIdsLocais)
 
-        validarEvidenciasDaResposta(resultadoChunk, evidenciasChunk.evidencias.map((e) => e.chunkId))
-
-        resultadosPorChunk.push({
-          chunk,
-          resultado: resultadoChunk,
-          tempoMs: Date.now() - inicioChunk,
-        })
-      }
+          return {
+            chunk,
+            resultado: resultadoChunk,
+            tempoMs: Date.now() - inicioChunk,
+            versaoBase: evidenciasChunk.contexto.versaoBase,
+            evidencias: evidenciasChunk.evidencias,
+            chunkIdsLocais,
+          }
+        }
+      )
+      const versoesBase = new Set(resultadosPorChunk.map((item) => item.versaoBase))
+      const chunkIdsValidos = resultadosPorChunk.flatMap((item) => item.chunkIdsLocais)
+      evidenciasPersistencia = resultadosPorChunk.flatMap((item) => item.evidencias)
 
       const tempoProcessamento = Date.now() - startTime
-      respostaCompleta = consolidarResultadosIncrementais(resultadosPorChunk, {
-        timestamp,
-        modeloUsado,
-        tempoProcessamento,
-      })
+      respostaCompleta = consolidarResultadosIncrementais(
+        resultadosPorChunk.map(({ chunk, resultado, tempoMs }) => ({ chunk, resultado, tempoMs })),
+        {
+          timestamp,
+          modeloUsado,
+          tempoProcessamento,
+        }
+      )
 
       validarEvidenciasDaResposta(respostaCompleta, Array.from(new Set(chunkIdsValidos)))
       contextoPersistencia = {
@@ -210,6 +214,27 @@ async function analisarConformidadeHandler(request: NextRequest) {
     errorResponse.headers.set('x-request-id', requestId);
     return errorResponse;
   }
+}
+
+async function mapComConcorrencia<T, R>(
+  items: T[],
+  limit: number,
+  mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let cursor = 0
+
+  async function worker() {
+    while (cursor < items.length) {
+      const current = cursor
+      cursor += 1
+      results[current] = await mapper(items[current], current)
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () => worker())
+  await Promise.all(workers)
+  return results
 }
 
 function validarEvidenciasDaResposta(

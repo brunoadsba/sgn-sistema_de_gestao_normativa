@@ -4,15 +4,28 @@ import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Input } from '@/components/ui/input'
-import { Brain, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react'
+import { Brain } from 'lucide-react'
 import { useQueryState } from 'nuqs'
+import dynamic from 'next/dynamic'
 import { UploadDocumento } from '@/components/analise/UploadDocumento'
 import { SeletorNormas } from '@/components/analise/SeletorNormas'
-import { ResultadoAnalise } from '@/components/analise/ResultadoAnalise'
 import { AnaliseConformidadeResponse } from '@/types/ia'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { ErrorDisplay } from '@/components/error/ErrorDisplay'
+import { HistoricoAnalisesCard } from '@/features/analise/components/HistoricoAnalisesCard'
+
+const ResultadoAnalise = dynamic(
+  () => import('@/components/analise/ResultadoAnalise').then((mod) => mod.ResultadoAnalise),
+  {
+    loading: () => (
+      <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-blue-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
+        <CardContent className="py-8">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Carregando resultado...</p>
+        </CardContent>
+      </Card>
+    ),
+  }
+)
 
 export interface NormaReduzida {
     id: string
@@ -56,6 +69,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [historico, setHistorico] = useState<HistoricoAnalise[]>([])
     const [carregandoHistorico, setCarregandoHistorico] = useState(true)
     const [limpandoHistorico, setLimpandoHistorico] = useState(false)
+    const [mostrarHistorico, setMostrarHistorico] = useState(false)
     const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('hist_page', {
         defaultValue: '1',
         shallow: true,
@@ -139,8 +153,9 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     }, [buscaDocumento])
 
     useEffect(() => {
+        if (!mostrarHistorico) return
         void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
-    }, [carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
+    }, [carregarHistorico, mostrarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
     const executarAnalise = useCallback(async () => {
         if (!arquivo) {
@@ -241,18 +256,6 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             dateStyle: 'short',
             timeStyle: 'medium',
         }).format(new Date(isoDate))
-    const labelPeriodo: Record<PeriodoHistorico, string> = {
-        today: 'Hoje',
-        '7d': '7 dias',
-        '30d': '30 dias',
-    }
-    const periodos: PeriodoHistorico[] = ['today', '7d', '30d']
-    const opcoesOrdenacao: { value: OrdenacaoHistorico; label: string }[] = [
-        { value: 'data_desc', label: 'Data (mais recente)' },
-        { value: 'data_asc', label: 'Data (mais antiga)' },
-        { value: 'score_desc', label: 'Score (maior)' },
-        { value: 'score_asc', label: 'Score (menor)' },
-    ]
     const exportarHistoricoCsv = () => {
         const params = new URLSearchParams({
             format: 'csv',
@@ -391,148 +394,46 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         </Button>
                     </div>
 
-                    <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-emerald-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
-                        <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <div>
-                                    <CardTitle className="text-xl dark:text-gray-100">Histórico de análises</CardTitle>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        Data e hora exibidas no padrão Brasil (Horário de Brasília).
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={exportarHistoricoCsv}
-                                        className="border-gray-300 dark:border-gray-600"
-                                    >
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Exportar CSV
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={limparHistorico}
-                                        disabled={limpandoHistorico || historico.length === 0}
-                                        className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        {limpandoHistorico ? 'Limpando...' : 'Limpar Histórico'}
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="mt-3 flex flex-wrap items-center gap-2">
-                                {periodos.map((periodo) => (
-                                    <Button
-                                        key={periodo}
-                                        type="button"
-                                        size="sm"
-                                        variant={periodoHistorico === periodo ? 'default' : 'outline'}
-                                        onClick={() => {
-                                            setPeriodoHistoricoQuery(periodo)
-                                            setPaginaHistoricoQuery('1')
-                                        }}
-                                        className={periodoHistorico === periodo ? '' : 'border-gray-300 dark:border-gray-600'}
-                                    >
-                                        {labelPeriodo[periodo]}
-                                    </Button>
-                                ))}
-                            </div>
-                            <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-                                <Input
-                                    value={buscaDocumento}
-                                    onChange={(event) => {
-                                        const value = event.target.value
-                                        setBuscaDocumentoQuery(value || null)
-                                        setPaginaHistoricoQuery('1')
-                                    }}
-                                    placeholder="Buscar por nome do documento..."
-                                    className="border-gray-300 dark:border-gray-600"
-                                />
-                                <select
-                                    value={ordenacaoHistorico}
-                                    onChange={(event) => {
-                                        setOrdenacaoHistoricoQuery(event.target.value as OrdenacaoHistorico)
-                                        setPaginaHistoricoQuery('1')
-                                    }}
-                                    className="h-10 rounded-md border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200"
-                                >
-                                    {opcoesOrdenacao.map((opcao) => (
-                                        <option key={opcao.value} value={opcao.value} className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-                                            {opcao.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-4">
-                            {carregandoHistorico ? (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Carregando histórico...</p>
-                            ) : historico.length === 0 ? (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Nenhuma análise registrada ainda.
-                                </p>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="space-y-3">
-                                        {historico.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 px-4 py-3"
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                        {item.nomeDocumento}
-                                                    </p>
-                                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                        Score {item.score}
-                                                    </span>
-                                                </div>
-                                                <div className="mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                                    <span className="truncate">{item.tipoDocumento} · Risco {item.nivelRisco}</span>
-                                                    <span>{formatarDataHoraBrasilia(item.timestamp)}</span>
-                                                </div>
-                                                <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500 break-all sm:break-normal">
-                                                    {item.modeloUsado} · {item.tempoProcessamento}ms
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                    <div className="pt-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setMostrarHistorico((prev) => !prev)}
+                            className="border-gray-300 dark:border-gray-600"
+                        >
+                            {mostrarHistorico ? 'Ocultar Histórico' : 'Mostrar Histórico'}
+                        </Button>
+                    </div>
 
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            Página {paginacao.pagina} de {Math.max(paginacao.totalPaginas, 1)}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={!paginacao.temAnterior}
-                                                onClick={() => setPaginaHistoricoQuery(String(Math.max(paginaHistorico - 1, 1)))}
-                                                className="border-gray-300 dark:border-gray-600"
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={!paginacao.temProxima}
-                                                onClick={() => setPaginaHistoricoQuery(String(paginaHistorico + 1))}
-                                                className="border-gray-300 dark:border-gray-600"
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                    {mostrarHistorico ? (
+                        <HistoricoAnalisesCard
+                            historico={historico}
+                            carregandoHistorico={carregandoHistorico}
+                            limpandoHistorico={limpandoHistorico}
+                            paginaHistorico={paginaHistorico}
+                            periodoHistorico={periodoHistorico}
+                            ordenacaoHistorico={ordenacaoHistorico}
+                            buscaDocumento={buscaDocumento}
+                            paginacao={paginacao}
+                            formatarDataHoraBrasilia={formatarDataHoraBrasilia}
+                            onExportarCsv={exportarHistoricoCsv}
+                            onLimparHistorico={limparHistorico}
+                            onPeriodoChange={(periodo) => {
+                                setPeriodoHistoricoQuery(periodo)
+                                setPaginaHistoricoQuery('1')
+                            }}
+                            onBuscaChange={(value) => {
+                                setBuscaDocumentoQuery(value || null)
+                                setPaginaHistoricoQuery('1')
+                            }}
+                            onOrdenacaoChange={(value) => {
+                                setOrdenacaoHistoricoQuery(value)
+                                setPaginaHistoricoQuery('1')
+                            }}
+                            onPaginaChange={(novaPagina) => setPaginaHistoricoQuery(String(novaPagina))}
+                        />
+                    ) : null}
                 </div>
             )}
         </div>

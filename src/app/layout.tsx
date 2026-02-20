@@ -1,8 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { CanvasBackground } from "@/components/ui/CanvasBackground";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { CanvasBackgroundShell } from "@/components/ui/CanvasBackgroundShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark" data-scroll-behavior="smooth">
       <body className={`${inter.className} min-h-screen font-sans antialiased relative`}>
         <NuqsAdapter>
-          <CanvasBackground />
+          <CanvasBackgroundShell />
 
           <header className="sticky top-0 z-50 w-full border-b border-white/10 dark:border-gray-800/80 bg-white/60 dark:bg-gray-950/80 backdrop-blur-md shadow-sm dark:shadow-black/30">
             <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
