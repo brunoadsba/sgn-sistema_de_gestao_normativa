@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 28: gate de abertura por dispositivo com CTA)
+> Atualizado em: 2026-02-20 (sessão 29: redesign premium da abertura web/mobile)
 
 ---
 
@@ -43,7 +43,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 - **Dark mode forçado por padrão**: `<html className="dark">` em `layout.tsx`. Tailwind usa `darkMode: ["class"]`.
 - **Canvas Background animado**: `src/components/ui/CanvasBackground.tsx` — partículas índigo interligadas por linhas, fundo `#0d1117 → #0f1525`.
 - **Identidade PWA SGN**: ícones gerados em `src/app/icon.tsx` e `src/app/apple-icon.tsx` com tema escuro no manifest.
-- **Abertura web padronizada**: splash visual full-screen com CTA `Acessar Plataforma`, exibida uma única vez por dispositivo via `SessionSplashGate` (`localStorage`); loading interno em navegação usa skeleton leve.
+- **Abertura web padronizada**: tela full-screen premium (card glass, iluminação difusa e textura geométrica) com CTA `Acessar Plataforma`, exibida uma única vez por dispositivo via `SessionSplashGate` (`localStorage`); loading interno em navegação usa skeleton leve.
 - **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
 - **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
 - Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
@@ -216,6 +216,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 26 | 2026-02-20 | Implementação do plano de performance web/mobile: CanvasBackground otimizado para mobile/reduced-motion e lazy-load via shell, AnaliseCliente refatorado com histórico sob demanda e `dynamic import` de resultado, otimização de bundle para `lucide-react`, remoção de N+1 no histórico com paginação/ordenação em SQL, criação de índices SQLite (`analise_resultados.created_at`, `analise_resultados.score_geral`, `conformidade_gaps.analise_resultado_id`), paralelização do incremental com limite de concorrência e cache em memória para leitura da base normativa por `mtime`. |
 | 27 | 2026-02-20 | Modernização da abertura mobile/web: criação de ícones PWA de marca (`/icon`, `/apple-icon`), tema nativo escuro no manifest (`background_color/theme_color`), nova abertura visual com canvas (`AppOpeningScreen`), gate de splash somente no primeiro acesso da sessão (`SessionSplashGate`, 1100ms), loading global substituído por skeleton leve para navegação interna, ajustes responsivos adicionais em `/normas/[id]` (overflow/chips/CTA/botões) e teste unitário dedicado (`session-splash-gate.test.tsx`). |
 | 28 | 2026-02-20 | Evolução do gate de abertura: removido auto-fechamento por tempo; abertura passa a bloquear o app até clique explícito em CTA profissional (`Acessar Plataforma`), com persistência one-time por dispositivo em `localStorage` (`sgn.opening.seen.device`). `SessionSplashGate` passou a envolver header e conteúdo para experiência de entrada única e consistente em web/mobile. |
+| 29 | 2026-02-20 | Redesign visual da abertura para padrão premium: `AppOpeningScreen` migrada para layout institucional escuro com iluminação de fundo, textura geométrica, card central de marca SGN, CTA principal com seta e rodapé institucional. `SessionSplashGate` recebeu textos finais da identidade e manteve comportamento one-time por dispositivo. |
 
 ---
 

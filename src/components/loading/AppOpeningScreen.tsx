@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-
 interface AppOpeningScreenProps {
   title: string
   subtitle: string
@@ -10,116 +8,62 @@ interface AppOpeningScreenProps {
 }
 
 export function AppOpeningScreen({ title, subtitle, actionLabel, onContinue }: AppOpeningScreenProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    let raf = 0
-    let time = 0
-
-    const render = () => {
-      const w = canvas.width
-      const h = canvas.height
-
-      ctx.clearRect(0, 0, w, h)
-
-      // Base gradient
-      const bg = ctx.createLinearGradient(0, 0, w, h)
-      bg.addColorStop(0, '#050b1b')
-      bg.addColorStop(0.55, '#142a67')
-      bg.addColorStop(1, '#1e3a8a')
-      ctx.fillStyle = bg
-      ctx.fillRect(0, 0, w, h)
-
-      // Ambient glow layers
-      const glowA = ctx.createRadialGradient(w * 0.2, h * 0.2, 10, w * 0.2, h * 0.2, w * 0.65)
-      glowA.addColorStop(0, 'rgba(59,130,246,0.35)')
-      glowA.addColorStop(1, 'rgba(59,130,246,0)')
-      ctx.fillStyle = glowA
-      ctx.fillRect(0, 0, w, h)
-
-      const glowB = ctx.createRadialGradient(w * 0.85, h * 0.8, 10, w * 0.85, h * 0.8, w * 0.5)
-      glowB.addColorStop(0, 'rgba(99,102,241,0.28)')
-      glowB.addColorStop(1, 'rgba(99,102,241,0)')
-      ctx.fillStyle = glowB
-      ctx.fillRect(0, 0, w, h)
-
-      // Moving arcs for a premium "system boot" effect
-      ctx.save()
-      ctx.translate(w / 2, h * 0.42)
-      ctx.rotate(time * 0.0022)
-      ctx.strokeStyle = 'rgba(255,255,255,0.16)'
-      ctx.lineWidth = 1.6
-      ctx.beginPath()
-      ctx.arc(0, 0, 115, 0.25 * Math.PI, 1.6 * Math.PI)
-      ctx.stroke()
-      ctx.restore()
-
-      ctx.save()
-      ctx.translate(w / 2, h * 0.42)
-      ctx.rotate(-time * 0.0016)
-      ctx.strokeStyle = 'rgba(147,197,253,0.26)'
-      ctx.lineWidth = 1.1
-      ctx.beginPath()
-      ctx.arc(0, 0, 92, 0.7 * Math.PI, 1.9 * Math.PI)
-      ctx.stroke()
-      ctx.restore()
-
-      time += 1
-      raf = requestAnimationFrame(render)
-    }
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.width = Math.floor(window.innerWidth * dpr)
-      canvas.height = Math.floor(window.innerHeight * dpr)
-      canvas.style.width = `${window.innerWidth}px`
-      canvas.style.height = `${window.innerHeight}px`
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    }
-
-    resize()
-    render()
-    window.addEventListener('resize', resize)
-
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
-    }
-  }, [])
+  const textureSvg =
+    "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6zM36 4V0h-2v4h-4v2h4v4h2V6h4V4h-4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")"
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0" />
+    <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white selection:bg-emerald-500 selection:text-white">
+      <div className="pointer-events-none absolute left-[-10%] top-[-20%] h-[70%] w-[70%] rounded-full bg-emerald-900/30 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-emerald-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: textureSvg }} />
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06),transparent_62%)]" />
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[440px] flex-col items-center justify-center px-6">
+        <section className="animate-in fade-in slide-in-from-bottom-5 duration-700 w-full rounded-[2.5rem] border border-emerald-500/10 bg-[#0c1412]/80 p-10 text-center shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] backdrop-blur-2xl sm:p-12">
+          <div className="relative mx-auto mb-8 h-24 w-24">
+            <div className="absolute inset-0 animate-pulse rounded-3xl bg-emerald-500/20 blur-2xl" />
+            <div className="relative flex h-full w-full items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-tr from-emerald-600 to-emerald-400 shadow-2xl">
+              <span className="text-3xl font-bold tracking-tighter text-white drop-shadow-lg">SGN</span>
+            </div>
+          </div>
 
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
-        <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/30 bg-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-          <span className="text-4xl font-extrabold tracking-tight text-white">SGN</span>
-        </div>
+          <div className="mb-10 space-y-3">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight text-white">{title}</h1>
+            <div className="flex items-center justify-center gap-2">
+              <span className="h-px w-4 bg-emerald-500/30" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">{subtitle}</p>
+              <span className="h-px w-4 bg-emerald-500/30" />
+            </div>
+          </div>
 
-        <h1 className="max-w-sm text-balance text-3xl font-semibold leading-tight text-white sm:text-4xl">
-          {title}
-        </h1>
-        <p className="mt-3 max-w-xs text-sm leading-relaxed text-blue-100/90 sm:max-w-sm sm:text-base">
-          {subtitle}
+          <button
+            type="button"
+            onClick={onContinue}
+            className="group inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-8 py-4 font-bold text-[#060a09] shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] transition-all duration-500 hover:scale-[1.02] hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+          >
+            <span>{actionLabel}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </button>
+        </section>
+
+        <p className="mt-10 text-center text-[10px] font-medium tracking-wider text-slate-500/80">
+          &copy; 2026 - SGN: Sistema de Gestão Normativa
         </p>
-
-        <button
-          type="button"
-          onClick={onContinue}
-          className="mt-9 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/15 px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
-        >
-          {actionLabel}
-        </button>
-        <p className="mt-3 text-xs text-blue-100/70">Ambiente seguro para análise normativa</p>
-      </div>
+      </main>
     </div>
   )
 }

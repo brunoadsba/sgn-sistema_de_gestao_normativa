@@ -36,7 +36,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 6. **Experiência mobile/web de abertura**
    - Ícone PWA da marca SGN (`/icon` e `/apple-icon`)
    - Splash nativa com tema escuro (manifest)
-   - Tela de abertura visual (canvas) com CTA **Acessar Plataforma**
+   - Tela de abertura premium (card glass + iluminação + textura) com CTA **Acessar Plataforma**
    - Gate de entrada exibido uma única vez por dispositivo (`localStorage`)
    - Após a liberação inicial, navegação interna usa loading leve (skeleton), sem splash full-screen repetitiva
 

@@ -83,6 +83,7 @@ Responsabilidade:
 6. CSP de produção alinhada com hidratação do App Router para evitar loading infinito na página raiz.
 7. Seção de histórico sob demanda e otimizações de animação para reduzir custo em dispositivos móveis.
 8. Abertura full-screen bloqueante até ação do usuário (`Acessar Plataforma`), exibida uma única vez por dispositivo com persistência em `localStorage`.
+9. Tela de abertura implementada com layout premium em Tailwind (card central, iluminação de fundo e textura geométrica), sem dependência de CDN externa.
 
 ## APIs Ativas
 
@@ -120,8 +121,8 @@ Responsabilidade:
 6. Qualidade validada com lint/build e suíte E2E estável.
 7. Histórico otimizado sem N+1 com ordenação/paginação em SQL.
 8. Análise incremental processada com concorrência limitada por chunk.
-9. Identidade PWA de marca aplicada com ícones próprios e splash nativa escura para mobile.
-10. Gate de abertura envolve header + conteúdo para evitar exposição parcial da interface antes da liberação explícita.
+10. Identidade PWA de marca aplicada com ícones próprios e splash nativa escura para mobile.
+11. Gate de abertura envolve header + conteúdo para evitar exposição parcial da interface antes da liberação explícita.
 
 ### Débito técnico aberto
 

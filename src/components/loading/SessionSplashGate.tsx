@@ -19,8 +19,8 @@ export function SessionSplashGate({ children }: { children: React.ReactNode }) {
   if (showSplash) {
     return (
       <AppOpeningScreen
-        title="SGN"
-        subtitle="Centro profissional para gestão normativa e conformidade em SST."
+        title="Sistema de Gestão Normativa"
+        subtitle="Saúde e Segurança do Trabalho"
         actionLabel="Acessar Plataforma"
         onContinue={handleContinue}
       />

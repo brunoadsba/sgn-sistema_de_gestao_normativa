@@ -2,6 +2,24 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-20] - Redesign premium da tela de abertura (web/mobile)
+
+### Alterado
+
+- **`AppOpeningScreen`** (`src/components/loading/AppOpeningScreen.tsx`) refeito para seguir layout premium:
+  - fundo escuro institucional com iluminação e textura geométrica
+  - card central com identidade SGN e subtítulo SST
+  - CTA primário `Acessar Plataforma` com microinteração de seta
+  - rodapé institucional `© 2026 - SGN: Sistema de Gestão Normativa`
+- **`SessionSplashGate`** (`src/components/loading/SessionSplashGate.tsx`):
+  - títulos adaptados para a nova identidade visual (`Sistema de Gestão Normativa` / `Saúde e Segurança do Trabalho`)
+  - comportamento de gate one-time por dispositivo preservado
+
+### Validado
+
+- `npm test -- session-splash-gate.test.tsx` sem falhas
+- `npm run build` sem erros
+
 ## [2026-02-20] - Identidade mobile PWA e abertura web por dispositivo
 
 ### Adicionado
