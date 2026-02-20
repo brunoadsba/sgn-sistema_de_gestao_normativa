@@ -96,6 +96,9 @@ Observações:
    - ícone SGN aplicado na tela inicial
    - splash nativa sem fundo branco (tema escuro do manifest)
    - em caso de cache antigo, remover atalho e adicionar novamente
+6. Validar gate de abertura web/mobile:
+   - tela de abertura bloqueia o app até clique em `Acessar Plataforma`
+   - após o primeiro clique, reabertura não deve reaparecer no mesmo dispositivo
 
 ## Gate de Qualidade Recomendado
 
@@ -162,6 +165,16 @@ Ações:
 2. Limpar cache/dados do navegador.
 3. Abrir novamente a URL de produção.
 4. Adicionar o app à tela inicial outra vez.
+
+### Tela de abertura não reaparece após validação
+
+Causa provável:
+1. Estado persistido em `localStorage` (`sgn.opening.seen.device`).
+
+Ações:
+1. Limpar dados do site no navegador.
+2. Ou remover a chave `sgn.opening.seen.device` via DevTools.
+3. Reabrir a aplicação para validar a experiência de primeiro acesso.
 
 ### Comando correto de redeploy em produção
 

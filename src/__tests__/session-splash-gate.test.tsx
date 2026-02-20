@@ -1,18 +1,31 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { SessionSplashGate } from '@/components/loading/SessionSplashGate'
 
 jest.mock('@/components/loading/AppOpeningScreen', () => ({
-  AppOpeningScreen: ({ title, subtitle }: { title: string; subtitle: string }) => (
+  AppOpeningScreen: ({
+    title,
+    subtitle,
+    onContinue,
+    actionLabel,
+  }: {
+    title: string
+    subtitle: string
+    onContinue: () => void
+    actionLabel: string
+  }) => (
     <div data-testid="splash">
       <span>{title}</span>
       <span>{subtitle}</span>
+      <button onClick={onContinue} type="button">
+        {actionLabel}
+      </button>
     </div>
   ),
 }))
 
 describe('SessionSplashGate', () => {
   beforeEach(() => {
-    window.sessionStorage.clear()
+    window.localStorage.clear()
     jest.useFakeTimers()
   })
 
@@ -21,7 +34,7 @@ describe('SessionSplashGate', () => {
     jest.useRealTimers()
   })
 
-  it('deve exibir splash no primeiro acesso e depois conteúdo', async () => {
+  it('deve manter splash até clique explícito e depois liberar conteúdo', () => {
     render(
       <SessionSplashGate>
         <div data-testid="conteudo">conteudo da aplicacao</div>
@@ -32,17 +45,20 @@ describe('SessionSplashGate', () => {
     expect(screen.queryByTestId('conteudo')).not.toBeInTheDocument()
 
     act(() => {
-      jest.advanceTimersByTime(1200)
+      jest.advanceTimersByTime(5000)
     })
 
-    await waitFor(() => {
-      expect(screen.getByTestId('conteudo')).toBeInTheDocument()
-    })
-    expect(window.sessionStorage.getItem('sgn.opening.seen')).toBe('1')
+    expect(screen.getByTestId('splash')).toBeInTheDocument()
+    expect(screen.queryByTestId('conteudo')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acessar Plataforma' }))
+
+    expect(screen.getByTestId('conteudo')).toBeInTheDocument()
+    expect(window.localStorage.getItem('sgn.opening.seen.device')).toBe('1')
   })
 
-  it('não deve exibir splash quando sessão já foi marcada', () => {
-    window.sessionStorage.setItem('sgn.opening.seen', '1')
+  it('não deve exibir splash quando dispositivo já foi marcado', () => {
+    window.localStorage.setItem('sgn.opening.seen.device', '1')
 
     render(
       <SessionSplashGate>

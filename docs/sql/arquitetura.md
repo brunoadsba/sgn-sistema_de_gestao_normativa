@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 27 - identidade mobile PWA e splash web por sessão)
+> Atualizado em: 2026-02-20 (sessão 28 - gate de abertura por dispositivo com CTA)
 
 ## Visão Geral
 
@@ -82,7 +82,7 @@ Responsabilidade:
 5. Fluxo incremental opcional por chunks com validação por evidência em cada etapa.
 6. CSP de produção alinhada com hidratação do App Router para evitar loading infinito na página raiz.
 7. Seção de histórico sob demanda e otimizações de animação para reduzir custo em dispositivos móveis.
-8. Abertura full-screen exibida apenas no primeiro acesso de sessão (gate client-side), preservando fluidez em navegações internas.
+8. Abertura full-screen bloqueante até ação do usuário (`Acessar Plataforma`), exibida uma única vez por dispositivo com persistência em `localStorage`.
 
 ## APIs Ativas
 
@@ -121,6 +121,7 @@ Responsabilidade:
 7. Histórico otimizado sem N+1 com ordenação/paginação em SQL.
 8. Análise incremental processada com concorrência limitada por chunk.
 9. Identidade PWA de marca aplicada com ícones próprios e splash nativa escura para mobile.
+10. Gate de abertura envolve header + conteúdo para evitar exposição parcial da interface antes da liberação explícita.
 
 ### Débito técnico aberto
 

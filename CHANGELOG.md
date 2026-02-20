@@ -2,15 +2,15 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
-## [2026-02-20] - Identidade mobile PWA e abertura web por sessão
+## [2026-02-20] - Identidade mobile PWA e abertura web por dispositivo
 
 ### Adicionado
 
 - **Ícones de marca SGN para PWA**: `src/app/icon.tsx` (512x512) e `src/app/apple-icon.tsx` (180x180)
 - **Tela de abertura premium com canvas** em `src/components/loading/AppOpeningScreen.tsx`
-- **Gate de splash por sessão** em `src/components/loading/SessionSplashGate.tsx`:
-  - splash full-screen apenas no primeiro acesso da sessão
-  - duração curta (1100ms) com persistência em `sessionStorage`
+- **Gate de abertura por dispositivo** em `src/components/loading/SessionSplashGate.tsx`:
+  - abertura bloqueia interface até ação explícita do usuário
+  - persistência em `localStorage` para exibição única por dispositivo
 - **Teste unitário de comportamento da abertura** em `src/__tests__/session-splash-gate.test.tsx`
 
 ### Alterado
@@ -21,7 +21,10 @@ Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 - **Metadata global** (`src/app/layout.tsx`):
   - manifest declarado explicitamente
   - `icons` e `appleWebApp` configurados
-  - conteúdo principal envolvido com `SessionSplashGate`
+  - aplicação (header + conteúdo) envolvida com `SessionSplashGate` para bloqueio completo até o CTA
+- **Tela de abertura** (`src/components/loading/AppOpeningScreen.tsx`):
+  - substituída barra de progresso automática por CTA profissional `Acessar Plataforma`
+  - ajuste para cobertura full-screen real (`min-h-screen`)
 - **Loading global** (`src/app/loading.tsx`):
   - removida splash full-screen recorrente
   - adotado skeleton leve por seção para navegação interna

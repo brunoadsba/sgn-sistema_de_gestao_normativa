@@ -5,9 +5,11 @@ import { useEffect, useRef } from 'react'
 interface AppOpeningScreenProps {
   title: string
   subtitle: string
+  actionLabel: string
+  onContinue: () => void
 }
 
-export function AppOpeningScreen({ title, subtitle }: AppOpeningScreenProps) {
+export function AppOpeningScreen({ title, subtitle, actionLabel, onContinue }: AppOpeningScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -92,12 +94,12 @@ export function AppOpeningScreen({ title, subtitle }: AppOpeningScreenProps) {
   }, [])
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06),transparent_62%)]" />
 
-      <div className="relative z-10 flex min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-6 text-center">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/30 bg-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl">
           <span className="text-4xl font-extrabold tracking-tight text-white">SGN</span>
         </div>
@@ -109,9 +111,14 @@ export function AppOpeningScreen({ title, subtitle }: AppOpeningScreenProps) {
           {subtitle}
         </p>
 
-        <div className="mt-8 h-1.5 w-44 overflow-hidden rounded-full bg-white/20">
-          <div className="h-full w-1/2 animate-[pulse_1.4s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-blue-300 to-indigo-200" />
-        </div>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="mt-9 inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/15 px-6 py-3 text-sm font-semibold tracking-wide text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+        >
+          {actionLabel}
+        </button>
+        <p className="mt-3 text-xs text-blue-100/70">Ambiente seguro para análise normativa</p>
       </div>
     </div>
   )
