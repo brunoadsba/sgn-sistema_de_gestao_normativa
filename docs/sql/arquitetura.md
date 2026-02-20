@@ -1,96 +1,111 @@
-# SGN - Arquitetura Técnica Atual
+# SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-19 (sessão 20)
+> Atualizado em: 2026-02-19 (sessão 22 - padronização documental)
 
-## Resumo arquitetural
+## Visão Geral
 
-O SGN opera em arquitetura monolítica com Next.js App Router, banco local SQLite e Drizzle ORM. As NRs são mantidas localmente em TypeScript. A análise de conformidade é executada via GROQ. Sem autenticação, sem Redis, sem multi-tenancy — aplicação single-user local.
+O SGN é um monolito Next.js (App Router) com banco local SQLite via Drizzle ORM e processamento de conformidade por IA (GROQ).
+
+Princípios arquiteturais ativos:
+
+1. Server Components para aquisição de dados.
+2. Client Components para interatividade.
+3. Estado compartilhável em query string via `nuqs`.
+4. Persistência local simples e rastreável (SQLite).
 
 ## Stack
 
-- Next.js 15.5.2 (App Router)
-- TypeScript 5.9.2 (strict)
-- SQLite (`better-sqlite3`) + Drizzle ORM
-- GROQ SDK — modelo: `meta-llama/llama-4-scout-17b-16e-instruct` (17B ativos, MoE)
-- pdf-parse v2 (extração de texto PDF) + mammoth (DOCX)
-- Zod para validação de entrada
-- Pino para logging estruturado
-- Tailwind CSS + shadcn/ui (dark mode forçado via `class="dark"`)
+| Camada | Tecnologia |
+|--------|------------|
+| Framework | Next.js 15.5.2 |
+| Linguagem | TypeScript 5.9.2 (strict) |
+| UI | React 19 + Tailwind + shadcn/ui |
+| Estado em URL | nuqs |
+| Banco | SQLite (`better-sqlite3`) + Drizzle ORM |
+| IA | GROQ SDK (`meta-llama/llama-4-scout-17b-16e-instruct`) |
+| Extração | `pdf-parse` v2 (PDF) + `mammoth` (DOCX) |
+| Logging | Pino |
+| Testes | Playwright (E2E) |
 
-## Estrutura de dados
+## Organização de Componentes
 
-### Fontes de dados
+### Server Components
 
-1. NRs locais em `src/lib/data/normas.ts` (38 NRs, links diretos MTE + 17 anexos)
-2. Banco relacional SQLite em `./data/sgn.db`
+- `src/app/page.tsx`
+- `src/app/normas/page.tsx`
 
-### Tabelas ativas (Drizzle ORM)
+Responsabilidade:
+- buscar dados no servidor
+- montar composição de página
 
-| Tabela | Descrição |
-|--------|-----------|
-| `documentos` | Documentos enviados pelo usuário (PGR, PCMSO, LTCAT, etc.) |
-| `analise_jobs` | Jobs de análise (pending / processing / completed / failed / cancelled) |
-| `analise_resultados` | Resultados detalhados com score de conformidade |
-| `conformidade_gaps` | Gaps identificados (severidade: baixa / media / alta / critica) |
+### Client Components
 
-> Tabelas removidas na sessão 13: `empresas`, `documentos_empresa`, `alertas_conformidade`.
+- `src/features/analise/components/AnaliseCliente.tsx`
+- `src/features/normas/components/ListaNormasDinamica.tsx`
 
-## Fluxo de análise IA
+Responsabilidade:
+- estado de UI
+- interações de usuário
+- busca dinâmica e sincronização com URL
 
-1. Usuário envia documento (PDF, DOCX, TXT — até 100MB) e seleciona NRs no frontend
-2. `POST /api/extrair-texto` — extrai texto via pdf-parse v2 (PDF) ou mammoth (DOCX)
-3. `POST /api/ia/analisar-conformidade` — envia texto (truncado em 500K chars) ao GROQ + persiste resultado no SQLite:
-   - cria registro em `documentos`
-   - cria `analise_jobs` com status `completed`
-   - cria `analise_resultados`
-   - cria itens em `conformidade_gaps`
-4. `GET /api/ia/analisar-conformidade` — lista histórico com paginação
+## Domínio e Dados
 
-## APIs ativas
+### Fonte normativa
 
-| Rota | Método | Descrição |
-|------|--------|-----------|
-| `/api/health` | GET | Status do banco e da API |
-| `/api/normas` | GET | Lista todas as NRs com stats |
-| `/api/normas/[id]` | GET | Detalhes de uma NR |
-| `/api/search` | GET | Busca inteligente por normas |
-| `/api/extrair-texto` | POST | Extração de texto de PDF/DOCX/TXT |
-| `/api/ia/analisar-conformidade` | POST | Análise de conformidade com IA |
-| `/api/ia/analisar-conformidade` | GET | Histórico de análises (paginado) |
-| `/api/nr6/analisar` | POST | Análise específica NR-6 (EPIs) |
-| `/api/export` | GET | Exportação de dados (CSV/JSON) |
+- `src/lib/data/normas.ts`
+- 38 NRs (36 ativas, 2 revogadas)
+- Links oficiais e anexos mapeados
 
-> APIs removidas na sessão 13: `/api/empresas`, `/api/alertas`, `/api/conformidade/*`, `/api/rate-limit`, `/api/security`, `/api/demo`.
+### Tabelas SQLite
 
-## Persistência e armazenamento
+| Tabela | Finalidade |
+|--------|------------|
+| `documentos` | metadados dos arquivos enviados |
+| `analise_jobs` | rastreamento da execução |
+| `analise_resultados` | resultado agregado da análise |
+| `conformidade_gaps` | gaps por severidade e recomendação |
 
-- Banco: `./data/sgn.db` (volume Docker persistente)
-- Uploads: `./data/uploads/`
-- Migrations: `drizzle/`
-- Configuração Drizzle: `drizzle.config.ts`
-- Schema: `src/lib/db/schema.ts`
+## Fluxo Técnico Principal
 
-## Limites técnicos relevantes
+1. Usuário envia documento e escolhe NRs.
+2. `POST /api/extrair-texto` converte arquivo para texto.
+3. `POST /api/ia/analisar-conformidade` chama GROQ e persiste resultado.
+4. UI renderiza score, gaps e plano de ação.
 
-| Parâmetro | Valor |
-|-----------|-------|
-| Tamanho máximo de upload | 100MB |
-| Limite de caracteres extraídos (Zod) | 2.000.000 |
-| Caracteres enviados à IA (truncamento) | 500.000 |
-| Contexto do modelo GROQ | 10M tokens |
-| Rate limit GROQ (free tier) | 1000 req/dia + 30K TPM |
+## APIs Ativas
 
-## Estado atual
+| Rota | Método | Objetivo |
+|------|--------|----------|
+| `/api/health` | GET | status da aplicação |
+| `/api/normas` | GET | catálogo e estatísticas |
+| `/api/normas/[id]` | GET | detalhe de norma |
+| `/api/search` | GET | busca inteligente |
+| `/api/extrair-texto` | POST | extração de texto |
+| `/api/ia/analisar-conformidade` | POST | análise de conformidade |
+| `/api/ia/analisar-conformidade` | GET | histórico paginado |
+| `/api/nr6/analisar` | POST | análise NR-6 |
+| `/api/export` | GET | exportação CSV/JSON |
 
-Implementado:
-- Migração completa de Supabase para SQLite
-- Persistência do resultado de análise IA
-- Listagem histórica de análises com paginação
-- Validação de payload com Zod (schemas em `src/schemas/`)
-- Build TypeScript strict sem erros
-- Interface dark mode com Canvas Background animado
+## Limites Operacionais
 
-Pendente:
-- Worker assíncrono real para jobs (hoje processamento é síncrono)
-- Testes unitários de APIs críticas
-- Monitoramento de erros (Sentry ausente)
+| Item | Limite |
+|------|--------|
+| Upload | 100MB |
+| Texto extraído (validação) | 2.000.000 caracteres |
+| Texto enviado para IA | 500.000 caracteres |
+| Contexto do modelo | 10M tokens |
+
+## Estado Atual
+
+### Consolidado
+
+1. Fluxo principal de análise estável.
+2. Catálogo de normas estável com busca dinâmica e URL state.
+3. UI dark mode padronizada com Canvas Background.
+4. Persistência e histórico funcionando no SQLite.
+
+### Débito técnico aberto
+
+1. Worker assíncrono real para processamento.
+2. Testes unitários e integração para APIs críticas.
+3. Monitoramento de produção (Sentry/telemetria).

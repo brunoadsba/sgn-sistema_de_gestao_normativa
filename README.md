@@ -1,115 +1,135 @@
 # SGN - Sistema de Gestão Normativa
 
-Plataforma local de análise de conformidade em Saúde e Segurança no Trabalho (SST) com Inteligência Artificial. O SGN verifica se documentos e processos estão em conformidade com as Normas Regulamentadoras (NRs) brasileiras.
+Plataforma local de análise de conformidade em SST (Saúde e Segurança no Trabalho) com IA.
 
-Aplicação single-user, executada localmente. A única dependência externa é a API do GROQ (LLM).
+O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza com Normas Regulamentadoras (NRs) e gera diagnóstico executivo com score, gaps, severidade e plano de ação.
 
-## O que você pode fazer
+## Status do Projeto
 
-| **Analisar** | Envie um documento (PDF, DOCX, TXT), escolha as NRs aplicáveis e receba uma análise automática com IA. O sistema indica conformidades, gaps e recomendações. |
-| **Normas** | Consulte o catálogo de 38 NRs disponíveis com busca instantânea via URL. |
-| **NR-6** | Análise específica para EPIs (Equipamentos de Proteção Individual): documentação, treinamento e adequação às exigências da NR-6. |
+- `Status`: ativo, em produção local
+- `Arquitetura`: monolito Next.js (App Router)
+- `Modelo operacional`: single-user local
+- `Branch principal`: `master`
 
-## Como usar
+## Capacidades
 
-### 1. Análise de conformidade (página inicial)
+1. **Análise de conformidade com IA**
+   - Upload de `PDF`, `DOCX` e `TXT` (até 100MB)
+   - Extração de texto server-side (`pdf-parse` + `mammoth`)
+   - Análise via GROQ (`Llama 4 Scout 17B`)
+2. **Catálogo de normas**
+   - 38 NRs com busca dinâmica
+   - Estado de busca na URL com `nuqs` (`?search=`)
+   - Página detalhada com links oficiais e anexos
+3. **Análise específica NR-6**
+   - Fluxo dedicado para EPIs
+4. **Persistência e histórico**
+   - SQLite + Drizzle (`documentos`, `analise_jobs`, `analise_resultados`, `conformidade_gaps`)
 
-1. Acesse a página inicial.
-2. Faça upload do documento SST (PGR, PCMSO, LTCAT, etc.).
-3. Selecione as NRs que deseja verificar.
-4. Clique em **Analisar Conformidade com IA**.
-5. Aguarde a extração do texto e a análise. O resultado exibe:
-   - Pontuação de conformidade
-   - Gaps identificados (descrição, severidade, recomendação)
-   - Resumo geral
+## Stack Técnica
 
-### 2. Consultar normas
+| Camada | Tecnologia |
+|--------|------------|
+| Framework | Next.js 15 (App Router) |
+| Linguagem | TypeScript (strict) |
+| UI | React 19 + Tailwind CSS + shadcn/ui |
+| Estado em URL | nuqs |
+| Banco | SQLite (`better-sqlite3`) + Drizzle ORM |
+| IA | GROQ SDK (`meta-llama/llama-4-scout-17b-16e-instruct`) |
+| Extração de texto | `pdf-parse` v2 + `mammoth` |
+| Testes E2E | Playwright |
+| Logging | Pino |
 
-1. Acesse **Normas** no menu.
-2. Use a busca para encontrar NRs instantaneamente (o filtro é aplicado enquanto você digita e o critério fica salvo na URL).
-3. Clique em uma norma para ver detalhes, texto oficial e anexos.
-
-### 3. Análise NR-6 (EPIs)
-
-1. Acesse `/nr6` no navegador.
-2. Informe o texto do documento ou faça upload.
-3. Selecione o tipo de documento.
-4. Clique em analisar para obter o resultado focado em EPIs.
-
-## Como iniciar o sistema
+## Quick Start
 
 ### Pré-requisitos
 
-- Node.js 18 ou superior
-- Chave de API do GROQ (para a análise com IA)
+- Node.js 18+
+- Chave GROQ (`GROQ_API_KEY`)
 
-### Passos
+### Execução local
 
-1. Instale as dependências:
+1. Instale dependências:
    ```bash
    npm install
    ```
-
-2. Crie o arquivo de configuração:
+2. Crie variáveis de ambiente:
    ```bash
    cp .env.example .env.local
    ```
-
-3. Edite `.env.local` e defina sua chave de API:
+3. Configure `.env.local`:
    ```bash
    GROQ_API_KEY=sua_chave_aqui
    ```
-
-4. Inicie o sistema:
+4. Rode o projeto:
    ```bash
    npm run dev
    ```
+5. Acesse:
+   - `http://localhost:3001`
 
-5. Acesse `http://localhost:3001` no navegador.
-
-### Com Docker
-
-Se preferir rodar com Docker:
+### Execução com Docker
 
 ```bash
 npm run docker:start
 ```
 
-O sistema estará disponível em `http://localhost:3001`.
+## Fluxo Funcional Principal
 
-## Stack técnica
+1. Acessar `/`
+2. Enviar documento SST
+3. Selecionar NRs aplicáveis
+4. Executar **Analisar Conformidade com IA**
+5. Avaliar resultado:
+   - score
+   - gaps por severidade
+   - pontos de atenção
+   - próximos passos
 
-| Framework | Next.js 15 (App Router) |
-| Linguagem | TypeScript (strict mode) |
-| Banco de dados | SQLite (better-sqlite3) + Drizzle ORM |
-| IA | GROQ SDK (Llama 4 Scout 17B MoE) |
-| URL State | nuqs (gerenciamento de estado na URL) |
-| UI | React 19 + Tailwind CSS + shadcn/ui |
-| Extração de texto | pdf-parse v2 + mammoth |
-| Testes | Playwright (E2E) |
+## Operação e Limites
 
-## Interface
+| Item | Valor |
+|------|-------|
+| Upload máximo | 100MB |
+| Limite do texto extraído (validação) | 2.000.000 caracteres |
+| Texto enviado à IA (truncamento) | 500.000 caracteres |
+| Porta padrão | 3001 |
 
-O sistema utiliza **dark mode por padrão** com fundo animado (Canvas Background com partículas) e efeito glassmorphism nos cards. A interface é responsiva e otimizada para uso contínuo em tela escura.
+## Comandos Essenciais
 
-## Dicas de uso
+```bash
+# desenvolvimento
+npm run dev
+npm run build
+npm run lint
 
-- **Documentos suportados:** PDF, DOCX, TXT. O sistema extrai o texto automaticamente. Tamanho máximo: 100MB.
-- **Busca:** A busca na página de normas é reativa e utiliza a URL para manter o estado. Você pode compartilhar o link da busca diretamente.
-- **Documentos grandes:** o sistema suporta arquivos pesados. A IA recebe até 500K caracteres por análise.
+# testes
+npm run test:e2e
+npm run test:e2e:ui
+npm run test:e2e:report
 
-## Problemas comuns
+# banco (drizzle)
+npm run db:generate
+npm run db:push
+npm run db:studio
 
-| Situação | O que fazer |
-|----------|-------------|
-| Erro ao extrair texto | Verifique se o documento não está protegido ou corrompido. Tente um PDF sem senha. |
-| Análise demora muito | A IA pode levar alguns segundos. Aguarde a conclusão. |
-| GROQ_API_KEY inválida | Confirme que a chave está correta em `.env.local` e que a conta GROQ está ativa. |
-| Erro "Documento muito grande" | O arquivo excede 100MB ou 2M de caracteres extraídos. Divida o documento. |
+# docker
+npm run docker:start
+npm run docker:stop
+```
 
-## Documentação técnica
+## Problemas Comuns
 
-- `docs/memory.md` — estado completo do projeto, histórico de sessões e próximos passos
-- `CHANGELOG.md` — histórico detalhado de todas as mudanças
-- `SECURITY.md` — segurança
-- `CONTRIBUTING.md` — como contribuir
+| Situação | Ação recomendada |
+|----------|------------------|
+| Erro de extração de texto | Validar arquivo (sem senha/corrupção) e formato suportado |
+| Chave GROQ inválida | Revisar `GROQ_API_KEY` em `.env.local` |
+| Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
+
+## Documentação
+
+- `docs/memory.md` - contexto operacional completo e histórico de sessões
+- `docs/sql/arquitetura.md` - arquitetura técnica consolidada
+- `CHANGELOG.md` - histórico de mudanças
+- `SECURITY.md` - modelo de segurança e hardening
+- `CONTRIBUTING.md` - fluxo de contribuição

@@ -1,56 +1,76 @@
-# SGN - Guia de Segurança
+# SGN - Security
 
-## Objetivo
+## Escopo
 
-Documentar os controles de segurança existentes, limites atuais e próximos passos de hardening.
+Este documento descreve o estado de segurança atual do SGN, riscos aceitos no modo single-user local e requisitos mínimos para evolução para ambiente público.
 
-## Controles implementados
+## Modelo de Ameaça Atual
 
-1. Validação de entrada com Zod nas rotas principais
-2. Sanitização de input para prompts de IA (`sanitizeInput` em `groq.ts` e `analisador-nr6.ts`)
-3. Headers de segurança configurados no app (`next.config.js`)
-4. Logging estruturado com Pino
-5. Tratamento padronizado de respostas de erro/sucesso nas APIs
-6. Variáveis de ambiente validadas com Zod (`src/lib/env.ts`)
+- Aplicação local, single-user, sem autenticação.
+- Superfícies de entrada principais: upload de arquivos, payloads de API, variáveis de ambiente.
+- Comunicação externa: apenas API da GROQ para processamento de IA.
 
-## Modelo de segurança
+## Controles Implementados
 
-Aplicação single-user, executada localmente. Sem autenticação (acesso restrito à máquina local). Única comunicação externa é com a API do GROQ para análise de IA.
+1. Validação de entrada com Zod em rotas críticas.
+2. Sanitização de texto para prompts de IA (`sanitizeInput`).
+3. Headers de segurança definidos em `next.config.js`.
+4. Logging estruturado com Pino.
+5. Estrutura padronizada de retorno de erro/sucesso nas APIs.
+6. Validação de variáveis de ambiente em `src/lib/env.ts`.
+7. Armazenamento local com SQLite (sem credenciais remotas de banco).
 
-## Riscos atuais conhecidos
+## Riscos Conhecidos (Estado Atual)
 
-1. APIs sem autenticação (aceitável para uso local single-user)
-2. Sem monitoramento centralizado (Sentry ausente)
-3. Sem rate limiting (removido junto com Redis — desnecessário para uso local)
+1. APIs sem autenticação/autorização (aceito para uso local).
+2. Ausência de monitoramento centralizado (Sentry não implementado).
+3. Ausência de rate limiting específico para rotas de IA.
+4. Dependência de serviço externo GROQ para etapa crítica de análise.
 
-## Recomendações para produção
+## Requisitos de Hardening para Deploy Público
 
-Se o projeto evoluir para multi-user ou deploy público:
+1. Implementar autenticação e autorização por usuário/tenant.
+2. Implementar rate limiting em `/api/ia/*`, `/api/extrair-texto` e endpoints de alto custo.
+3. Adotar monitoramento e rastreamento de erro (Sentry ou equivalente).
+4. Forçar HTTPS com HSTS e políticas de CORS restritivas.
+5. Definir política de retenção e criptografia para uploads e banco.
+6. Implementar trilha de auditoria para ações críticas.
 
-1. Implementar autenticação (NextAuth ou similar)
-2. Adicionar rate limiting em `/api/ia/*`
-3. Integrar observabilidade de erros (Sentry)
-4. Configurar HTTPS
-5. Implementar CORS restritivo
+## Gestão de Secrets
 
-## Variáveis de ambiente
+1. Segredos apenas em `.env.local`/cofre de ambiente.
+2. Proibido versionar tokens/chaves.
+3. Rotacionar `GROQ_API_KEY` em caso de vazamento.
+
+Variáveis principais:
 
 ```bash
 NODE_ENV=development|production
 GROQ_API_KEY=                     # Obrigatória
 DATABASE_PATH=./data/sgn.db       # Opcional (default: ./data/sgn.db)
+PORT=3001                         # Opcional
+LOG_LEVEL=info                    # Opcional
 ```
 
-## Checklist rápido
+## Checklist Operacional de Segurança
 
-1. Confirmar `GROQ_API_KEY` somente em `.env.local` (nunca versionado)
-2. Confirmar que não há secrets versionados (`git grep -i "api_key\|password\|secret"`)
-3. Executar validação de tipagem: `npx tsc --noEmit`
+1. Verificar ausência de segredos no repositório:
+   ```bash
+   git grep -i "api_key\|password\|secret\|token"
+   ```
+2. Validar tipagem e build:
+   ```bash
+   npx tsc --noEmit
+   npm run build
+   ```
+3. Executar testes E2E:
+   ```bash
+   npm run test:e2e
+   ```
+4. Revisar alterações de API e schema antes de merge.
 
-## Histórico recente
+## Política de Divulgação de Vulnerabilidades
 
-- Supabase e N8N removidos do fluxo principal
-- Redis removido (desnecessário para single-user local)
-- Banco local SQLite com Drizzle em operação
-- Feature de empresas removida (app single-user)
-- Persistência da análise IA implementada com registro de jobs/resultados/gaps
+1. Não abrir vulnerabilidade crítica em issue pública.
+2. Registrar impacto, vetor, severidade e evidência técnica.
+3. Corrigir em branch isolada e publicar patch com changelog.

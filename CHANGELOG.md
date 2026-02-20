@@ -2,6 +2,22 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-19] - Padronização de documentação (Sessão 22)
+
+### Alterado
+
+- **`README.md`**: reestruturado em formato operacional (status, capacidades, stack, quick start, limites, comandos, troubleshooting e mapa de documentação)
+- **`CONTRIBUTING.md`**: atualizado para padrão de engenharia (branch strategy, requisitos de PR, quality gates, critérios de aceite e convenções arquiteturais)
+- **`SECURITY.md`**: reformulado com modelo de ameaça, riscos aceitos, hardening para ambiente público, gestão de secrets e política de divulgação de vulnerabilidades
+- **`docs/sql/arquitetura.md`**: consolidado com padrão Server/Client Components, uso de `nuqs`, limites operacionais e débito técnico atual
+- **`docs/Guia-Vercel.md`**: conteúdo genérico removido e substituído por guia de deploy do SGN (pré/pós-deploy, variáveis e limitações do SQLite em serverless)
+
+### Notas
+
+- Documentação alinhada ao estado atual até sessão 21 e organizada para manutenção contínua em padrão de projeto de produto.
+
+---
+
 ## [2026-02-19] - Refatoração Server/Client Components + Filtro dinâmico com nuqs (Sessão 21)
 
 ### Adicionado
