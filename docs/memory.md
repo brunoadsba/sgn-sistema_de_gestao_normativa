@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 23: confiabilidade, observabilidade e estabilização E2E)
+> Atualizado em: 2026-02-20 (sessão 24: estratégia incremental para arquivos grandes)
 
 ---
 
@@ -157,6 +157,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 15. **Arquitetura Server/Client Components** com data fetching server-side e interatividade isolada em Client Components
 16. **Observabilidade e resiliência**: Sentry integrado + retry/timeout + idempotência
 17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
+18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados de processamento
 
 ---
 
@@ -166,7 +167,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 - Worker assíncrono real não existe (processamento é síncrono)
 
 ### Prioridade Média
-- Testes unitários: zero cobertura de testes unitários/integração (E2E existe)
+- Testes unitários: cobertura inicial criada para processamento incremental; ampliar para APIs críticas
 - Monitoramento ainda básico (Sentry ativo; falta telemetria de negócio e alertas operacionais)
 - Virtualização de listas para grandes volumes de normas
 
@@ -202,6 +203,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 21 | 2026-02-19 | Refatoração Server/Client Components: `page.tsx` (análise) e `normas/page.tsx` convertidos para Server Components. Criados `AnaliseCliente.tsx` e `ListaNormasDinamica.tsx` como Client Components em `src/features/`. Adicionado `nuqs` para estado de busca via URL. `NuqsAdapter` global no layout. Corrigido título "Análise de Conformidade" apagado em dark mode. Corrigido corte da letra 'g' em títulos com `bg-clip-text`. Botão "Analisar" restaurado para gradiente vivo. |
 | 22 | 2026-02-19 | Padronização de documentação: `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/Guia-Vercel.md` e `docs/sql/arquitetura.md` reorganizados em formato operacional e de engenharia. |
 | 23 | 2026-02-20 | Confiabilidade operacional: retry/timeout em chamadas críticas, idempotência em análise IA, health check ampliado (db/api/llm), Sentry integrado (server/edge/client), error boundaries por rota e global. Histórico evoluído com filtros/paginação/ordenação/busca/export CSV em horário de Brasília e persistência em URL (`nuqs`). Qualidade validada com `lint`, `build` e E2E (29/29). |
+| 24 | 2026-02-20 | Estratégia para documentos grandes: adicionados contratos backward-compatible (`estrategiaProcessamento`), chunking com overlap, orquestração incremental no endpoint de análise, consolidação/deduplicação de gaps com score ponderado, persistência de metadados por chunk e testes unitários específicos. |
 
 ---
 

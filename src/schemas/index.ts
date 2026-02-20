@@ -18,6 +18,7 @@ export const AnaliseConformidadeSchema = z.object({
   documento: z.string().min(1, 'Documento é obrigatório').max(2_000_000, 'Documento excede o limite de 2 milhões de caracteres'),
   tipoDocumento: z.enum(['PGR', 'NR-1-GRO', 'PCMSO', 'LTCAT', 'ASO', 'PPRA', 'OUTRO']),
   normasAplicaveis: z.array(z.string()).min(1, 'Pelo menos uma norma deve ser aplicável'),
+  estrategiaProcessamento: z.enum(['completo', 'incremental']).default('completo'),
   score: z.number().min(0).max(100).optional(),
   nivelRisco: z.enum(['baixo', 'medio', 'alto', 'critico']).optional(),
   status: z.enum(['pendente', 'processando', 'concluida', 'erro']).default('pendente'),

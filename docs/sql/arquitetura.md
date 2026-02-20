@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 23 - confiabilidade e estabilidade)
+> Atualizado em: 2026-02-20 (sessão 24 - processamento incremental para documentos grandes)
 
 ## Visão Geral
 
@@ -79,6 +79,7 @@ Responsabilidade:
 2. Endpoint de análise suporta idempotência por `Idempotency-Key`.
 3. Persistência de análise usa transação para manter consistência de dados.
 4. Histórico e exportação usam filtros determinísticos (período, busca, ordenação).
+5. Fluxo incremental opcional por chunks com validação por evidência em cada etapa.
 
 ## APIs Ativas
 
@@ -100,7 +101,8 @@ Responsabilidade:
 |------|--------|
 | Upload | 100MB |
 | Texto extraído (validação) | 2.000.000 caracteres |
-| Texto enviado para IA | 500.000 caracteres |
+| Texto enviado para IA (modo completo) | 500.000 caracteres |
+| Texto enviado para IA (modo incremental) | chunks com overlap e consolidação |
 | Contexto do modelo | 10M tokens |
 
 ## Estado Atual

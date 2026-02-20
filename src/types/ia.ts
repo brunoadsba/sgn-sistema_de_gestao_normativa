@@ -4,7 +4,9 @@ export interface AnaliseConformidadeRequest {
   documento: string
   tipoDocumento: string
   normasAplicaveis?: string[]
+  estrategiaProcessamento?: 'completo' | 'incremental'
   evidenciasNormativas?: EvidenciaNormativa[]
+  chunkMetadados?: ChunkDocumentoMetadata[]
   contextoBaseConhecimento?: {
     versaoBase: string
     totalChunks: number
@@ -24,6 +26,7 @@ export interface AnaliseConformidadeResponse {
   timestamp: string
   modeloUsado: string
   tempoProcessamento: number
+  metadadosProcessamento?: MetadadosProcessamento
 }
 
 export interface GapConformidade {
@@ -38,6 +41,10 @@ export interface GapConformidade {
   responsavelSugerido?: string
   normasRelacionadas?: string[]
   evidencias?: EvidenciaNormativa[]
+  metadadosChunk?: {
+    chunkIdsUsados: string[]
+    ordemProcessamento: number[]
+  }
 }
 
 export interface EvidenciaNormativa {
@@ -47,6 +54,24 @@ export interface EvidenciaNormativa {
   conteudo: string
   score: number
   fonte: 'local'
+}
+
+export interface ChunkDocumentoMetadata {
+  chunkId: string
+  indice: number
+  totalChunks: number
+  inicioOffset: number
+  fimOffset: number
+  tamanhoCaracteres: number
+}
+
+export interface MetadadosProcessamento {
+  estrategia: 'completo' | 'incremental'
+  totalChunksProcessados: number
+  chunksPorGap: Record<string, string[]>
+  ordemProcessamento: string[]
+  temposPorChunkMs?: Record<string, number>
+  truncamentoEvitado?: boolean
 }
 
 export interface ConfiguracaoIA {

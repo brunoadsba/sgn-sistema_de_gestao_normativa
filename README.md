@@ -18,6 +18,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Upload de `PDF`, `DOCX` e `TXT` (até 100MB)
    - Extração de texto server-side (`pdf-parse` + `mammoth`)
    - Análise via GROQ (`Llama 4 Scout 17B`)
+   - Estratégia de processamento opcional: `completo` ou `incremental` (chunking + consolidação)
 2. **Catálogo de normas**
    - 38 NRs com busca dinâmica
    - Estado de busca na URL com `nuqs` (`?search=`)
@@ -99,7 +100,8 @@ npm run docker:start
 |------|-------|
 | Upload máximo | 100MB |
 | Limite do texto extraído (validação) | 2.000.000 caracteres |
-| Texto enviado à IA (truncamento) | 500.000 caracteres |
+| Texto enviado à IA (modo completo) | 500.000 caracteres |
+| Processamento incremental | chunks com overlap e consolidação final |
 | Porta padrão | 3001 |
 
 ## Comandos Essenciais
@@ -139,6 +141,7 @@ npm run docker:stop
 - `docs/memory.md` - contexto operacional completo e histórico de sessões
 - `docs/sql/arquitetura.md` - arquitetura técnica consolidada
 - `docs/Guia-Vercel.md` - guia operacional de deploy e checklist
+- `docs/POP-Uso-do-SGN-Analise-de-Conformidade-SST.md` - POP e gate GO/NO-GO para operacao
 - `CHANGELOG.md` - histórico de mudanças
 - `SECURITY.md` - modelo de segurança e hardening
 - `CONTRIBUTING.md` - fluxo de contribuição

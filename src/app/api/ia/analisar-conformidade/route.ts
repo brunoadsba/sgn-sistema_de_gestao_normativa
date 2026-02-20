@@ -17,6 +17,10 @@ import {
 import { getIdempotentResponse, saveIdempotentResponse } from '@/lib/idempotency'
 import { randomUUID } from 'crypto'
 import { recuperarEvidenciasNormativas } from '@/lib/normas/kb'
+import { dividirDocumentoEmChunks } from '@/lib/ia/chunking'
+import { consolidarResultadosIncrementais } from '@/lib/ia/consolidacao-incremental'
+
+const MAX_CHUNKS_INCREMENTAL = 8
 
 // Função principal para análise de IA
 async function analisarConformidadeHandler(request: NextRequest) {
@@ -52,36 +56,114 @@ async function analisarConformidadeHandler(request: NextRequest) {
       }
     }
 
-    const evidenciasNormativas = await recuperarEvidenciasNormativas(
-      body.normasAplicaveis ?? [],
-      body.documento
-    )
+    const estrategia = body.estrategiaProcessamento ?? 'completo'
+    const timestamp = new Date().toISOString()
+    const modeloUsado = 'llama-4-scout-17b-16e-instruct'
+    let respostaCompleta: AnaliseConformidadeResponse
+    let evidenciasPersistencia = [] as NonNullable<AnaliseConformidadeRequest['evidenciasNormativas']>
+    let contextoPersistencia: NonNullable<AnaliseConformidadeRequest['contextoBaseConhecimento']> = {
+      versaoBase: 'nao_informada',
+      totalChunks: 0,
+      fonte: 'local',
+    }
 
-    // Executar análise
-    const resultado = await analisarConformidade({
-      ...body,
-      evidenciasNormativas: evidenciasNormativas.evidencias,
-      contextoBaseConhecimento: evidenciasNormativas.contexto,
-    })
+    if (estrategia === 'incremental') {
+      const chunks = dividirDocumentoEmChunks(body.documento)
+      if (chunks.length > MAX_CHUNKS_INCREMENTAL) {
+        throw new Error(
+          `Documento gerou ${chunks.length} chunks; limite incremental atual é ${MAX_CHUNKS_INCREMENTAL}`
+        )
+      }
 
-    const tempoProcessamento = Date.now() - startTime
+      const resultadosPorChunk = [] as {
+        chunk: (typeof chunks)[number]
+        resultado: AnaliseConformidadeResponse
+        tempoMs: number
+      }[]
+      const versoesBase = new Set<string>()
+      const chunkIdsValidos: string[] = []
 
-    validarEvidenciasDaResposta(resultado, evidenciasNormativas.evidencias.map((e) => e.chunkId))
+      for (const chunk of chunks) {
+        const inicioChunk = Date.now()
+        log.info(
+          {
+            requestId,
+            chunkId: chunk.chunkId,
+            indice: chunk.indice,
+            totalChunks: chunk.totalChunks,
+            tamanhoCaracteres: chunk.tamanhoCaracteres,
+          },
+          'Iniciando análise de chunk incremental'
+        )
 
-    // Adicionar metadados
-    const respostaCompleta: AnaliseConformidadeResponse = {
-      ...resultado,
-      timestamp: new Date().toISOString(),
-      modeloUsado: 'llama-4-scout-17b-16e-instruct',
-      tempoProcessamento
+        const evidenciasChunk = await recuperarEvidenciasNormativas(body.normasAplicaveis ?? [], chunk.conteudo)
+        versoesBase.add(evidenciasChunk.contexto.versaoBase)
+        evidenciasPersistencia.push(...evidenciasChunk.evidencias)
+        chunkIdsValidos.push(...evidenciasChunk.evidencias.map((e) => e.chunkId))
+
+        const resultadoChunk = await analisarConformidade({
+          ...body,
+          documento: chunk.conteudo,
+          estrategiaProcessamento: 'completo',
+          chunkMetadados: [chunk],
+          evidenciasNormativas: evidenciasChunk.evidencias,
+          contextoBaseConhecimento: evidenciasChunk.contexto,
+        })
+
+        validarEvidenciasDaResposta(resultadoChunk, evidenciasChunk.evidencias.map((e) => e.chunkId))
+
+        resultadosPorChunk.push({
+          chunk,
+          resultado: resultadoChunk,
+          tempoMs: Date.now() - inicioChunk,
+        })
+      }
+
+      const tempoProcessamento = Date.now() - startTime
+      respostaCompleta = consolidarResultadosIncrementais(resultadosPorChunk, {
+        timestamp,
+        modeloUsado,
+        tempoProcessamento,
+      })
+
+      validarEvidenciasDaResposta(respostaCompleta, Array.from(new Set(chunkIdsValidos)))
+      contextoPersistencia = {
+        versaoBase: Array.from(versoesBase).join('|'),
+        totalChunks: evidenciasPersistencia.length,
+        fonte: 'local',
+      }
+    } else {
+      const evidenciasNormativas = await recuperarEvidenciasNormativas(
+        body.normasAplicaveis ?? [],
+        body.documento
+      )
+      evidenciasPersistencia = evidenciasNormativas.evidencias
+      contextoPersistencia = evidenciasNormativas.contexto
+
+      const resultado = await analisarConformidade({
+        ...body,
+        estrategiaProcessamento: 'completo',
+        evidenciasNormativas: evidenciasNormativas.evidencias,
+        contextoBaseConhecimento: evidenciasNormativas.contexto,
+      })
+
+      const tempoProcessamento = Date.now() - startTime
+      validarEvidenciasDaResposta(resultado, evidenciasNormativas.evidencias.map((e) => e.chunkId))
+
+      respostaCompleta = {
+        ...resultado,
+        timestamp,
+        modeloUsado,
+        tempoProcessamento,
+      }
     }
 
     // Persistir no banco
     await persistirAnaliseConformidade(
       {
         ...body,
-        evidenciasNormativas: evidenciasNormativas.evidencias,
-        contextoBaseConhecimento: evidenciasNormativas.contexto,
+        evidenciasNormativas: evidenciasPersistencia,
+        contextoBaseConhecimento: contextoPersistencia,
       },
       respostaCompleta
     )
@@ -93,10 +175,11 @@ async function analisarConformidadeHandler(request: NextRequest) {
     // Log de sucesso
     log.info({
       requestId,
-      tempoProcessamento,
-      score: resultado.score,
-      gapsCount: resultado.gaps.length,
-      evidenciasCount: evidenciasNormativas.evidencias.length,
+      tempoProcessamento: respostaCompleta.tempoProcessamento,
+      score: respostaCompleta.score,
+      gapsCount: respostaCompleta.gaps.length,
+      evidenciasCount: evidenciasPersistencia.length,
+      estrategiaProcessamento: estrategia,
     }, 'Análise de conformidade concluída com sucesso');
 
     const successResponse = createSuccessResponse(

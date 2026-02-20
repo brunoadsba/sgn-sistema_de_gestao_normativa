@@ -4,6 +4,30 @@ Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
 ## [2026-02-20] - Confiabilidade operacional, observabilidade e estabilidade E2E
 
+## [2026-02-20] - Estratégia incremental para documentos grandes
+
+### Adicionado
+
+- **Processamento incremental opcional** no contrato de análise (`estrategiaProcessamento: completo|incremental`) para manter backward compatibility da API
+- **Chunking com overlap** em `src/lib/ia/chunking.ts` com metadados de rastreabilidade (`chunkId`, offsets, índice e total)
+- **Consolidação de resultados por chunk** em `src/lib/ia/consolidacao-incremental.ts` com deduplicação de gaps e score ponderado
+- **Testes unitários direcionados** para chunking/overlap e consolidação em `src/lib/ia/__tests__/processamento-incremental.test.ts`
+
+### Alterado
+
+- **Endpoint `/api/ia/analisar-conformidade`** com orquestração incremental por chunk, validação por evidência local e guardrail de custo (limite de chunks por requisição)
+- **Persistência de análise** com metadados de processamento incremental para auditoria em `analise_resultados.metadata`
+- **Documentação operacional e arquitetural** atualizada para refletir o novo fluxo para arquivos grandes
+
+### Validado
+
+- `npm run lint` sem erros
+- `npm run build` sem erros
+- `npm run test:e2e` com **29/29 testes passando**
+- `npm test -- --runInBand src/lib/ia/__tests__/processamento-incremental.test.ts` com suíte verde
+
+## [2026-02-20] - Confiabilidade operacional, observabilidade e estabilidade E2E
+
 ### Adicionado
 
 - **Observabilidade com Sentry**: instrumentação server, edge e client com hooks oficiais (`onRequestError`, `onRouterTransitionStart`) e `global-error` para captura de erros de renderização no App Router
@@ -27,6 +51,13 @@ Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 - `npm run lint` sem erros
 - `npm run build` sem erros
 - `npm run test:e2e` com **29/29 testes passando**
+- `npm run kb:sync` concluído com **38/38 NRs** em `data/normas`
+- `KB_STRICT_MODE=true` validado em cenário de lacuna de base (erro controlado)
+
+### Operação portuária
+
+- POP atualizado com checklist específico para fiscalização portuária (NR-29/NR-30 e correlatas)
+- Critério de prontidão formalizado com gate **GO/NO-GO**
 
 ## [2026-02-19] - Padronização de documentação (Sessão 22)
 
