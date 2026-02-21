@@ -2,6 +2,25 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-21] - Finalização das Tarefas de Qualidade e Infra do Harbor (Sessão 30)
+
+### Adicionado
+
+- **Suíte de Testes Unitários de API (`src/__tests__/api-health.test.ts`)**: testando a rota GET `/api/health` usando mocks para `NodeResponse`, validação de retornos `200 OK` (tudo up) e `503 Service Unavailable` em caso de downtime de Banco de Dados ou da LLM (GROQ). (Tarefa: `sgn-unit-tests-api-health`)
+- **Suíte de Testes Unitários de Dados/Helpers (`src/lib/data/__tests__/normas.test.ts`)**: coberta validação para os módulos estáticos `getNormas`, `getNormaById`, `searchNormas` e estatísticas do acervo. (Tarefa: `sgn-unit-tests-normas-api`)
+- **Testes aprofundados para Chunking/Processamento Incremental (`processamento-incremental.test.ts`)**: implementados 5 novos cenários focados em *edge cases*: tratamento de strings vazias, documento contendo apenas 1 chunk, comportamento e proteção contra overlaps mal formatados, chunks contendo caracteres em formato Emoji (`UTF-16`) preservando quebra correta, processamento ágil sob estresse pesado (1MB in-memory validation). (Tarefa: `sgn-unit-tests-chunking`)
+
+### Corrigido
+
+- Bug de Overlap no Chunk Engine (`src/lib/ia/chunking.ts`): foi adicionado um *clamp matemático* para que caso o cursor do leitor tentasse retroceder muito via `options.overlapSize`, ele sempre seja forçado via `Math.max(cursor + 1, ...)` a avançar, fechando vulnerabilidade grave de Loop infinito em runtime (Memory Leak).
+- Limpeza global de Linter e Build logs (`sgn-lint-and-build-clean`): Warnings relacionados a vars declaradas mas nunca lidas corrigidas, o projeto atinge build de produção com *nenhum trace amarelo/vermelho logado*.
+- Ajustes de estabilidade em E2E (`e2e/normas.spec.ts`): Os validadores visuais do Playwright para os botões "Ver Detalhes" foram refatorados migrando de `page.locator('a')` para `page.getByRole('button')` e filtrando corretamente seu parent via xpath (`ancestor::a`), compatibilizando as checagens ponta a ponta com a atual arquitetura ServerComponent do Next 16 usando classes de estilos em componentes aninhados do Radix UI (`<Button asChild><Link>...</Link></Button>`). (Tarefa: `sgn-playwright-coverage-normas`)
+
+### Removido
+
+- Pacote inseguro e nativo (`pdfjs-dist`): removido em prol das APIS standalone. (Tarefa: `sgn-remove-pdfjs-dist`)
+- Nginx e Redis (`docker-compose.yml`): removidos imagens pré-geradas e port mapping obsoletos do Redis e Nginx no workflow Local Dev. Passamos de arquitetura complexa para `Standalone + rootless NextServer + SQLite nativo`. (Tarefa: `sgn-fix-docker-compose`)
+
 ## [2026-02-20] - Redesign premium da tela de abertura (web/mobile)
 
 ### Alterado

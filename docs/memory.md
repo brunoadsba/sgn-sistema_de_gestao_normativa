@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-20 (sessão 29: redesign premium da abertura web/mobile)
+> Atualizado em: 2026-02-21 (sessão 30: Implementação das Tarefas do Harbor)
 
 ---
 
@@ -217,6 +217,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 27 | 2026-02-20 | Modernização da abertura mobile/web: criação de ícones PWA de marca (`/icon`, `/apple-icon`), tema nativo escuro no manifest (`background_color/theme_color`), nova abertura visual com canvas (`AppOpeningScreen`), gate de splash somente no primeiro acesso da sessão (`SessionSplashGate`, 1100ms), loading global substituído por skeleton leve para navegação interna, ajustes responsivos adicionais em `/normas/[id]` (overflow/chips/CTA/botões) e teste unitário dedicado (`session-splash-gate.test.tsx`). |
 | 28 | 2026-02-20 | Evolução do gate de abertura: removido auto-fechamento por tempo; abertura passa a bloquear o app até clique explícito em CTA profissional (`Acessar Plataforma`), com persistência one-time por dispositivo em `localStorage` (`sgn.opening.seen.device`). `SessionSplashGate` passou a envolver header e conteúdo para experiência de entrada única e consistente em web/mobile. |
 | 29 | 2026-02-20 | Redesign visual da abertura para padrão premium: `AppOpeningScreen` migrada para layout institucional escuro com iluminação de fundo, textura geométrica, card central de marca SGN, CTA principal com seta e rodapé institucional. `SessionSplashGate` recebeu textos finais da identidade e manteve comportamento one-time por dispositivo. |
+| 30 | 2026-02-21 | Implementação das 7 Tarefas do Harbor (Fases 1, 2 e 3). Remoção completa do package `pdfjs-dist` instável substituído nativamente. Enxugamento do Docker Compose para local rootless (sem Redis/Nginx). Criação de ampla malha de Testes Unitários: Health check (`api-health.test.ts`), Normas Helpers (`normas.test.ts`) e features de IA Chunking lidando com edge cases (`processamento-incremental.test.ts`). Fix global de warning no linter e expansão dos validadores E2E da suite de Normas do Playwright para corresponder ao novo DOM do Radix. |
 
 ---
 
@@ -224,18 +225,15 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
 
-### Fase 5 - Qualidade
+### Fase 5 - Produção
 
-- **Implementar testes unitários para APIs críticas**
-  - Prioridade: `/api/ia/analisar-conformidade`, `/api/normas`, `/api/health`
-  - Usar Jest (já configurado no projeto)
-  - Testar com banco SQLite in-memory para isolamento
-
-### Fase 6 - Produção
+- **Implementar Worker Assíncrono para Filas de Long Running Jobs**
+  - Orquestrar filas pesadas sem travar a requisição cliente usando SQLite persistente ou Background Workers do App Router.
 
 - **Evoluir observabilidade além de erro**
   - Definir alertas operacionais (falha de API, timeout IA, fila de processamento)
   - Adicionar métricas de negócio e dashboards
+
 
 - **Otimizar Docker para produção**
   - Testar `docker-compose.prod.yml` end-to-end
