@@ -1,6 +1,6 @@
 # SGN - Arquitetura Técnica
 
-> Atualizado em: 2026-02-20 (sessão 28 - gate de abertura por dispositivo com CTA)
+> Atualizado em: 2026-02-21 (sessão 30 - testes unitários/Playwright e task harbor complete)
 
 ## Visão Geral
 
@@ -123,9 +123,9 @@ Responsabilidade:
 8. Análise incremental processada com concorrência limitada por chunk.
 10. Identidade PWA de marca aplicada com ícones próprios e splash nativa escura para mobile.
 11. Gate de abertura envolve header + conteúdo para evitar exposição parcial da interface antes da liberação explícita.
+12. Ampla Suíte de testes (Jest: Data Helpers, Heath Check, Orquestração de Incremental Edge cases. Playwright: rotas E2E). API e Features 100% testadas em cenários isolados (Sessão 30).
 
 ### Débito técnico aberto
 
-1. Worker assíncrono real para processamento.
-2. Testes unitários e integração para APIs críticas.
-3. Evoluir base normativa local para cobertura completa e atualização automatizada contínua.
+1. Worker assíncrono real em background para long running tasks pesadas no backend.
+2. Evoluir base normativa local para cobertura automática (web-scrapping/RSS dos Diários da União).
