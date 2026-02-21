@@ -105,7 +105,7 @@
 1. Base local completa com `NR-1` a `NR-38` em `data/normas`.
 2. `KB_STRICT_MODE=true` ativo no ambiente de operacao.
 3. Validacoes tecnicas verdes (`lint`, `build`, `test:e2e`).
-4. Analise real concluida com rastreabilidade de evidencias normativas.
+4. Analise real concluida com Recall >= 0.90 no Harbor Scorecard e rastreabilidade de evidencias normativas.
 5. Plano de acao definido para gaps criticos/altos.
 
 ### NO-GO

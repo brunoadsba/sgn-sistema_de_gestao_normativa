@@ -2,6 +2,24 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-21] - Otimização de RAG e IA Híbrida (V1.7.0)
+
+### Adicionado
+- **Arquitetura de IA Híbrida**: suporte nativo a provedores **Groq (Cloud)** e **Ollama (Local)** via variável `AI_PROVIDER`.
+- **Suporte NR-29 e NR-30 (Portos/Aquaviário)**: inclusão de base normativa de 100k+ bytes e validação no Harbor Scorecard.
+- **Harbor Scorecard Automatizado**: script de orquestração (`scripts/harbor-scorecard.py`) para medição de Recall e Precision com Golden Dataset.
+- **Cache de Evidências**: sistema de validação que garante que o "lastro" citado pela IA realmente existe no Knowledge Base local.
+
+### Alterado
+- **Motor de Busca (RAG)**: algoritmo de ranking híbrido que favorece hits absolutos em documentos curtos, resolvendo recall zero em CIPA e EPI.
+- **Normalização Normativa**: o sistema agora mapeia automaticamente números simples (ex: "5") para códigos padronizados ("nr-5").
+- **Modelo Groq**: migração para `llama-3.3-70b-versatile` para maior estabilidade e precisão.
+- **Parser de Resposta**: maior resiliência na extração de JSON para lidar com respostas de modelos locais (Llama 3.2).
+
+### Corrigido
+- **Baixo Recall em CIPA e EPI**: atingido 100% de Recall nos casos de teste unitários através de melhorias no chunking e ranking.
+- **Hallucination Guard**: proibição de gaps sem evidência normativa válida presente no diretório `data/normas`.
+
 ## [2026-02-21] - Finalização das Tarefas de Qualidade e Infra do Harbor (Sessão 30)
 
 ### Adicionado

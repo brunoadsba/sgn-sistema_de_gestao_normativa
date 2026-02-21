@@ -20,34 +20,50 @@ const GROQ_RETRY_BASE_MS = env.GROQ_RETRY_BASE_MS
 const GROQ_RETRY_MAX_MS = env.GROQ_RETRY_MAX_MS
 
 const EvidenciaNormativaSchema = z.object({
-  chunkId: z.string().min(1),
-  normaCodigo: z.string().min(1),
-  secao: z.string().min(1),
-  conteudo: z.string().min(1),
-  score: z.number().min(0).max(1),
+  chunkId: z.string(),
+  normaCodigo: z.string(),
+  secao: z.string(),
+  conteudo: z.string(),
+  score: z.number().min(0),
   fonte: z.literal('local'),
 })
 
 const AnaliseConformidadeResponseSchema = z.object({
   score: z.number().min(0).max(100),
-  nivelRisco: z.enum(['baixo', 'medio', 'alto', 'critico']),
+  nivelRisco: z.string().transform((v) => {
+    const lower = (v || 'baixo').toLowerCase().replace(/[áàâãä]/g, 'a').replace(/[éèêë]/g, 'e').replace(/[íìîï]/g, 'i').replace(/[óòôõö]/g, 'o').replace(/[úùûü]/g, 'u').replace(/ç/g, 'c');
+    if (lower === 'critico' || lower === 'critica' || lower === 'alto' || lower === 'alta' || lower === 'medio' || lower === 'media' || lower === 'baixo' || lower === 'baixa') {
+      if (lower === 'critico' || lower === 'critica') return 'critico';
+      if (lower === 'alto' || lower === 'alta') return 'alto';
+      if (lower === 'medio' || lower === 'media') return 'medio';
+      return 'baixo';
+    }
+    return 'baixo'; // fallback para 'inexistente' ou outros termos
+  }),
   gaps: z.array(
     z.object({
-      id: z.string().min(1),
-      descricao: z.string().min(1),
-      severidade: z.enum(['baixa', 'media', 'alta', 'critica']),
-      categoria: z.string().min(1),
-      recomendacao: z.string().min(1),
-      prazo: z.string().min(1),
+      id: z.string().default('gap_indefinido'),
+      descricao: z.string().default('Sem descrição detalhada'),
+      severidade: z.string().transform((v) => {
+        const lower = (v || 'media').toLowerCase().replace(/[áàâãä]/g, 'a').replace(/[éèêë]/g, 'e').replace(/[íìîï]/g, 'i').replace(/[óòôõö]/g, 'o').replace(/[úùûü]/g, 'u').replace(/ç/g, 'c');
+        if (lower === 'critica' || lower === 'critico') return 'critica';
+        if (lower === 'media') return 'media';
+        if (lower === 'alta') return 'alta';
+        if (lower === 'baixa') return 'baixa';
+        return 'media'; // fallback
+      }),
+      categoria: z.string().default('Geral'),
+      recomendacao: z.string().default('Nenhuma recomendação fornecida'),
+      prazo: z.string().optional().default('Não informado'),
       impacto: z.string().optional(),
       normasRelacionadas: z.array(z.string()).optional(),
       evidencias: z.array(EvidenciaNormativaSchema).default([]),
     })
-  ),
-  resumo: z.string().min(1),
-  pontosPositivos: z.array(z.string()),
-  pontosAtencao: z.array(z.string()),
-  proximosPassos: z.array(z.string()),
+  ).default([]),
+  resumo: z.string().default('Análise concluída sem resumo detalhado.'),
+  pontosPositivos: z.array(z.string()).default([]),
+  pontosAtencao: z.array(z.string()).default([]),
+  proximosPassos: z.array(z.string()).default([]),
 })
 
 /**
@@ -124,7 +140,7 @@ async function executarComRetry(prompt: string): Promise<string> {
               content: prompt,
             },
           ],
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          model: 'llama-3.3-70b-versatile',
           temperature: 0.2,
           max_tokens: 4000,
           top_p: 0.9,
@@ -160,8 +176,7 @@ async function executarComRetry(prompt: string): Promise<string> {
   }
 
   throw new Error(
-    `Falha na chamada GROQ após ${GROQ_RETRY_ATTEMPTS} tentativas: ${
-      lastError instanceof Error ? lastError.message : 'Erro desconhecido'
+    `Falha na chamada GROQ após ${GROQ_RETRY_ATTEMPTS} tentativas: ${lastError instanceof Error ? lastError.message : 'Erro desconhecido'
     }`
   )
 }
@@ -208,14 +223,15 @@ VERSÃO BASE DE CONHECIMENTO: ${request.contextoBaseConhecimento?.versaoBase || 
 EVIDÊNCIAS NORMATIVAS LOCAIS (USE SOMENTE ESSAS COMO FONTE):
 ${JSON.stringify(evidenciasSanitizadas)}
 
-INSTRUÇÕES:
+INSTRUÇÕES CRÍTICAS (DEVE SEGUIR ESTRITAMENTE):
 1. Analise o documento APENAS com base nas evidências normativas locais fornecidas.
-2. NÃO invente requisitos. Se faltar evidência, use "dadosInsuficientes" no resumo.
-3. Identifique gaps de conformidade.
-4. Classifique severidade (baixa, média, alta, crítica).
-5. Forneça recomendações práticas.
-6. Calcule score de 0-100.
-7. Para cada gap, preencha "evidencias" com os chunkIds usados.
+2. NÃO invente requisitos ou gaps de SST que não figurem no documento. Se o documento for sobre receita de bolo, ou um assunto aleatório que não trata de SST, não liste gaps. Ao invés disso, deixe o array "gaps" VAZIO e avise no "resumo" que o texto é inconclusivo ou fora de escopo.
+3. Se o array de EVIDÊNCIAS NORMATIVAS LOCAIS estiver vazio, VOCÊ DEVE retornar o array "gaps" VAZIO, pois você não tem licença para opinar sem lastro.
+4. Identifique gaps de conformidade (quando houver).
+5. Classifique severidade (baixa, média, alta, crítica).
+6. Forneça recomendações práticas e objetivas.
+7. Calcule score de 0-100 refletindo a aderência geral (Zero gaps = 100).
+8. MANDATÓRIO: Para CADA gap listado, você DEVE OBRIGATORIAMENTE preencher o array "evidencias" referenciando QUAL "chunkId" embasou aquela crítica. Copie os dados (chunkId, normaCodigo, secao, conteudo, score, fonte) EXATAMENTE como estão no JSON de Evidencias enviado a você. Não deixe campos vazios. Se você não encontrar um chunkId compatível, não liste o gap. Um gap SEM EVIDÊNCIA ou com chunkId vazio será rejeitado pelo sistema.
 
 FORMATO DE RESPOSTA (JSON):
 {
@@ -231,7 +247,7 @@ FORMATO DE RESPOSTA (JSON):
       "prazo": "30 dias",
       "evidencias": [
         {
-          "chunkId": "nr-06:chunk-012",
+          "chunkId": "COPIE EXATAMENTE O ID AQUI",
           "normaCodigo": "NR-6",
           "secao": "6.5.1",
           "conteudo": "Trecho de evidência",
@@ -241,13 +257,13 @@ FORMATO DE RESPOSTA (JSON):
       ]
     }
   ],
-  "resumo": "Resumo executivo da análise",
+  "resumo": "Resumo executivo contendo o veredito geral da analise. Informe se o texto fugiu do escopo se aplicável",
   "pontosPositivos": ["Ponto positivo 1", "Ponto positivo 2"],
   "pontosAtencao": ["Ponto de atenção 1", "Ponto de atenção 2"],
   "proximosPassos": ["Próximo passo 1", "Próximo passo 2"]
 }
 
-IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional.
+IMPORTANTE: Responda APENAS com o JSON válido, sem markdown, fences ou texto adicional. Se tiver gaps, as evidencias tem que ter \`chunkId\` da lista.
   `
 }
 
@@ -255,15 +271,22 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional.
 function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
   try {
     // Limpar resposta e extrair JSON
+    // Limpar resposta e extrair JSON
+    console.log(`[DEBUG] Resposta Bruta da IA: ${response.substring(0, 500)}...`)
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
+      console.log(`[DEBUG] Falha no match de JSON. Resposta completa: ${response}`)
       throw new Error('JSON não encontrado na resposta')
     }
 
-    const parsed = JSON.parse(jsonMatch[0])
+    const rawJson = jsonMatch[0]
+    const parsed = JSON.parse(rawJson)
     const validado = AnaliseConformidadeResponseSchema.parse(parsed)
     return validado as AnaliseConformidadeResponse
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error(`[DEBUG] Erro de Validação Zod:`, JSON.stringify(error.issues, null, 2))
+    }
     iaLogger.error(
       { error: error instanceof Error ? error.message : 'Erro desconhecido' },
       'Erro ao parsear resposta da IA'

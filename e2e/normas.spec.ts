@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Página de Normas Regulamentadoras', () => {
   test.beforeEach(async ({ page }) => {
+    // Bypass splash screen
+    await page.addInitScript(() => {
+      window.localStorage.setItem('sgn.opening.seen.device', '1')
+    })
     await page.goto('/normas')
   })
 
@@ -54,5 +58,47 @@ test.describe('Página de Normas Regulamentadoras', () => {
     }
 
     await expect(page).toHaveURL(new RegExp(`${hrefDetalhe}$`))
+  })
+
+  test('exibe página de detalhe de NR ativa (NR-1) com título e badge "Em vigor"', async ({ page }) => {
+    await page.goto('/normas/1')
+
+    await expect(
+      page.getByRole('heading', { name: 'NR-1' })
+    ).toBeVisible({ timeout: 10000 })
+
+    await expect(page.getByText('Em vigor')).toBeVisible()
+    await expect(page.getByText('Disposições Gerais e Gerenciamento de Riscos Ocupacionais')).toBeVisible()
+  })
+
+  test('exibe link oficial do MTE na página de detalhe', async ({ page }) => {
+    await page.goto('/normas/1')
+
+    const linkOficial = page.getByRole('link', { name: /Acessar texto oficial/i })
+    await expect(linkOficial).toBeVisible({ timeout: 10000 })
+    await expect(linkOficial).toHaveAttribute('target', '_blank')
+    await expect(linkOficial).toHaveAttribute('href', /\.pdf$/)
+  })
+
+  test('exibe seção de anexos na NR-15 com pelo menos 10 itens', async ({ page }) => {
+    await page.goto('/normas/15')
+
+    await expect(page.getByText('Anexos Disponíveis')).toBeVisible({ timeout: 10000 })
+
+    const anexos = page.locator('a[target="_blank"]').filter({ hasText: /Anexo/ })
+    await expect(anexos.first()).toBeVisible()
+    expect(await anexos.count()).toBeGreaterThanOrEqual(10)
+  })
+
+  test('exibe mensagem adequada ao buscar termo sem resultados', async ({ page }) => {
+    const campoBusca = page.getByPlaceholder('Digite o código ou palavra-chave (ex: NR-01, EPI, CIPA)...')
+    await campoBusca.fill('xyztermoquenoexiste999')
+
+    // Aguarda filtro aplicar e verificar que nenhuma norma aparece
+    await page.waitForTimeout(500)
+
+    // Não deve haver nenhum card de norma visível com "Ver Detalhes"
+    const botoes = page.getByRole('button', { name: 'Ver Detalhes' })
+    await expect(botoes).toHaveCount(0)
   })
 })

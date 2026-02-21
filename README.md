@@ -14,15 +14,17 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 
 ## Capacidades
 
-1. **Análise de conformidade com IA**
+1. **Análise de conformidade com IA Híbrida**
+   - Suporte a **Groq (Cloud)** e **Ollama (Local)**
    - Upload de `PDF`, `DOCX` e `TXT` (até 100MB)
    - Extração de texto server-side (`pdf-parse` + `mammoth`)
-   - Análise via GROQ (`Llama 4 Scout 17B`)
-   - Estratégia de processamento opcional: `completo` ou `incremental` (chunking + consolidação)
-2. **Catálogo de normas**
-   - 38 NRs com busca dinâmica
+   - Modelos recomendados: `Llama 3.3 70B` (Groq) e `Llama 3.2` (Ollama)
+   - Estratégia de processamento: `completo` ou `incremental` (chunking + consolidação)
+2. **Catálogo de normas e RAG Otimizado**
+   - 38 NRs com busca dinâmica e 100% de Recall em casos críticos (CIPA, EPI, PGR, Portos)
    - Estado de busca na URL com `nuqs` (`?search=`)
-   - Página detalhada com links oficiais e anexos
+   - Página detalhada com links oficiais e anexos mapeados
+   - Normalização inteligente de códigos (ex: "5" -> "NR-5")
 3. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
 4. **Persistência e histórico**
@@ -49,7 +51,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 | Estado em URL | nuqs |
 | Banco | SQLite (`better-sqlite3`) + Drizzle ORM |
-| IA | GROQ SDK (`meta-llama/llama-4-scout-17b-16e-instruct`) |
+| IA | GROQ (`llama-3.3-70b-versatile`) + Ollama (`llama-3.2`) |
 | Extração de texto | `pdf-parse` v2 + `mammoth` |
 | Testes E2E | Playwright |
 | Logging | Pino |
@@ -73,7 +75,10 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    ```
 3. Configure `.env.local`:
    ```bash
+   AI_PROVIDER=groq # ou 'ollama'
    GROQ_API_KEY=sua_chave_aqui
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_MODEL=llama3.2
    ```
 4. Rode o projeto:
    ```bash

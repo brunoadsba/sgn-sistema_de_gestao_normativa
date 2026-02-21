@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-21 (sessão 30: Implementação das Tarefas do Harbor)
+> Atualizado em: 2026-02-21 (V1.7.0: Otimização de RAG e IA Híbrida)
 
 ---
 
@@ -24,7 +24,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | SQLite (better-sqlite3) + Drizzle ORM | 0.45.1 |
-| IA | GROQ SDK (Llama 4 Scout 17B) | 0.32.0 |
+| IA | GROQ (Llama 3.3 70B) + Ollama (Llama 3.2) | 1.7.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -162,11 +162,13 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 15. **Arquitetura Server/Client Components** com data fetching server-side e interatividade isolada em Client Components
 16. **Observabilidade e resiliência**: Sentry integrado + retry/timeout + idempotência
 17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
-18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados de processamento
-19. **Deploy Vercel estabilizado**: correções de `vercel.json`, `GROQ_API_KEY` em todos ambientes, upgrade para Next.js 16.1.6 e correção de CSP para destravar hidratação da home
-20. **Performance web/mobile otimizada**: Canvas com perfil de baixo consumo no mobile, histórico sob demanda, remoção de N+1 em histórico, paginação/ordenação em SQL, paralelismo controlado no incremental e cache de leitura da KB local
-21. **Abertura e branding modernizados**: ícones PWA de marca SGN, splash nativa escura no mobile, abertura web full-screen com CTA e exibição única por dispositivo, loading interno substituído por skeleton leve
-
+18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados
+19. **Deploy Vercel estabilizado**: correções de `vercel.json` e CSP
+20. **Performance web/mobile otimizada**: Canvas low-power, lazy-load e cache de KB
+21. **Branding modernizado**: ícones PWA, splash nativa e abertura premium
+22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local)
+23. **RAG de Alta Precisão**: ranking híbrido e normalização inteligente com 100% de Recall em casos críticos (CIPA/EPI/Portos)
+24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
 ---
 
 ## O que NÃO funciona / está incompleto
@@ -217,7 +219,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 27 | 2026-02-20 | Modernização da abertura mobile/web: criação de ícones PWA de marca (`/icon`, `/apple-icon`), tema nativo escuro no manifest (`background_color/theme_color`), nova abertura visual com canvas (`AppOpeningScreen`), gate de splash somente no primeiro acesso da sessão (`SessionSplashGate`, 1100ms), loading global substituído por skeleton leve para navegação interna, ajustes responsivos adicionais em `/normas/[id]` (overflow/chips/CTA/botões) e teste unitário dedicado (`session-splash-gate.test.tsx`). |
 | 28 | 2026-02-20 | Evolução do gate de abertura: removido auto-fechamento por tempo; abertura passa a bloquear o app até clique explícito em CTA profissional (`Acessar Plataforma`), com persistência one-time por dispositivo em `localStorage` (`sgn.opening.seen.device`). `SessionSplashGate` passou a envolver header e conteúdo para experiência de entrada única e consistente em web/mobile. |
 | 29 | 2026-02-20 | Redesign visual da abertura para padrão premium: `AppOpeningScreen` migrada para layout institucional escuro com iluminação de fundo, textura geométrica, card central de marca SGN, CTA principal com seta e rodapé institucional. `SessionSplashGate` recebeu textos finais da identidade e manteve comportamento one-time por dispositivo. |
-| 30 | 2026-02-21 | Implementação das 7 Tarefas do Harbor (Fases 1, 2 e 3). Remoção completa do package `pdfjs-dist` instável substituído nativamente. Enxugamento do Docker Compose para local rootless (sem Redis/Nginx). Criação de ampla malha de Testes Unitários: Health check (`api-health.test.ts`), Normas Helpers (`normas.test.ts`) e features de IA Chunking lidando com edge cases (`processamento-incremental.test.ts`). Fix global de warning no linter e expansão dos validadores E2E da suite de Normas do Playwright para corresponder ao novo DOM do Radix. |
+| 30 | 2026-02-21 | Qualidade e Infra: Testes unitários de API/Helps, fix de Memory Leak no chunking, remoção de dependências inseguras e E2E Playwright. |
+| 31 | 2026-02-21 | V1.7.0: Otimização de RAG (Recall 1.00), IA Híbrida (Groq/Ollama), suporte NR-29/30 e Harbour Scorecard. Atualização completa da documentação técnica e operacional. |
 
 ---
 

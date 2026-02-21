@@ -1,0 +1,6 @@
+Vistoria Técnica de Engenharia - Setor de Prensas
+
+Equipamento: Prensa Hidráulica PH-500
+
+Status de Segurança:
+A prensa está operacional, mas foram detectados riscos iminentes. A zona de perigo (área de prensagem) encontra-se totalmente exposta, sem barreiras físicas ou dispositivos de intertravamento associados à abertura da grade. O botão de parada de emergência está inacessível ao operador de sua posição de trabalho habitual. Conforme a NR-12, máquinas desse tipo exigem proteção fixa ou móvel com encravamento que impeça o funcionamento com a grade aberta. A situação atual permite acesso direto às partes móveis, configurando risco de amputação.

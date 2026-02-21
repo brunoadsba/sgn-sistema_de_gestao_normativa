@@ -38,8 +38,8 @@ export async function persistirAnaliseConformidade(
   let jobId: string | undefined;
   let analiseResultadoId: string | undefined;
 
-  await db.transaction(async (tx) => {
-    const documentoInserido = await tx
+  db.transaction((tx) => {
+    const documentoInserido = tx
       .insert(schema.documentos)
       .values({
         nomeArquivo: nomeArquivoAnalise,
@@ -47,14 +47,15 @@ export async function persistirAnaliseConformidade(
         conteudoExtraido: entrada.documento,
         metadados: { origem: 'api-ia-analisar-conformidade' },
       })
-      .returning({ id: schema.documentos.id });
+      .returning({ id: schema.documentos.id })
+      .get();
 
-    documentoId = documentoInserido[0]?.id;
+    documentoId = documentoInserido?.id;
     if (!documentoId) {
       throw new Error('Falha ao criar documento para persistência da análise');
     }
 
-    const jobInserido = await tx
+    const jobInserido = tx
       .insert(schema.analiseJobs)
       .values({
         documentoId,
@@ -68,14 +69,15 @@ export async function persistirAnaliseConformidade(
         startedAt: new Date(Date.now() - resultado.tempoProcessamento).toISOString(),
         completedAt: new Date().toISOString(),
       })
-      .returning({ id: schema.analiseJobs.id });
+      .returning({ id: schema.analiseJobs.id })
+      .get();
 
-    jobId = jobInserido[0]?.id;
+    jobId = jobInserido?.id;
     if (!jobId) {
       throw new Error('Falha ao criar job para persistência da análise');
     }
 
-    const resultadoInserido = await tx
+    const resultadoInserido = tx
       .insert(schema.analiseResultados)
       .values({
         jobId,
@@ -99,15 +101,16 @@ export async function persistirAnaliseConformidade(
           evidenciasUtilizadas: resultado.gaps.flatMap((gap) => gap.evidencias ?? []),
         },
       })
-      .returning({ id: schema.analiseResultados.id });
+      .returning({ id: schema.analiseResultados.id })
+      .get();
 
-    analiseResultadoId = resultadoInserido[0]?.id;
+    analiseResultadoId = resultadoInserido?.id;
     if (!analiseResultadoId) {
       throw new Error('Falha ao criar resultado para persistência da análise');
     }
 
     if (resultado.gaps.length > 0) {
-      await tx.insert(schema.conformidadeGaps).values(
+      tx.insert(schema.conformidadeGaps).values(
         resultado.gaps.map((gap) => ({
           analiseResultadoId: analiseResultadoId as string,
           normaId: extrairNormaId(gap.normasRelacionadas),
@@ -118,7 +121,7 @@ export async function persistirAnaliseConformidade(
           prazoSugerido: gap.prazo,
           impacto: gap.impacto,
         }))
-      );
+      ).run();
     }
   });
 
@@ -165,9 +168,9 @@ export async function listarAnalisesConformidade(
   const gapsRaw =
     resultadoIds.length > 0
       ? await db
-          .select()
-          .from(schema.conformidadeGaps)
-          .where(inArray(schema.conformidadeGaps.analiseResultadoId, resultadoIds))
+        .select()
+        .from(schema.conformidadeGaps)
+        .where(inArray(schema.conformidadeGaps.analiseResultadoId, resultadoIds))
       : []
 
   const gapsPorResultado = new Map<string, typeof gapsRaw>()

@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Navegação Global', () => {
+  test.beforeEach(async ({ page }) => {
+    // Bypass splash screen
+    await page.addInitScript(() => {
+      window.localStorage.setItem('sgn.opening.seen.device', '1')
+    })
+  })
   test('logo leva à página inicial', async ({ page }) => {
     await page.goto('/normas')
     await page.getByRole('link', { name: /Gestão Normativa|SGN/i }).first().click()

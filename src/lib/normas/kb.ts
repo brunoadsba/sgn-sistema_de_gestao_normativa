@@ -26,20 +26,50 @@ const CHUNK_OVERLAP = 200
 const normaFileCache = new Map<string, { mtimeMs: number; content: string }>()
 
 function sanitizeCode(code: string): string {
-  return code.toLowerCase().replace(/[^a-z0-9-]/g, '')
+  const sanitized = code.toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (sanitized.startsWith('nr') && sanitized.length > 2) {
+    const num = parseInt(sanitized.substring(2), 10)
+    return `nr-${num}`
+  }
+  // Se for apenas número, trata como NR
+  if (/^\d+$/.test(sanitized)) {
+    return `nr-${parseInt(sanitized, 10)}`
+  }
+  return sanitized
 }
 
 function scoreChunkAgainstDocument(chunk: string, documento: string): number {
-  const doc = documento.toLowerCase()
-  const tokens = chunk
-    .toLowerCase()
+  const doc = documento.toLowerCase().replace(/[^\w\s]/g, ' ')
+  const chunkLower = chunk.toLowerCase()
+
+  const tokensChunk = chunkLower
     .split(/\W+/)
     .filter((token) => token.length > 3)
-    .slice(0, 80)
+    .slice(0, 200)
 
-  if (tokens.length === 0) return 0
-  const hits = tokens.filter((token) => doc.includes(token)).length
-  return Number((hits / tokens.length).toFixed(4))
+  if (tokensChunk.length === 0) return 0
+
+  // Métrica 1: Proporção de tokens do chunk no documento (Recall)
+  const hitsProporcional = tokensChunk.filter((token) => doc.includes(token)).length
+  const scoreProporcional = hitsProporcional / tokensChunk.length
+
+  // Métrica 2: Hits absolutos de palavras do documento no chunk (Precision/Boost)
+  // Extraímos tokens únicos do documento que são relevantes (ignorando stopwords comuns)
+  const stopwords = new Set(['este', 'esta', 'esse', 'essa', 'isso', 'aquilo', 'como', 'para', 'mais', 'pode', 'deve', 'sera', 'pelo', 'pela', 'sobre', 'entre', 'quando', 'onde', 'quem', 'qual', 'quais'])
+  const tokensDoc = new Set(
+    doc.split(/\W+/)
+      .filter(t => t.length > 3 && !stopwords.has(t))
+  )
+
+  let hitsAbsolutos = 0
+  for (const t of tokensDoc) {
+    if (chunkLower.includes(t)) hitsAbsolutos++
+  }
+
+  // Combinamos: a proporção ajuda em docs longos, os hits absolutos ajudam em docs curtos (sintéticos)
+  // Reduzimos o peso do bônus para 0.05 para não dominar a proporção
+  const scoreFinal = Math.min(1, Number((scoreProporcional + (hitsAbsolutos * 0.05)).toFixed(4)))
+  return scoreFinal
 }
 
 function chunkText(normaCodigo: string, content: string): ChunkNormativo[] {
@@ -120,6 +150,7 @@ export async function recuperarEvidenciasNormativas(
 
   for (const codigo of codigos) {
     const localText = readLocalNormaText(codigo)
+    console.log(`[DEBUG] KB: Lendo norma ${codigo}, texto local encontrado: ${!!localText}`)
     const sourceText = localText ?? getFallbackFromCatalog(codigo)
 
     if (!sourceText) {
@@ -129,6 +160,7 @@ export async function recuperarEvidenciasNormativas(
 
     const chunks = chunkText(codigo, sourceText)
     allChunks.push(...chunks)
+    console.log(`[DEBUG] KB: Adicionados ${chunks.length} chunks para ${codigo}. Total agora: ${allChunks.length}`)
   }
 
   if (env.KB_STRICT_MODE === 'true' && missingNormas.length > 0) {
@@ -138,13 +170,18 @@ export async function recuperarEvidenciasNormativas(
   }
 
   const ranked = allChunks
-    .map((chunk) => ({
-      ...chunk,
-      score: scoreChunkAgainstDocument(chunk.conteudo, documento),
-    }))
-    .filter((chunk) => chunk.score > 0)
+    .map((chunk) => {
+      const doc = documento ? documento.replace(/\s+/g, ' ').trim() : ''
+      const score = doc.length > 0 ? scoreChunkAgainstDocument(chunk.conteudo, doc) : 0
+      return {
+        ...chunk,
+        score
+      }
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
+
+  console.log(`[DEBUG] KB: Ranqueamento concluído. Chunks final: ${ranked.length}`)
 
   const evidencias: EvidenciaNormativa[] = ranked.map((chunk) => ({
     chunkId: chunk.chunkId,

@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Página NR-6 — Análise de EPIs', () => {
   test.beforeEach(async ({ page }) => {
+    // Bypass splash screen
+    await page.addInitScript(() => {
+      window.localStorage.setItem('sgn.opening.seen.device', '1')
+    })
     await page.goto('/nr6')
   })
 
