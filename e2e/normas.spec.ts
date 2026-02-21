@@ -33,13 +33,18 @@ test.describe('Página de Normas Regulamentadoras', () => {
   })
 
   test('navega para detalhes de uma norma ao clicar em Ver Detalhes', async ({ page }) => {
-    const linkDetalhe = page.locator('a[href^="/normas/"]').filter({ hasText: 'Ver Detalhes' }).first()
-    await linkDetalhe.waitFor({ timeout: 10000 })
-    await linkDetalhe.scrollIntoViewIfNeeded()
+    // Busca e clica diretamente no botão e obtém para qual norma estamos indo
+    const btnDetalhe = page.getByRole('button', { name: 'Ver Detalhes' }).first()
+    await btnDetalhe.waitFor({ timeout: 10000 })
+    await btnDetalhe.scrollIntoViewIfNeeded()
+
+    // O link fica no container que encapsula o botão. Podemos avaliar onde o href está injetado na árvore do DOM:
+    const linkDetalhe = btnDetalhe.locator('xpath=ancestor::a').first()
     const hrefDetalhe = await linkDetalhe.getAttribute('href')
     expect(hrefDetalhe).toMatch(/^\/normas\/\d+$/)
 
-    await linkDetalhe.click()
+    // Precisamos clicar em algo visível pro Playwright emular nativamente, então clicamos no próprio botão
+    await btnDetalhe.click()
 
     try {
       await page.waitForURL(new RegExp(`${hrefDetalhe}$`), { timeout: 5000 })
