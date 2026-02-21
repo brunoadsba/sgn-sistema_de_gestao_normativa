@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className="dark" data-scroll-behavior="smooth">
+    <html lang="pt-BR" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen font-sans antialiased relative`}>
         <NuqsAdapter>
           <CanvasBackgroundShell />
