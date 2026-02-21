@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { isDatabaseReady } from '@/lib/db';
 import { env } from '@/lib/env';
 
@@ -48,7 +49,7 @@ export async function GET() {
       uptime,
     };
 
-    return Response.json(health, {
+    return NextResponse.json(health, {
       status: status === 'error' ? 503 : 200,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -59,7 +60,7 @@ export async function GET() {
     const duration = Date.now() - checkStartTime;
     const uptime = Math.floor((Date.now() - startTime) / 1000);
 
-    return Response.json(
+    return NextResponse.json(
       {
         status: 'error' as const,
         timestamp: new Date().toISOString(),
