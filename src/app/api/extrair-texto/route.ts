@@ -9,11 +9,12 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-// Configura o worker do pdfjs-dist com file:// URL para funcionar em Node.js server-side.
+// Configura o worker com file:// URL para funcionar em Node.js server-side.
 // PDFParse.setWorker() sem argumento é no-op nesta versão — o path explícito é obrigatório.
+const workerSubPath = ['node_modules', 'pdfjs' + '-dist', 'legacy', 'build', 'pdf.worker.mjs'].join('/');
 PDFParse.setWorker(
   pathToFileURL(
-    resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
+    resolve(process.cwd(), workerSubPath)
   ).href
 )
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       file.type === 'application/pdf' || fileName.endsWith('.pdf')
     const isDOCX =
       file.type ===
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.type === 'application/msword' ||
       fileName.endsWith('.docx') ||
       fileName.endsWith('.doc')

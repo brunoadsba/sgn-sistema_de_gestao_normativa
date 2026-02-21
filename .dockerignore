@@ -128,3 +128,4 @@ vitest.config.*
 # Monitoring
 sentry.properties
 .sentryclirc
+jobs
