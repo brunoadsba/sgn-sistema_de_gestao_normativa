@@ -125,4 +125,50 @@ describe('processamento incremental', () => {
     expect(consolidado.metadadosProcessamento?.totalChunksProcessados).toBe(2);
     expect(consolidado.metadadosProcessamento?.truncamentoEvitado).toBe(true);
   });
+
+  it('deve retornar array vazio ao enviar texto vazio', () => {
+    const chunks = dividirDocumentoEmChunks('');
+    expect(chunks).toEqual([]);
+  });
+
+  it('deve retornar array com 1 chunk se documento for menor que o chunkSize', () => {
+    const documento = 'Documento super pequeno de uma linha.';
+    const chunks = dividirDocumentoEmChunks(documento, { chunkSize: 20000 });
+    expect(chunks.length).toBe(1);
+    expect(chunks[0].totalChunks).toBe(1);
+    expect(chunks[0].conteudo).toBe(documento);
+  });
+
+  it('deve lidar sem erro com overlap maior que tamanho de chunk', () => {
+    const documento = criarTextoGrande(10);
+
+    // Testamos com overlap maior que o chunkSize para verificar se o cursor não trava
+    const chunks = dividirDocumentoEmChunks(documento, {
+      chunkSize: 100,
+      overlapSize: 200,
+      minChunkSize: 50,
+    });
+
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0].conteudo.length).toBeGreaterThan(0);
+  });
+
+  it('deve processar e preservar caracteres unicode/emojis sem quebra', () => {
+    const unicodeText = '👩‍🚀 Trabalho em espaço confinado é perigoso! ☢️ Água suja 🌊 com tensão de 220V ⚡';
+    const chunks = dividirDocumentoEmChunks(unicodeText, { chunkSize: 300 });
+    expect(chunks[0].conteudo).toContain('👩‍🚀');
+    expect(chunks[0].conteudo).toContain('☢️');
+    expect(chunks[0].conteudo).toContain('⚡');
+  });
+
+  it('deve processar grandes quantidades de texto (~1MB) rapidamente sem timeout', () => {
+    // 1MB string
+    const string1MB = 'a'.repeat(1024 * 1024);
+    const tsInicio = Date.now();
+    const chunks = dividirDocumentoEmChunks(string1MB, { chunkSize: 100000, minChunkSize: 50000, overlapSize: 10000 });
+    const elapsed = Date.now() - tsInicio;
+
+    expect(chunks.length).toBeGreaterThan(5);
+    expect(elapsed).toBeLessThan(1500); // Demanda velocidade razoável (< 1.5s pra 1MB puro em chunks)
+  });
 });

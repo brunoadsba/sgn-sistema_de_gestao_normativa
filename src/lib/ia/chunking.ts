@@ -96,7 +96,8 @@ export function dividirDocumentoEmChunks(
     }
 
     if (fim >= texto.length) break
-    cursor = Math.max(0, fim - options.overlapSize)
+    // Protege contra loops infinitos: garante que o cursor sempre avance pelo menos 1 posição
+    cursor = Math.max(cursor + 1, fim - options.overlapSize)
   }
 
   const totalChunks = chunksBrutos.length
