@@ -3,7 +3,7 @@
  */
 import { GET } from '@/app/api/health/route';
 import { isDatabaseReady } from '@/lib/db';
-import { env } from '@/lib/env';
+
 
 // Mock dependencies
 jest.mock('@/lib/db', () => ({
