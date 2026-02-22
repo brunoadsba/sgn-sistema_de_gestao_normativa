@@ -92,4 +92,4 @@ obsoleto/
 # Harbor (docs privados / benchmarks locais)
 # ============================================
 docs/harbor/
-jobs/
+/jobs/
