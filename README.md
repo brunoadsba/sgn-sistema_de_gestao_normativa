@@ -28,8 +28,8 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 3. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
 4. **Persistência e histórico**
-   - SQLite + Drizzle (`documentos`, `analise_jobs`, `analise_resultados`, `conformidade_gaps`)
-   - Histórico com filtros, ordenação, busca, paginação e exportação CSV (horário de Brasília)
+   - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
+   - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação
 5. **Confiabilidade e observabilidade**
    - Retry com timeout para chamadas críticas
    - Idempotência em análise de IA
@@ -50,7 +50,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 | Linguagem | TypeScript (strict) |
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 | Estado em URL | nuqs |
-| Banco | SQLite (`better-sqlite3`) + Drizzle ORM |
+| Banco | **Turso DB (libsql)** + Drizzle ORM |
 | IA | GROQ (`llama-3.3-70b-versatile`) + Ollama (`llama-3.2`) |
 | Extração de texto | `pdf-parse` v2 + `mammoth` |
 | Testes E2E | Playwright |

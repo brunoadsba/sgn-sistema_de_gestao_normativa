@@ -23,7 +23,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
-| Banco de dados | Turso DB (@libsql/client) + SQLite + Drizzle | v1.8.0 |
+| Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
 | IA | GROQ (Llama 3.3 70B) + Ollama (Llama 3.2) | 1.8.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
@@ -169,9 +169,10 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local)
 23. **RAG de Alta Precisão**: ranking híbrido e normalização inteligente com 100% de Recall em casos críticos (CIPA/EPI/Portos)
 24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
-25. **Infraestrutura Turso DB**: Migração para `@libsql/client` permitindo persistência real no Vercel.
-26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real.
-27. **Exportação PDF**: Geração de laudos técnicos otimizada para impressão corporativa.
+25. **Infraestrutura Turso DB**: Migração para `@libsql/client` (LibSQL) garantindo persistência real no Vercel (Cloud SQLite).
+26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real das análises assíncronas.
+27. **Exportação PDF e Rastreabilidade**: Laudos técnicos otimizados para impressão corporativa com ID de Job e Nome de Arquivo.
+28. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
 ---
 
 ## O que NÃO funciona / está incompleto
@@ -225,6 +226,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 30 | 2026-02-21 | Qualidade e Infra: Testes unitários de API/Helps, fix de Memory Leak no chunking, remoção de dependências inseguras e E2E Playwright. |
 | 31 | 2026-02-21 | V1.7.0: Otimização de RAG (Recall 1.00), IA Híbrida (Groq/Ollama), suporte NR-29/30 e Harbour Scorecard. |
 | 32 | 2026-02-21 | V1.8.0: Evolução de Infraestrutura (Turso DB), UX (Progress Polling) e Produto (PDF Export). |
+| 33 | 2026-02-21 | Estabilização de Deploy: Ajuste de ignore rules, rotas dinâmicas async (Next 15) e conexão Lazy DB via Proxy. |
 
 ---
 

@@ -2,6 +2,25 @@
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
+## [2026-02-21] - Persistência em Nuvem e UX de Tempo Real (V1.8.0)
+
+### Adicionado
+- **Infraestrutura Turso DB**: Migração do SQLite local para Turso (LibSQL), permitindo persistência real de dados no ambiente Serverless da Vercel.
+- **Sistema de Job Tracking**: Implementação de polling assíncrono para acompanhamento do progresso da IA.
+- **Feedback Visual de Progresso**: Novo componente de Stepper na UI que mostra as etapas de extração, análise e consolidação em tempo real.
+- **Laudo Técnico com Rastreabilidade**: O PDF/Impressão agora inclui ID do Job, Nome do Arquivo e Metadados de processamento para auditoria profissional.
+- **Fluxo Iniciado por Norma**: Botão "Analisar com esta NR" na página de detalhes da norma, permitindo iniciar um diagnóstico com pré-seleção automática.
+- **Nomenclatura Corrigida**: Diferenciação entre "Ficha de Referência Normativa" (estática) e "Laudo de Conformidade" (analítico).
+
+### Alterado
+- **Conexão Lazy com o Banco**: Implementação de Proxy no cliente Drizzle para evitar tentativas de conexão durante o build do Next.js.
+- **Branding de Impressão**: Layout de PDF otimizado para laudos corporativos, incluindo rótulos de nível de conformidade (Alta, Parcial, Baixa).
+
+### Corrigido
+- **Build Errors no Vercel**: Correção de async params em rotas dinâmicas e tipagem estrita para Next.js 15+.
+- **Ghosting no Git**: Ajuste nas regras do `.gitignore` e `.vercelignore` que bloqueavam indevidamente pastas de código-fonte (`src/lib/data` e `src/app/api/ia/jobs`).
+- **Hydration Mismatch**: Supressão de alertas de lint em transições de estado de montagem no Client.
+
 ## [2026-02-21] - Otimização de RAG e IA Híbrida (V1.7.0)
 
 ### Adicionado

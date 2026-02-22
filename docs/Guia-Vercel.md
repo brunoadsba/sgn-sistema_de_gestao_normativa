@@ -19,15 +19,13 @@ Padronizar o deploy do SGN com configuração mínima segura, previsível e rast
 2. Chave de API GROQ válida.
 3. Estratégia de persistência definida.
 
-## Ponto de Atenção Crítico (SQLite)
+## Ponto de Atenção Crítico (Persistência)
 
-O SGN usa SQLite local (`./data/sgn.db`). Em ambiente serverless da Vercel, o filesystem é efêmero.
+O SGN suporta **Turso DB (LibSQL)** para persistência resiliente em nuvem. 
 
-Para uso real em produção, escolha uma destas opções:
-
-1. Migrar para banco gerenciado (Neon/Supabase/Postgres) mantendo Drizzle.
-2. Manter Vercel apenas para preview/homologação, com persistência não crítica.
-3. Executar SGN em Docker/self-hosted quando SQLite persistente for obrigatório.
+1. **Recomendado**: Usar Turso para garantir que o histórico de análises e jobs não seja perdido entre deploys.
+2. **Alternativa**: SQLite local (`./data/sgn.db`) é efêmero e será resetado periodicamente na Vercel.
+3. **Desenvolvimento**: O sistema usa arquivos locais se `TURSO_DATABASE_URL` não for fornecida.
 
 ## Configuração do Projeto na Vercel
 
@@ -43,17 +41,12 @@ Configurar em `Project Settings > Environment Variables`:
 
 ```bash
 GROQ_API_KEY=...
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
 NODE_ENV=production
 PORT=3001
 LOG_LEVEL=info
-DATABASE_PATH=./data/sgn.db
-GROQ_TIMEOUT_MS=45000
-GROQ_RETRY_ATTEMPTS=3
-GROQ_RETRY_BASE_MS=800
-GROQ_RETRY_MAX_MS=8000
 KB_STRICT_MODE=true
-SENTRY_DSN=
-NEXT_PUBLIC_SENTRY_DSN=
 ```
 
 Observações:

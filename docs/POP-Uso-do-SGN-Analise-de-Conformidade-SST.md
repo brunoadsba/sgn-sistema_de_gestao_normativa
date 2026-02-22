@@ -25,7 +25,7 @@
 
 ## 5) Procedimento operacional (passo a passo)
 
-1. Acessar o SGN na pagina `Analise de Conformidade`.
+1. Acessar o SGN na pagina `Analise de Conformidade` ou localizar uma NR no Catálogo e clicar em `Analisar documento com esta NR`.
 2. Fazer upload do documento.
 3. Selecionar as NRs aplicaveis.
 4. Clicar em `Analisar Conformidade com IA`.
