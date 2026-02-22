@@ -10,6 +10,7 @@ export function SessionSplashGate({ children }: { children: React.ReactNode }) {
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true)
     const hasSeen = window.localStorage.getItem(DEVICE_SPLASH_KEY) === '1'
     if (!hasSeen) {

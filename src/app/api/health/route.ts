@@ -29,7 +29,7 @@ export async function GET() {
   };
 
   try {
-    services.database = isDatabaseReady() ? 'ok' : 'error';
+    services.database = await isDatabaseReady() ? 'ok' : 'error';
     services.llm = await isGroqReady() ? 'ok' : 'error';
 
     const duration = Date.now() - checkStartTime;

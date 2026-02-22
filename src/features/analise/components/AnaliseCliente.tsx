@@ -94,7 +94,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         if (normaPreSelecionada) {
             setNormasSelecionadas([normaPreSelecionada])
         }
-    }, [normaPreSelecionada])
+    }, [normaPreSelecionada, setNormasSelecionadas])
     const paginaHistorico = Math.max(parseInt(paginaHistoricoQuery || '1', 10) || 1, 1)
     const periodoHistorico: PeriodoHistorico =
         periodoHistoricoQuery === 'today' || periodoHistoricoQuery === '7d' || periodoHistoricoQuery === '30d'
