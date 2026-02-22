@@ -31,25 +31,23 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
     await expect(page.getByText('Normas Aplicáveis', { exact: true })).toBeVisible()
   })
 
-  test('botão Analisar está desabilitado sem documento e sem normas', async ({ page }) => {
-    const botao = page.getByRole('button', { name: /Analisar Conformidade com IA/i })
+  test('botão começa com o rótulo de Descobrir Normas quando nenhuma norma está selecionada', async ({ page }) => {
+    const botao = page.getByRole('button', { name: /Descobrir Normas Aplicáveis com IA/i })
     await expect(botao).toBeVisible()
     await expect(botao).toBeDisabled()
   })
 
-  test('exibe erro ao tentar analisar sem selecionar normas', async ({ page }) => {
-    // Faz upload de um arquivo para habilitar o botão parcialmente
+  test('botão muda de função e fica habilitado ao subir documento sem normas (Auto-Sugestão)', async ({ page }) => {
     const conteudo = Buffer.from('Documento SST de teste.')
     await page.setInputFiles('input[type="file"]', {
       name: 'pgr.txt',
       mimeType: 'text/plain',
       buffer: conteudo,
     })
-    // Sem selecionar NRs, o botão permanece desabilitado — a validação
-    // acontece via estado React. Verificamos apenas que o botão existe
-    // e está desabilitado quando não há NRs selecionadas.
-    const botao = page.getByRole('button', { name: /Analisar Conformidade com IA/i })
-    await expect(botao).toBeDisabled()
+
+    // Agora o botão se chama "Descobrir Normas" e DEVE estar habilitado para fazer a predição.
+    const botao = page.getByRole('button', { name: /Descobrir Normas Aplicáveis com IA/i })
+    await expect(botao).not.toBeDisabled()
   })
 
   test('aceita upload de arquivo TXT e exibe nome do arquivo', async ({ page }) => {

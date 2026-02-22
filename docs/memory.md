@@ -1,7 +1,10 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-21 (V1.8.0: Evolução de Infraestrutura e UX)
+> Atualizado em: 2026-02-21 (V1.9.0: UX/UI Mestre)
+
+- **Versão Atual**: `1.9.0`
+- **Última Atualização**: 2026-02-21
 
 ---
 
@@ -141,19 +144,19 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 ## O que funciona (implementado)
 
-1. **Página principal de análise com IA** (Server Component + Client Component)
-   - Upload de documento com drag-and-drop (PDF, DOCX, TXT) — até 100MB
-   - Seletor de NRs: grid 2 colunas com filtro, chips de selecionadas, ações em lote
-   - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
-   - Resultado: score circular SVG animado, gaps ordenados por severidade, pontos positivos/atenção, próximos passos em grid
-2. **Catálogo de normas com busca dinâmica** (filtro client-side instantâneo com `nuqs`, estado na URL `?search=`)
-3. Análise especializada NR-6 (EPIs)
-4. Persistência de análises no SQLite (documentos, jobs, resultados, gaps)
-5. Busca inteligente com ranking
-6. Exportação de dados (CSV/JSON)
-7. API de health check
-8. Logging estruturado com Pino
-9. CI/CD com GitHub Actions (3 workflows: ci, deploy, release)
+1.  **Página principal de análise com IA** (Server Component + Client Component)
+    - Upload de documento com drag-and-drop (PDF, DOCX, TXT) — até 100MB
+    - Seletor de NRs: grid 2 colunas com filtro, chips de selecionadas, ações em lote
+    - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
+    - Resultado: score circular SVG animado, gaps ordenados por severidade, pontos positivos/atenção, próximos passos em grid
+2.  **Catálogo de normas com busca dinâmica** (filtro client-side instantâneo com `nuqs`, estado na URL `?search=`)
+3.  Análise especializada NR-6 (EPIs)
+4.  Persistência de análises no SQLite (documentos, jobs, resultados, gaps)
+5.  Busca inteligente com ranking
+6.  Exportação de dados (CSV/JSON)
+7.  API de health check
+8.  Logging estruturado com Pino
+9.  CI/CD com GitHub Actions (3 workflows: ci, deploy, release)
 10. Docker multi-stage build
 11. Validação de env com Zod
 12. Schemas Zod para APIs (camelCase) — limite de documento: 2M chars
@@ -189,7 +192,10 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 - Timeline de análises realizadas
 - Comparações side-by-side de documentos
 
----
+- [x] Histórico de análises (Turso DB).
+- [x] Auto-Sugestão de NRs baseada em IA.
+- [x] Accordions para visualização de gaps mobile.
+- [x] Pausa automática de animações (Page Visibility).
 
 ## Histórico de sessões
 
@@ -227,6 +233,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 31 | 2026-02-21 | V1.7.0: Otimização de RAG (Recall 1.00), IA Híbrida (Groq/Ollama), suporte NR-29/30 e Harbour Scorecard. |
 | 32 | 2026-02-21 | V1.8.0: Evolução de Infraestrutura (Turso DB), UX (Progress Polling) e Produto (PDF Export). |
 | 33 | 2026-02-21 | Estabilização de Deploy: Ajuste de ignore rules, rotas dinâmicas async (Next 15) e conexão Lazy DB via Proxy. |
+| 34 | 2026-02-21 | V1.9.0: UX/UI Mestre - Auto-Sugestão de NRs, Accordions para Gaps e otimização de Canvas. |
 
 ---
 

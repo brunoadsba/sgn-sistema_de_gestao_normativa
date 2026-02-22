@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.9.0] - 2026-02-21
+### Adicionado
+- **Auto-Sugestão de NRs (IA Mapeando IA)**: Novo endpoint `/api/ia/sugerir-nrs` que analisa o início do documento para sugerir normas aplicáveis automaticamente.
+- **Botão "Descobrir Normas com IA"**: Integração no frontend para disparar a sugestão quando nenhuma norma está selecionada.
+- **Accordions Dinâmicos**: Refatoração da exibição de gaps no `ResultadoAnalise.tsx` usando `shadcn/ui`, com gaps críticos/altos abertos por padrão.
+- **Otimização de Performance (Canvas)**: Implementação da `Page Visibility API` no `CanvasBackground.tsx` para pausar animações quando a aba não está visível.
+
+### Alterado
+- Melhoria nos rótulos de botões em `AnaliseCliente.tsx` para clareza funcional.
+- Atualização do componente `ResultadoAnalise.tsx` para priorizar visualmente riscos mais graves.
+
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 
 ## [2026-02-21] - Persistência em Nuvem e UX de Tempo Real (V1.8.0)

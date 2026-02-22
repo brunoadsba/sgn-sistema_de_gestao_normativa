@@ -8,7 +8,14 @@ import {
   Clock, ArrowRight, RotateCcw, AlertCircle,
   Printer
 } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { AnaliseConformidadeResponse, GapConformidade } from '@/types/ia'
+
 
 interface ResultadoAnaliseProps {
   resultado: AnaliseConformidadeResponse
@@ -159,7 +166,30 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
     baixa: gapsOrdenados.filter(g => g.severidade === 'baixa').length,
   }), [gapsOrdenados])
 
+  // Agrupa os gaps por categoria para o Accordion
+  const gapsPorTipo = useMemo(() => {
+    return {
+      critica: gapsOrdenados.filter(g => g.severidade === 'critica'),
+      alta: gapsOrdenados.filter(g => g.severidade === 'alta'),
+      media: gapsOrdenados.filter(g => g.severidade === 'media'),
+      baixa: gapsOrdenados.filter(g => g.severidade === 'baixa'),
+    };
+  }, [gapsOrdenados])
+
+  const defaultAccordionValues = useMemo(() => {
+    const values = [];
+    if (gapsPorTipo.critica.length > 0) values.push('item-critica');
+    if (gapsPorTipo.alta.length > 0) values.push('item-alta');
+    // Se só tiver media/baixa, abre a primeira que tiver
+    if (values.length === 0) {
+      if (gapsPorTipo.media.length > 0) values.push('item-media');
+      else if (gapsPorTipo.baixa.length > 0) values.push('item-baixa');
+    }
+    return values;
+  }, [gapsPorTipo])
+
   return (
+
     <div className="space-y-6 print:space-y-4 print:p-0">
       <style jsx global>{`
         @media print {
@@ -313,7 +343,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
         )}
       </div>
 
-      {/* Gaps — ordenados por severidade */}
+      {/* Gaps — organizados em Accordion por severidade */}
       {gapsOrdenados.length > 0 && (
         <Card className="border-red-100 dark:border-red-900/40 shadow-lg shadow-red-100/20 overflow-hidden">
           <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-white dark:from-red-950/30 dark:to-gray-900/0 border-b border-red-100/50 dark:border-red-900/30">
@@ -328,16 +358,105 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 bg-gray-50/50 dark:bg-gray-900/30">
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {gapsOrdenados.map((gap, i) => (
-                <div key={gap.id || i} className="p-4 sm:p-6 transition-colors hover:bg-white dark:hover:bg-gray-800/30">
-                  <GapItem gap={gap} index={i} />
-                </div>
-              ))}
-            </div>
+            <Accordion type="multiple" defaultValue={defaultAccordionValues} className="w-full">
+
+              {gapsPorTipo.critica.length > 0 && (
+                <AccordionItem value="item-critica" className="border-b-0 px-2 sm:px-6">
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                      <span className="font-bold text-red-800 dark:text-red-400 text-base sm:text-lg flex items-center gap-2">
+                        Risco Crítico
+                        <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 rounded-full border border-red-200 dark:border-red-800">{gapsPorTipo.critica.length}</span>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 border-t border-red-100 dark:border-red-900/30">
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {gapsPorTipo.critica.map((gap, i) => (
+                        <div key={gap.id || i} className="py-6 transition-colors hover:bg-white/50 dark:hover:bg-gray-800/20 px-4 rounded-xl">
+                          <GapItem gap={gap} index={i} />
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {gapsPorTipo.alta.length > 0 && (
+                <AccordionItem value="item-alta" className={`px-2 sm:px-6 ${gapsPorTipo.critica.length === 0 ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-800'}`}>
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]"></span>
+                      <span className="font-bold text-orange-800 dark:text-orange-400 text-base sm:text-lg flex items-center gap-2">
+                        Risco Alto
+                        <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 rounded-full border border-orange-200 dark:border-orange-800">{gapsPorTipo.alta.length}</span>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 border-t border-orange-100 dark:border-orange-900/30">
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {gapsPorTipo.alta.map((gap, i) => (
+                        <div key={gap.id || i} className="py-6 transition-colors hover:bg-white/50 dark:hover:bg-gray-800/20 px-4 rounded-xl">
+                          <GapItem gap={gap} index={i} />
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {gapsPorTipo.media.length > 0 && (
+                <AccordionItem value="item-media" className={`px-2 sm:px-6 ${gapsPorTipo.critica.length === 0 && gapsPorTipo.alta.length === 0 ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-800'}`}>
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
+                      <span className="font-bold text-yellow-800 dark:text-yellow-400 text-base sm:text-lg flex items-center gap-2">
+                        Risco Médio
+                        <span className="text-xs px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded-full border border-yellow-200 dark:border-yellow-800">{gapsPorTipo.media.length}</span>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 border-t border-yellow-100 dark:border-yellow-900/30">
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {gapsPorTipo.media.map((gap, i) => (
+                        <div key={gap.id || i} className="py-6 transition-colors hover:bg-white/50 dark:hover:bg-gray-800/20 px-4 rounded-xl">
+                          <GapItem gap={gap} index={i} />
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {gapsPorTipo.baixa.length > 0 && (
+                <AccordionItem value="item-baixa" className={`border-b-0 px-2 sm:px-6 ${gapsPorTipo.critica.length === 0 && gapsPorTipo.alta.length === 0 && gapsPorTipo.media.length === 0 ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-800'}`}>
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+                      <span className="font-bold text-green-800 dark:text-green-400 text-base sm:text-lg flex items-center gap-2">
+                        Risco Baixo
+                        <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-full border border-green-200 dark:border-green-800">{gapsPorTipo.baixa.length}</span>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 border-t border-green-100 dark:border-green-900/30">
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {gapsPorTipo.baixa.map((gap, i) => (
+                        <div key={gap.id || i} className="py-6 transition-colors hover:bg-white/50 dark:hover:bg-gray-800/20 px-4 rounded-xl">
+                          <GapItem gap={gap} index={i} />
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+            </Accordion>
           </CardContent>
         </Card>
       )}
+
 
       {/* Próximos Passos */}
       {resultado.proximosPassos?.length > 0 && (

@@ -55,7 +55,7 @@ export function CanvasBackground() {
     if (!ctx) return
 
     let animationFrameId: number | null = null
-    let paused = false
+
     let particles: Particle[] = []
     const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const isMobile = window.matchMedia('(max-width: 767px)').matches
@@ -99,11 +99,18 @@ export function CanvasBackground() {
       }
     }
 
+
+
     const animate = () => {
-      if (paused) {
-        animationFrameId = null
+      // Se não estiver visível (ou explicitamente pausado), não agenda próximo frame
+      if (document.hidden) {
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId)
+          animationFrameId = null
+        }
         return
       }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
@@ -116,8 +123,8 @@ export function CanvasBackground() {
     }
 
     const onVisibilityChange = () => {
-      paused = document.hidden
-      if (!paused && animationFrameId === null) {
+      if (!document.hidden && animationFrameId === null) {
+        // Retoma animação ao voltar o foco
         animationFrameId = requestAnimationFrame(animate)
       }
     }

@@ -27,6 +27,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Normalização inteligente de códigos (ex: "5" -> "NR-5")
 3. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
+- 🚀 **Versão 1.9.0**: Auto-Sugestão de NRs, Accordions Mobile e Performance Otimizada.
 4. **Persistência e histórico**
    - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
    - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação

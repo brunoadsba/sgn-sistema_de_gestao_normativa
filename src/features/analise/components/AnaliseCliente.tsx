@@ -71,6 +71,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [carregandoHistorico, setCarregandoHistorico] = useState(true)
     const [limpandoHistorico, setLimpandoHistorico] = useState(false)
     const [mostrarHistorico, setMostrarHistorico] = useState(false)
+    const [sugerindoNrs, setSugerindoNrs] = useState(false)
 
     const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('hist_page', {
         defaultValue: '1',
@@ -226,28 +227,18 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             setErro('Selecione um documento para analisar.')
             return
         }
-        if (normasSelecionadas.length === 0) {
-            setErro('Selecione pelo menos uma norma regulamentadora.')
-            return
-        }
-
         setAnalisando(true)
         setErro(null)
         setProgresso(0)
         setResultado(null)
+        setSugerindoNrs(false)
 
         try {
-            // 1. Extrair texto do documento localmente primeiro (para YAGNI/KISS, mantemos o fluxo de extração ativa)
-            // Mas agora o backend também rastreia isso se enviarmos via jobId.
-            // Para v1.8.0, vamos iniciar a análise e pegar o jobId.
-
-            setEtapa('Iniciando análise...')
-            setProgresso(5)
+            setEtapa('Iniciando extração...')
 
             const formData = new FormData()
             formData.append('file', arquivo)
 
-            // Primeiro extraímos o texto (como na v1.7.0)
             const extractRes = await fetchWithRetry('/api/extrair-texto', {
                 method: 'POST',
                 body: formData,
@@ -260,6 +251,36 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
 
             const extractData = await extractRes.json()
             const textoDocumento = extractData.data.texto
+
+            // Se o usuário pedir para sugerir as normas (array vazio), vamos bater na API de sugestão e PARAR a execução para ele revisar.
+            if (normasSelecionadas.length === 0) {
+                setSugerindoNrs(true)
+                setEtapa('IA analisando o escopo do documento...')
+                setProgresso(30)
+
+                const sugestaoRes = await fetchWithRetry('/api/ia/sugerir-nrs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ textoExtraido: textoDocumento }),
+                }, { retries: 1, timeoutMs: 30_000 })
+
+                if (sugestaoRes.ok) {
+                    const sugestaoData = await sugestaoRes.json()
+                    if (sugestaoData.success && sugestaoData.sugeridas) {
+                        setNormasSelecionadas(sugestaoData.sugeridas)
+                        setErro("A IA pré-selecionou as normas sugeridas. Revise e clique em 'Analisar' para continuar.")
+                    }
+                } else {
+                    setErro("Não foi possível inferir as normas com IA. Por favor, selecione-as manualmente.")
+                }
+
+                setSugerindoNrs(false)
+                setAnalisando(false)
+                return;
+            }
+
+            setEtapa('Iniciando análise...')
+            setProgresso(5)
 
             // Agora enviamos para análise que retorna jobId
             const codigosNR = normasSelecionadas.map(codigo => {
@@ -308,9 +329,10 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         setErro(null)
         setProgresso(0)
         setEtapa('')
+        setSugerindoNrs(false)
     }
 
-    const podeAnalisar = arquivo && normasSelecionadas.length > 0 && !analisando
+    const podeGatilhoAcao = arquivo && !analisando && !sugerindoNrs
     const formatarDataHoraBrasilia = (isoDate: string) =>
         new Intl.DateTimeFormat('pt-BR', {
             timeZone: 'America/Sao_Paulo',
@@ -479,18 +501,22 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         </div>
                     )}
 
-                    {/* Botão Analisar */}
                     <div className="pt-4">
                         <Button
                             onClick={executarAnalise}
-                            disabled={!podeAnalisar}
+                            disabled={!podeGatilhoAcao}
                             size="lg"
                             className="w-full h-14 sm:h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base sm:text-lg font-bold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
                         >
-                            <Brain className={`h-6 w-6 mr-3 ${analisando ? 'animate-pulse' : ''}`} />
-                            {analisando ? 'Processando com Inteligência Artificial...' : 'Analisar Conformidade com IA'}
+                            <Brain className={`h-6 w-6 mr-3 ${analisando || sugerindoNrs ? 'animate-pulse' : ''}`} />
+                            {analisando || sugerindoNrs
+                                ? 'Extraindo e processando documento...'
+                                : normasSelecionadas.length === 0
+                                    ? 'Descobrir Normas Aplicáveis com IA'
+                                    : 'Analisar Conformidade com NRs'}
                         </Button>
                     </div>
+
 
                     <div className="pt-2">
                         <Button
