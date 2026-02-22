@@ -29,55 +29,68 @@ export type AnaliseListagem = {
 export type PeriodoHistorico = 'today' | '7d' | '30d';
 export type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc';
 
-export async function persistirAnaliseConformidade(
+export async function iniciarJobAnalise(
+  entrada: { nomeArquivo: string; tipoDocumento: string; normasAplicaveis: string[] }
+): Promise<{ documentoId: string; jobId: string }> {
+  const { id: documentoId } = await db
+    .insert(schema.documentos)
+    .values({
+      nomeArquivo: entrada.nomeArquivo,
+      tipoDocumento: entrada.tipoDocumento,
+      metadados: { origem: 'api-ia-analisar-conformidade' },
+    })
+    .returning({ id: schema.documentos.id })
+    .get();
+
+  const { id: jobId } = await db
+    .insert(schema.analiseJobs)
+    .values({
+      documentoId,
+      normaIds: entrada.normasAplicaveis,
+      status: 'extracting',
+      progresso: 0,
+      tipoAnalise: 'completa',
+      startedAt: new Date().toISOString(),
+    })
+    .returning({ id: schema.analiseJobs.id })
+    .get();
+
+  return { documentoId, jobId };
+}
+
+export async function atualizarProgressoJob(
+  jobId: string,
+  status: string,
+  progresso: number,
+  erroDetalhes?: string
+): Promise<void> {
+  await db
+    .update(schema.analiseJobs)
+    .set({
+      status,
+      progresso,
+      erroDetalhes: erroDetalhes || null,
+    })
+    .where(eq(schema.analiseJobs.id, jobId));
+}
+
+export async function finalizarJobAnalise(
+  jobId: string,
+  documentoId: string,
   entrada: AnaliseConformidadeRequest,
   resultado: AnaliseConformidadeResponse
 ): Promise<void> {
-  const nomeArquivoAnalise = `analise-ia-${Date.now()}.txt`;
-  let documentoId: string | undefined;
-  let jobId: string | undefined;
-  let analiseResultadoId: string | undefined;
-
-  db.transaction((tx) => {
-    const documentoInserido = tx
-      .insert(schema.documentos)
-      .values({
-        nomeArquivo: nomeArquivoAnalise,
-        tipoDocumento: entrada.tipoDocumento,
-        conteudoExtraido: entrada.documento,
-        metadados: { origem: 'api-ia-analisar-conformidade' },
-      })
-      .returning({ id: schema.documentos.id })
-      .get();
-
-    documentoId = documentoInserido?.id;
-    if (!documentoId) {
-      throw new Error('Falha ao criar documento para persistência da análise');
+  await db.transaction(async (tx) => {
+    // Atualizar conteúdo extraído se disponível
+    if (entrada.documento) {
+      await tx
+        .update(schema.documentos)
+        .set({ conteudoExtraido: entrada.documento })
+        .where(eq(schema.documentos.id, documentoId));
     }
 
-    const jobInserido = tx
-      .insert(schema.analiseJobs)
-      .values({
-        documentoId,
-        normaIds: entrada.normasAplicaveis ?? [],
-        status: 'completed',
-        tipoAnalise: 'completa',
-        priority: 5,
-        progresso: 100,
-        parametros: { tipoDocumento: entrada.tipoDocumento },
-        metadata: { modeloUsado: resultado.modeloUsado },
-        startedAt: new Date(Date.now() - resultado.tempoProcessamento).toISOString(),
-        completedAt: new Date().toISOString(),
-      })
-      .returning({ id: schema.analiseJobs.id })
-      .get();
-
-    jobId = jobInserido?.id;
-    if (!jobId) {
-      throw new Error('Falha ao criar job para persistência da análise');
-    }
-
-    const resultadoInserido = tx
+    // Criar Resultado
+    const resultadoInserido = await tx
       .insert(schema.analiseResultados)
       .values({
         jobId,
@@ -87,7 +100,7 @@ export async function persistirAnaliseConformidade(
         statusGeral: resultado.score >= 80 ? 'conforme' : resultado.score >= 60 ? 'parcial_conforme' : 'nao_conforme',
         metadata: {
           resumo: resultado.resumo,
-          nomeArquivo: nomeArquivoAnalise,
+          nomeArquivo: entrada.tipoDocumento, // fallback
           tipoDocumento: entrada.tipoDocumento,
           estrategiaProcessamento: entrada.estrategiaProcessamento ?? 'completo',
           chunkMetadados: entrada.chunkMetadados ?? [],
@@ -99,20 +112,18 @@ export async function persistirAnaliseConformidade(
           timestamp: resultado.timestamp,
           metadadosProcessamento: resultado.metadadosProcessamento ?? null,
           evidenciasUtilizadas: resultado.gaps.flatMap((gap) => gap.evidencias ?? []),
+          contextoBaseConhecimento: entrada.contextoBaseConhecimento ?? null,
         },
       })
       .returning({ id: schema.analiseResultados.id })
       .get();
 
-    analiseResultadoId = resultadoInserido?.id;
-    if (!analiseResultadoId) {
-      throw new Error('Falha ao criar resultado para persistência da análise');
-    }
+    const analiseResultadoId = resultadoInserido.id;
 
     if (resultado.gaps.length > 0) {
-      tx.insert(schema.conformidadeGaps).values(
+      await tx.insert(schema.conformidadeGaps).values(
         resultado.gaps.map((gap) => ({
-          analiseResultadoId: analiseResultadoId as string,
+          analiseResultadoId,
           normaId: extrairNormaId(gap.normasRelacionadas),
           severidade: gap.severidade,
           categoria: gap.categoria,
@@ -121,11 +132,34 @@ export async function persistirAnaliseConformidade(
           prazoSugerido: gap.prazo,
           impacto: gap.impacto,
         }))
-      ).run();
+      );
     }
+
+    // Finalizar Job
+    await tx
+      .update(schema.analiseJobs)
+      .set({
+        status: 'completed',
+        progresso: 100,
+        completedAt: new Date().toISOString(),
+      })
+      .where(eq(schema.analiseJobs.id, jobId));
   });
 
-  log.info({ documentoId, jobId, analiseResultadoId }, 'Análise persistida com sucesso');
+  log.info({ jobId, documentoId }, 'Job de análise finalizado com sucesso');
+}
+
+export async function persistirAnaliseConformidade(
+  entrada: AnaliseConformidadeRequest,
+  resultado: AnaliseConformidadeResponse
+): Promise<void> {
+  const { documentoId, jobId } = await iniciarJobAnalise({
+    nomeArquivo: `analise-ia-${Date.now()}.txt`,
+    tipoDocumento: entrada.tipoDocumento,
+    normasAplicaveis: entrada.normasAplicaveis ?? [],
+  });
+
+  await finalizarJobAnalise(jobId, documentoId, entrada, resultado);
 }
 
 export async function listarAnalisesConformidade(
@@ -231,6 +265,48 @@ export async function listarAnalisesConformidade(
       temAnterior: pagina > 1,
     },
   };
+}
+
+export async function buscarAnalisePorId(id: string): Promise<AnaliseConformidadeResponse | null> {
+  const item = await db
+    .select({
+      id: schema.analiseResultados.id,
+      jobId: schema.analiseResultados.jobId,
+      scoreGeral: schema.analiseResultados.scoreGeral,
+      nivelRisco: schema.analiseResultados.nivelRisco,
+      metadata: schema.analiseResultados.metadata,
+      createdAt: schema.analiseResultados.createdAt,
+      nomeArquivo: schema.documentos.nomeArquivo,
+      tipoDocumento: schema.documentos.tipoDocumento,
+    })
+    .from(schema.analiseResultados)
+    .leftJoin(schema.documentos, eq(schema.analiseResultados.documentoId, schema.documentos.id))
+    .where(eq(schema.analiseResultados.id, id))
+    .get();
+
+  if (!item) return null;
+
+  const gaps = await db
+    .select()
+    .from(schema.conformidadeGaps)
+    .where(eq(schema.conformidadeGaps.analiseResultadoId, id));
+
+  const metadata = (item.metadata ?? {}) as Record<string, unknown>;
+
+  return {
+    score: item.scoreGeral ?? 0,
+    nivelRisco: (item.nivelRisco as AnaliseConformidadeResponse['nivelRisco']) ?? 'medio',
+    gaps: gaps.map(normalizarGap),
+    resumo: toStringValue(metadata.resumo),
+    pontosPositivos: toStringArray(metadata.pontosPositivos),
+    pontosAtencao: toStringArray(metadata.pontosAtencao),
+    proximosPassos: toStringArray(metadata.proximosPassos),
+    timestamp: toStringValue(metadata.timestamp, item.createdAt),
+    modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
+    tempoProcessamento: typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
+    jobId: item.jobId ?? undefined,
+    nomeArquivo: item.nomeArquivo ?? undefined,
+  } as AnaliseConformidadeResponse;
 }
 
 function buildWhereClause(periodo: PeriodoHistorico, buscaDocumento: string) {

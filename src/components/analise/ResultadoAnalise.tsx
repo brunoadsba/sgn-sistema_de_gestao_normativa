@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   CheckCircle, AlertTriangle, Shield,
   Clock, ArrowRight, RotateCcw, AlertCircle,
+  Printer
 } from 'lucide-react'
 import { AnaliseConformidadeResponse, GapConformidade } from '@/types/ia'
 
@@ -22,31 +23,31 @@ const ORDEM_SEVERIDADE: Record<string, number> = {
 }
 
 const CONFIG_RISCO = {
-  baixo:  { bg: 'bg-green-50 dark:bg-green-950/40',  border: 'border-green-200 dark:border-green-800/60', text: 'text-green-800 dark:text-green-400',  label: 'Risco Baixo' },
-  medio:  { bg: 'bg-yellow-50 dark:bg-yellow-950/40', border: 'border-yellow-200 dark:border-yellow-800/60', text: 'text-yellow-800 dark:text-yellow-400', label: 'Risco Médio' },
-  alto:   { bg: 'bg-orange-50 dark:bg-orange-950/40', border: 'border-orange-200 dark:border-orange-800/60', text: 'text-orange-800 dark:text-orange-400', label: 'Risco Alto' },
-  critico:{ bg: 'bg-red-50 dark:bg-red-950/40',    border: 'border-red-200 dark:border-red-800/60',   text: 'text-red-800 dark:text-red-400',    label: 'Risco Crítico' },
+  baixo: { bg: 'bg-green-50 dark:bg-green-950/40', border: 'border-green-200 dark:border-green-800/60', text: 'text-green-800 dark:text-green-400', label: 'Risco Baixo' },
+  medio: { bg: 'bg-yellow-50 dark:bg-yellow-950/40', border: 'border-yellow-200 dark:border-yellow-800/60', text: 'text-yellow-800 dark:text-yellow-400', label: 'Risco Médio' },
+  alto: { bg: 'bg-orange-50 dark:bg-orange-950/40', border: 'border-orange-200 dark:border-orange-800/60', text: 'text-orange-800 dark:text-orange-400', label: 'Risco Alto' },
+  critico: { bg: 'bg-red-50 dark:bg-red-950/40', border: 'border-red-200 dark:border-red-800/60', text: 'text-red-800 dark:text-red-400', label: 'Risco Crítico' },
 } as const
 
 const CONFIG_SEVERIDADE: Record<string, { badge: string; border: string; icon: string }> = {
-  baixa:  { badge: 'bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-400',  border: 'border-l-green-400 dark:border-l-green-700',  icon: 'text-green-500 dark:text-green-400' },
-  media:  { badge: 'bg-yellow-100 dark:bg-yellow-950/60 text-yellow-800 dark:text-yellow-400', border: 'border-l-yellow-400 dark:border-l-yellow-700', icon: 'text-yellow-500 dark:text-yellow-400' },
-  alta:   { badge: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-400', border: 'border-l-orange-400 dark:border-l-orange-700', icon: 'text-orange-500 dark:text-orange-400' },
-  critica:{ badge: 'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-400',      border: 'border-l-red-500 dark:border-l-red-700',    icon: 'text-red-500 dark:text-red-400' },
+  baixa: { badge: 'bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-400', border: 'border-l-green-400 dark:border-l-green-700', icon: 'text-green-500 dark:text-green-400' },
+  media: { badge: 'bg-yellow-100 dark:bg-yellow-950/60 text-yellow-800 dark:text-yellow-400', border: 'border-l-yellow-400 dark:border-l-yellow-700', icon: 'text-yellow-500 dark:text-yellow-400' },
+  alta: { badge: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-400', border: 'border-l-orange-400 dark:border-l-orange-700', icon: 'text-orange-500 dark:text-orange-400' },
+  critica: { badge: 'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-400', border: 'border-l-red-500 dark:border-l-red-700', icon: 'text-red-500 dark:text-red-400' },
 }
 
 function ScoreIndicador({ score }: { score: number }) {
   const cor =
     score >= 80 ? 'text-green-600'
-    : score >= 60 ? 'text-yellow-600'
-    : score >= 40 ? 'text-orange-600'
-    : 'text-red-600'
+      : score >= 60 ? 'text-yellow-600'
+        : score >= 40 ? 'text-orange-600'
+          : 'text-red-600'
 
   const bgCor =
     score >= 80 ? 'bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/60 dark:to-green-900/30 border-green-200 dark:border-green-800/50 shadow-green-100/50'
-    : score >= 60 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100/50 dark:from-yellow-950/60 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800/50 shadow-yellow-100/50'
-    : score >= 40 ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/60 dark:to-orange-900/30 border-orange-200 dark:border-orange-800/50 shadow-orange-100/50'
-    : 'bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/60 dark:to-red-900/30 border-red-200 dark:border-red-800/50 shadow-red-100/50'
+      : score >= 60 ? 'bg-gradient-to-br from-yellow-50 to-yellow-100/50 dark:from-yellow-950/60 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800/50 shadow-yellow-100/50'
+        : score >= 40 ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/60 dark:to-orange-900/30 border-orange-200 dark:border-orange-800/50 shadow-orange-100/50'
+          : 'bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/60 dark:to-red-900/30 border-red-200 dark:border-red-800/50 shadow-red-100/50'
 
   const porcentagem = Math.min(100, Math.max(0, score))
   const circunferencia = 2 * Math.PI * 40
@@ -73,9 +74,15 @@ function ScoreIndicador({ score }: { score: number }) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center animate-in zoom-in duration-500 delay-300">
           <span className={`text-3xl sm:text-4xl font-black tracking-tighter leading-none ${cor} drop-shadow-sm`}>{score}</span>
-          <span className="text-xs font-bold text-gray-500/80 uppercase tracking-widest mt-1">Score</span>
+          <span className="text-[10px] font-bold text-gray-500/80 uppercase tracking-widest mt-1">Geral</span>
         </div>
       </div>
+      <span className={`text-[10px] font-black uppercase tracking-tighter mt-2 ${cor} bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-md border border-white/20`}>
+        {score >= 80 ? 'Alta Conformidade'
+          : score >= 60 ? 'Conformidade Parcial'
+            : score >= 40 ? 'Baixa Conformidade'
+              : 'Não Conforme'}
+      </span>
     </div>
   )
 }
@@ -84,7 +91,7 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
   const config = CONFIG_SEVERIDADE[gap.severidade] || CONFIG_SEVERIDADE.media
 
   return (
-        <div className="flex gap-4 group">
+    <div className="flex gap-4 group">
       <div className="flex flex-col items-center mt-1">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border ${config.badge} ${config.border.replace('border-l-', 'border-')}`}>
           {index + 1}
@@ -134,6 +141,10 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
 export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseProps) {
   const riscoConfig = CONFIG_RISCO[resultado.nivelRisco] || CONFIG_RISCO.medio
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   const gapsOrdenados = useMemo(
     () => [...resultado.gaps].sort(
       (a, b) => (ORDEM_SEVERIDADE[a.severidade] ?? 4) - (ORDEM_SEVERIDADE[b.severidade] ?? 4)
@@ -143,13 +154,66 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
 
   const gapsPorSeveridade = useMemo(() => ({
     critica: gapsOrdenados.filter(g => g.severidade === 'critica').length,
-    alta:    gapsOrdenados.filter(g => g.severidade === 'alta').length,
-    media:   gapsOrdenados.filter(g => g.severidade === 'media').length,
-    baixa:   gapsOrdenados.filter(g => g.severidade === 'baixa').length,
+    alta: gapsOrdenados.filter(g => g.severidade === 'alta').length,
+    media: gapsOrdenados.filter(g => g.severidade === 'media').length,
+    baixa: gapsOrdenados.filter(g => g.severidade === 'baixa').length,
   }), [gapsOrdenados])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-4 print:p-0">
+      <style jsx global>{`
+        @media print {
+          body { 
+            background: white !important; 
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          nav, footer, button, .no-print, [data-canvas-background] { 
+            display: none !important; 
+          }
+          .print-header {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+          }
+          .card-no-shadow {
+            box-shadow: none !important;
+            border: 1px solid #e2e8f0 !important;
+            background: white !important;
+          }
+          .page-break {
+            page-break-before: always;
+          }
+        }
+        @media screen {
+          .print-header { display: none; }
+        }
+      `}</style>
+
+      {/* Header Exclusivo para Print */}
+      <div className="print-header">
+        <div className="flex items-center gap-3">
+          <Shield className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-xl font-bold uppercase tracking-tight text-gray-900">SGN - Sistema de Gestão Normativa</h1>
+            <p className="text-[10px] text-gray-500 font-medium">Relatório de Conformidade Técnica</p>
+          </div>
+        </div>
+        <div className="text-right">
+          {resultado.nomeArquivo && (
+            <p className="text-[10px] text-gray-900 font-bold mb-1">Doc: {resultado.nomeArquivo}</p>
+          )}
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Documento Reservado</p>
+          <p className="text-[10px] text-gray-400 font-medium mt-1">{new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR')}</p>
+          {resultado.jobId && (
+            <p className="text-[8px] text-gray-300 font-mono mt-1">ID: {resultado.jobId}</p>
+          )}
+        </div>
+      </div>
       {/* Score + Cabeçalho */}
       <div className="flex flex-col md:flex-row gap-4 sm:gap-6 p-4 sm:p-8 rounded-3xl border border-white/10 dark:border-gray-700/50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl shadow-xl shadow-blue-900/5 dark:shadow-black/30 hover:shadow-blue-900/10 transition-shadow duration-300">
         <ScoreIndicador score={resultado.score} />
@@ -251,7 +315,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
 
       {/* Gaps — ordenados por severidade */}
       {gapsOrdenados.length > 0 && (
-          <Card className="border-red-100 dark:border-red-900/40 shadow-lg shadow-red-100/20 overflow-hidden">
+        <Card className="border-red-100 dark:border-red-900/40 shadow-lg shadow-red-100/20 overflow-hidden">
           <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-white dark:from-red-950/30 dark:to-gray-900/0 border-b border-red-100/50 dark:border-red-900/30">
             <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2 sm:gap-3 text-red-900 dark:text-red-300">
               <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
@@ -303,11 +367,20 @@ export function ResultadoAnalise({ resultado, onNovaAnalise }: ResultadoAnaliseP
         </Card>
       )}
 
-      {/* Ação */}
-      <div className="flex justify-center pt-8 pb-4">
-        <Button 
-          onClick={onNovaAnalise} 
-          size="lg" 
+      {/* Ações */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 pb-4 no-print">
+        <Button
+          onClick={handlePrint}
+          size="lg"
+          className="h-14 px-8 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 font-bold text-base transition-all hover:-translate-y-1 shadow-xl flex items-center gap-3"
+        >
+          <Printer className="h-5 w-5" />
+          Gerar Laudo PDF
+        </Button>
+
+        <Button
+          onClick={onNovaAnalise}
+          size="lg"
           variant="outline"
           className="h-14 px-8 rounded-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-base transition-all hover:-translate-y-1 shadow-sm hover:shadow-md"
         >

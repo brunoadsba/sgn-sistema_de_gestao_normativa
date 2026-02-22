@@ -1,34 +1,27 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
 import * as schema from './schema';
-import path from 'path';
-import fs from 'fs';
-
-// Path do banco: ./data/sgn.db (volume Docker)
-const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'sgn.db');
-
-// Garantir que o diretório existe
-const dbDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+import { env } from '@/lib/env';
 
 // Singleton para evitar múltiplas conexões
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let _client: ReturnType<typeof createClient> | null = null;
 
 function createDb() {
   if (_db) return _db;
 
-  const sqlite = new Database(DB_PATH);
+  // Se for arquivo local e não tiver o protocolo file:, adiciona
+  let url = env.TURSO_DATABASE_URL || env.DATABASE_PATH;
+  if (!url.startsWith('libsql://') && !url.startsWith('https://') && !url.startsWith('file:')) {
+    url = `file:${url}`;
+  }
 
-  // WAL mode para melhor performance de leitura
-  sqlite.pragma('journal_mode = WAL');
-  // Sync normal para melhor performance (dados não são mission-critical em dev)
-  sqlite.pragma('synchronous = normal');
-  // Foreign keys habilitadas
-  sqlite.pragma('foreign_keys = ON');
+  _client = createClient({
+    url,
+    ...(env.TURSO_AUTH_TOKEN ? { authToken: env.TURSO_AUTH_TOKEN } : {}),
+  });
 
-  _db = drizzle(sqlite, { schema });
+  _db = drizzle(_client, { schema });
   return _db;
 }
 
@@ -38,13 +31,13 @@ export const db = createDb();
 export { schema };
 
 // Helper para verificar se o banco está acessível
-export function isDatabaseReady(): boolean {
+export async function isDatabaseReady(): Promise<boolean> {
   try {
-    const sqlite = new Database(DB_PATH, { readonly: true });
-    sqlite.pragma('integrity_check');
-    sqlite.close();
+    if (!_client) return false;
+    await _client.execute('SELECT 1');
     return true;
-  } catch {
+  } catch (error) {
+    console.error('[DB] Erro ao verificar disponibilidade:', error);
     return false;
   }
 }

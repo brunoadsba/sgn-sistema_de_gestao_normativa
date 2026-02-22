@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getNormaById } from "@/lib/data/normas"
-import { CheckCircle, AlertTriangle, ExternalLink, Tag, BookOpen, ArrowLeft } from "lucide-react"
+import { CheckCircle, AlertTriangle, ExternalLink, Tag, BookOpen, ArrowLeft, Brain } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import BotoesSeguranca from "./components/BotoesSeguranca"
@@ -54,7 +54,16 @@ export default async function NormaDetalhes({
                   </Badge>
                 )}
               </div>
-              <p className="text-gray-700 dark:text-gray-300 text-base sm:text-xl font-medium leading-relaxed max-w-3xl">{norma.titulo}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-base sm:text-xl font-medium leading-relaxed max-w-3xl mb-8">{norma.titulo}</p>
+
+              {!isRevogada && (
+                <Link href={`/?norma=${norma.codigo}`}>
+                  <Button size="lg" className="h-14 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-lg shadow-indigo-500/25 transition-all hover:-translate-y-1 hover:shadow-indigo-500/40 gap-3 group">
+                    <Brain className="h-5 w-5 animate-pulse group-hover:animate-none" />
+                    Analisar documento com esta NR
+                  </Button>
+                </Link>
+              )}
             </div>
 
             <div className="p-6 sm:p-8 md:p-12 space-y-8 sm:space-y-10">

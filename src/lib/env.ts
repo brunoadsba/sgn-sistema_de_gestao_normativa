@@ -4,6 +4,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_PATH: z.string().default('./data/sgn.db'),
+  TURSO_DATABASE_URL: z.string().optional(),
+  TURSO_AUTH_TOKEN: z.string().optional(),
   GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY é obrigatória'),
   GROQ_TIMEOUT_MS: z.coerce.number().int().positive().default(45000),
   GROQ_RETRY_ATTEMPTS: z.coerce.number().int().min(1).max(8).default(3),
@@ -33,6 +35,8 @@ export function validateEnv(): Env {
     validatedEnv = envSchema.parse({
       NODE_ENV: process.env.NODE_ENV,
       DATABASE_PATH: process.env.DATABASE_PATH,
+      TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL,
+      TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN,
       GROQ_API_KEY: process.env.GROQ_API_KEY,
       GROQ_TIMEOUT_MS: process.env.GROQ_TIMEOUT_MS,
       GROQ_RETRY_ATTEMPTS: process.env.GROQ_RETRY_ATTEMPTS,

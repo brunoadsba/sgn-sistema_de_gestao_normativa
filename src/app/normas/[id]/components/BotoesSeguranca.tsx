@@ -32,7 +32,7 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Relatório Técnico — ${norma.codigo}</title>
+  <title>Ficha de Referência Normativa — ${norma.codigo}</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
     h1 { color: #1e40af; border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
@@ -46,7 +46,7 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
   </style>
 </head>
 <body>
-  <h1>Relatório Técnico — ${norma.codigo}</h1>
+  <h1>Ficha de Referência Normativa — ${norma.codigo}</h1>
   <div class="meta">
     <div class="campo">
       <div class="label">Código</div>
@@ -71,9 +71,9 @@ export default function BotoesSeguranca({ norma }: BotoesSegurancaProps) {
   </div>
   <div class="alerta">
     ${isRevogada
-      ? `<strong>⚠ Norma revogada.</strong> Esta NR não possui mais efeito jurídico. Consulte a legislação vigente antes de qualquer implementação.`
-      : `<strong>✓ Norma em vigor.</strong> Esta NR está ativa e seu cumprimento é obrigatório conforme a legislação trabalhista brasileira.`
-    }
+        ? `<strong>⚠ Norma revogada.</strong> Esta NR não possui mais efeito jurídico. Consulte a legislação vigente antes de qualquer implementação.`
+        : `<strong>✓ Norma em vigor.</strong> Esta NR está ativa e seu cumprimento é obrigatório conforme a legislação trabalhista brasileira.`
+      }
   </div>
   <p><strong>Fonte oficial:</strong> Ministério do Trabalho e Emprego — <a href="https://www.gov.br/trabalho-e-emprego">gov.br/trabalho-e-emprego</a></p>
   <div class="footer">

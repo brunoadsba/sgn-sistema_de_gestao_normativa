@@ -15,16 +15,16 @@ import { ErrorDisplay } from '@/components/error/ErrorDisplay'
 import { HistoricoAnalisesCard } from '@/features/analise/components/HistoricoAnalisesCard'
 
 const ResultadoAnalise = dynamic(
-  () => import('@/components/analise/ResultadoAnalise').then((mod) => mod.ResultadoAnalise),
-  {
-    loading: () => (
-      <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-blue-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
-        <CardContent className="py-8">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Carregando resultado...</p>
-        </CardContent>
-      </Card>
-    ),
-  }
+    () => import('@/components/analise/ResultadoAnalise').then((mod) => mod.ResultadoAnalise),
+    {
+        loading: () => (
+            <Card className="border-white/10 dark:border-gray-700/40 shadow-xl shadow-blue-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl">
+                <CardContent className="py-8">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Carregando resultado...</p>
+                </CardContent>
+            </Card>
+        ),
+    }
 )
 
 export interface NormaReduzida {
@@ -64,12 +64,14 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     const [analisando, setAnalisando] = useState(false)
     const [progresso, setProgresso] = useState(0)
     const [etapa, setEtapa] = useState('')
+    const [jobId, setJobId] = useState<string | null>(null)
     const [erro, setErro] = useState<string | null>(null)
     const [resultado, setResultado] = useState<AnaliseConformidadeResponse | null>(null)
     const [historico, setHistorico] = useState<HistoricoAnalise[]>([])
     const [carregandoHistorico, setCarregandoHistorico] = useState(true)
     const [limpandoHistorico, setLimpandoHistorico] = useState(false)
     const [mostrarHistorico, setMostrarHistorico] = useState(false)
+
     const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('hist_page', {
         defaultValue: '1',
         shallow: true,
@@ -86,6 +88,13 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         defaultValue: '',
         shallow: true,
     })
+    const [normaPreSelecionada] = useQueryState('norma', { shallow: true })
+
+    useEffect(() => {
+        if (normaPreSelecionada) {
+            setNormasSelecionadas([normaPreSelecionada])
+        }
+    }, [normaPreSelecionada])
     const paginaHistorico = Math.max(parseInt(paginaHistoricoQuery || '1', 10) || 1, 1)
     const periodoHistorico: PeriodoHistorico =
         periodoHistoricoQuery === 'today' || periodoHistoricoQuery === '7d' || periodoHistoricoQuery === '30d'
@@ -93,9 +102,9 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             : '30d'
     const ordenacaoHistorico: OrdenacaoHistorico =
         ordenacaoHistoricoQuery === 'data_desc' ||
-        ordenacaoHistoricoQuery === 'data_asc' ||
-        ordenacaoHistoricoQuery === 'score_desc' ||
-        ordenacaoHistoricoQuery === 'score_asc'
+            ordenacaoHistoricoQuery === 'data_asc' ||
+            ordenacaoHistoricoQuery === 'score_desc' ||
+            ordenacaoHistoricoQuery === 'score_asc'
             ? ordenacaoHistoricoQuery
             : 'data_desc'
     const buscaDocumento = buscaDocumentoQuery || ''
@@ -157,6 +166,61 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
     }, [carregarHistorico, mostrarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
+    // Polling de Job
+    useEffect(() => {
+        if (!jobId || !analisando) return
+
+        let timer: NodeJS.Timeout
+
+        const checkStatus = async () => {
+            try {
+                const res = await fetch(`/api/ia/jobs/${jobId}`)
+                const payload = await res.json()
+
+                if (!res.ok || !payload.success) return
+
+                const job = payload.data
+                setProgresso(job.progresso || 0)
+
+                // Mapear status para etapas legíveis
+                const statusMap: Record<string, string> = {
+                    'pending': 'Aguardando início...',
+                    'extracting': 'Extraindo texto do documento...',
+                    'analyzing': 'IA analisando conformidade...',
+                    'consolidating': 'Consolidando resultados...',
+                    'completed': 'Análise concluída!',
+                    'error': 'Erro no processamento'
+                }
+                setEtapa(statusMap[job.status] || job.status)
+
+                if (job.status === 'completed' && job.resultadoId) {
+                    // Buscar o resultado completo
+                    const resFinal = await fetch(`/api/ia/analisar-conformidade?id=${job.resultadoId}`)
+                    const payloadFinal = await resFinal.json()
+                    if (payloadFinal.success && payloadFinal.data) {
+                        setResultado(payloadFinal.data.analises[0])
+                        setAnalisando(false)
+                        setJobId(null)
+                        void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
+                    }
+                } else if (job.status === 'error') {
+                    setErro(job.erroDetalhes || 'Erro ao processar documento')
+                    setAnalisando(false)
+                    setJobId(null)
+                } else {
+                    // Continuar polling
+                    timer = setTimeout(checkStatus, 3000)
+                }
+            } catch (err) {
+                console.error('Erro polling:', err)
+                timer = setTimeout(checkStatus, 5000)
+            }
+        }
+
+        timer = setTimeout(checkStatus, 2000)
+        return () => clearTimeout(timer)
+    }, [jobId, analisando, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
+
     const executarAnalise = useCallback(async () => {
         if (!arquivo) {
             setErro('Selecione um documento para analisar.')
@@ -173,13 +237,17 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
         setResultado(null)
 
         try {
-            // 1. Extrair texto do documento
-            setEtapa('Extraindo texto do documento...')
-            setProgresso(15)
+            // 1. Extrair texto do documento localmente primeiro (para YAGNI/KISS, mantemos o fluxo de extração ativa)
+            // Mas agora o backend também rastreia isso se enviarmos via jobId.
+            // Para v1.8.0, vamos iniciar a análise e pegar o jobId.
+
+            setEtapa('Iniciando análise...')
+            setProgresso(5)
 
             const formData = new FormData()
             formData.append('file', arquivo)
 
+            // Primeiro extraímos o texto (como na v1.7.0)
             const extractRes = await fetchWithRetry('/api/extrair-texto', {
                 method: 'POST',
                 body: formData,
@@ -191,17 +259,9 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             }
 
             const extractData = await extractRes.json()
-            if (!extractData.success) {
-                throw new Error(extractData.error || 'Falha na extração de texto')
-            }
-
             const textoDocumento = extractData.data.texto
-            setProgresso(40)
 
-            // 2. Análise de conformidade com IA
-            setEtapa('Analisando conformidade com IA...')
-            setProgresso(50)
-
+            // Agora enviamos para análise que retorna jobId
             const codigosNR = normasSelecionadas.map(codigo => {
                 const match = codigo.match(/NR[-\s]*(\d+)/i)
                 return match ? `NR-${parseInt(match[1])}` : codigo
@@ -214,28 +274,29 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                     documento: textoDocumento,
                     tipoDocumento: 'OUTRO',
                     normasAplicaveis: codigosNR,
+                    metadata: { nomeArquivoSource: arquivo.name }
                 }),
-            }, { retries: 3, timeoutMs: 90_000 })
-
-            setProgresso(85)
+            }, { retries: 1, timeoutMs: 30_000 }) // Timeout curto pois queremos o JobId
 
             if (!analysisRes.ok) {
                 const err = await analysisRes.json().catch(() => ({}))
-                throw new Error(err.error || `Erro ${analysisRes.status} na análise`)
+                throw new Error(err.error || `Erro ${analysisRes.status} ao iniciar análise`)
             }
 
             const analysisData = await analysisRes.json()
-            if (!analysisData.success || !analysisData.data) {
-                throw new Error(analysisData.error || 'Falha na análise de conformidade')
+            if (analysisData.success && analysisData.data?.jobId) {
+                setJobId(analysisData.data.jobId)
+                setEtapa('Job aceito. Acompanhando progresso...')
+                // O useEffect de polling assume daqui em diante
+            } else if (analysisData.success && !analysisData.data?.jobId) {
+                // Caso a API tenha concluído síncronamente (raro mas possível em docs minúsculos)
+                setResultado(analysisData.data)
+                setProgresso(100)
+                setAnalisando(false)
+                await carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
             }
-
-            setProgresso(100)
-            setEtapa('Concluída')
-            setResultado(analysisData.data)
-            await carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
         } catch (err) {
             setErro(err instanceof Error ? err.message : 'Erro desconhecido na análise')
-        } finally {
             setAnalisando(false)
         }
     }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
@@ -362,22 +423,59 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         </div>
                     )}
 
-                    {/* Progresso */}
+                    {/* Progresso com Stepper */}
                     {analisando && (
-                        <div aria-live="polite" className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 p-6 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 dark:from-blue-950/50 dark:to-indigo-950/50 backdrop-blur-xl border border-blue-100 dark:border-blue-900/50 shadow-lg rounded-2xl">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-blue-400 rounded-full blur animate-pulse opacity-50"></div>
-                                        <div className="relative h-8 w-8 rounded-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 animate-spin" />
-                                    </div>
-                                    <span className="text-sm sm:text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 truncate">
-                                        {etapa}
-                                    </span>
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6 p-8 bg-white/40 dark:bg-gray-900/40 backdrop-blur-2xl border border-white/20 dark:border-gray-800 shadow-2xl rounded-3xl">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                                        Análise em Andamento
+                                    </h3>
+                                    <span className="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">{progresso}%</span>
                                 </div>
-                                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{progresso}%</span>
+                                <Progress value={progresso} className="h-2 bg-gray-200 dark:bg-gray-800" />
                             </div>
-                            <Progress value={progresso} className="h-3 bg-blue-100 dark:bg-blue-950" />
+
+                            <div className="grid grid-cols-3 gap-4 relative">
+                                {[
+                                    { label: 'Extração', step: 10, key: 'extract' },
+                                    { label: 'Análise', step: 40, key: 'analyze' },
+                                    { label: 'Conclusão', step: 90, key: 'finish' }
+                                ].map((s, idx) => (
+                                    <div key={s.key} className="flex flex-col items-center gap-3 relative z-10">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 shadow-lg ${progresso >= s.step
+                                            ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-blue-500/20'
+                                            : 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 text-gray-400'
+                                            }`}>
+                                            {progresso > s.step ? (
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                <span className="text-xs font-bold">{idx + 1}</span>
+                                            )}
+                                        </div>
+                                        <span className={`text-[10px] sm:text-xs font-bold tracking-tight uppercase ${progresso >= s.step ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'
+                                            }`}>
+                                            {s.label}
+                                        </span>
+                                    </div>
+                                ))}
+                                {/* Linha conectora */}
+                                <div className="absolute top-5 left-[15%] right-[15%] h-[2px] bg-gray-100 dark:bg-gray-800 -z-0">
+                                    <div
+                                        className="h-full bg-blue-600 transition-all duration-700 ease-in-out shadow-[0_0_8px_rgba(37,99,235,0.5)]"
+                                        style={{ width: `${Math.max(0, Math.min(100, (progresso / 100) * 125))}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-800/30 animate-pulse">
+                                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 italic">
+                                    {etapa}
+                                </span>
+                            </div>
                         </div>
                     )}
 

@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-21 (V1.7.0: Otimização de RAG e IA Híbrida)
+> Atualizado em: 2026-02-21 (V1.8.0: Evolução de Infraestrutura e UX)
 
 ---
 
@@ -23,8 +23,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
-| Banco de dados | SQLite (better-sqlite3) + Drizzle ORM | 0.45.1 |
-| IA | GROQ (Llama 3.3 70B) + Ollama (Llama 3.2) | 1.7.0 |
+| Banco de dados | Turso DB (@libsql/client) + SQLite + Drizzle | v1.8.0 |
+| IA | GROQ (Llama 3.3 70B) + Ollama (Llama 3.2) | 1.8.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -169,6 +169,9 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local)
 23. **RAG de Alta Precisão**: ranking híbrido e normalização inteligente com 100% de Recall em casos críticos (CIPA/EPI/Portos)
 24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
+25. **Infraestrutura Turso DB**: Migração para `@libsql/client` permitindo persistência real no Vercel.
+26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real.
+27. **Exportação PDF**: Geração de laudos técnicos otimizada para impressão corporativa.
 ---
 
 ## O que NÃO funciona / está incompleto
@@ -220,7 +223,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 28 | 2026-02-20 | Evolução do gate de abertura: removido auto-fechamento por tempo; abertura passa a bloquear o app até clique explícito em CTA profissional (`Acessar Plataforma`), com persistência one-time por dispositivo em `localStorage` (`sgn.opening.seen.device`). `SessionSplashGate` passou a envolver header e conteúdo para experiência de entrada única e consistente em web/mobile. |
 | 29 | 2026-02-20 | Redesign visual da abertura para padrão premium: `AppOpeningScreen` migrada para layout institucional escuro com iluminação de fundo, textura geométrica, card central de marca SGN, CTA principal com seta e rodapé institucional. `SessionSplashGate` recebeu textos finais da identidade e manteve comportamento one-time por dispositivo. |
 | 30 | 2026-02-21 | Qualidade e Infra: Testes unitários de API/Helps, fix de Memory Leak no chunking, remoção de dependências inseguras e E2E Playwright. |
-| 31 | 2026-02-21 | V1.7.0: Otimização de RAG (Recall 1.00), IA Híbrida (Groq/Ollama), suporte NR-29/30 e Harbour Scorecard. Atualização completa da documentação técnica e operacional. |
+| 31 | 2026-02-21 | V1.7.0: Otimização de RAG (Recall 1.00), IA Híbrida (Groq/Ollama), suporte NR-29/30 e Harbour Scorecard. |
+| 32 | 2026-02-21 | V1.8.0: Evolução de Infraestrutura (Turso DB), UX (Progress Polling) e Produto (PDF Export). |
 
 ---
 

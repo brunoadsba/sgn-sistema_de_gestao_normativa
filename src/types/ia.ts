@@ -13,6 +13,7 @@ export interface AnaliseConformidadeRequest {
     fonte: 'local'
   }
   prioridade?: 'baixa' | 'media' | 'alta' | 'critica'
+  metadata?: Record<string, unknown>
 }
 
 export interface AnaliseConformidadeResponse {
@@ -27,6 +28,8 @@ export interface AnaliseConformidadeResponse {
   modeloUsado: string
   tempoProcessamento: number
   metadadosProcessamento?: MetadadosProcessamento
+  jobId?: string | undefined
+  nomeArquivo?: string | undefined
 }
 
 export interface GapConformidade {

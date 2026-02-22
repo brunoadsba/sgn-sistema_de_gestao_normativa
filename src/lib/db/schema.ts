@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { sql, relations } from 'drizzle-orm';
 
 const nowDefault = sql`(datetime('now'))`;
 
@@ -14,6 +14,10 @@ export const documentos = sqliteTable('documentos', {
   versao: integer('versao').default(1),
   createdAt: text('created_at').notNull().default(nowDefault),
 });
+
+export const documentosRelations = relations(documentos, ({ many }) => ({
+  jobs: many(analiseJobs),
+}));
 
 // ====== ANALISE JOBS ======
 export const analiseJobs = sqliteTable('analise_jobs', {
@@ -32,6 +36,13 @@ export const analiseJobs = sqliteTable('analise_jobs', {
   completedAt: text('completed_at'),
 });
 
+export const analiseJobsRelations = relations(analiseJobs, ({ one }) => ({
+  documento: one(documentos, {
+    fields: [analiseJobs.documentoId],
+    references: [documentos.id],
+  }),
+}));
+
 // ====== ANALISE RESULTADOS ======
 export const analiseResultados = sqliteTable('analise_resultados', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -43,6 +54,18 @@ export const analiseResultados = sqliteTable('analise_resultados', {
   metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
   createdAt: text('created_at').notNull().default(nowDefault),
 });
+
+export const analiseResultadosRelations = relations(analiseResultados, ({ one, many }) => ({
+  job: one(analiseJobs, {
+    fields: [analiseResultados.jobId],
+    references: [analiseJobs.id],
+  }),
+  documento: one(documentos, {
+    fields: [analiseResultados.documentoId],
+    references: [documentos.id],
+  }),
+  gaps: many(conformidadeGaps),
+}));
 
 // ====== CONFORMIDADE GAPS ======
 export const conformidadeGaps = sqliteTable('conformidade_gaps', {
@@ -58,3 +81,10 @@ export const conformidadeGaps = sqliteTable('conformidade_gaps', {
   impacto: text('impacto'),
   createdAt: text('created_at').notNull().default(nowDefault),
 });
+
+export const conformidadeGapsRelations = relations(conformidadeGaps, ({ one }) => ({
+  resultado: one(analiseResultados, {
+    fields: [conformidadeGaps.analiseResultadoId],
+    references: [analiseResultados.id],
+  }),
+}));

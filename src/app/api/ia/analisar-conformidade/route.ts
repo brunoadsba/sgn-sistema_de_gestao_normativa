@@ -24,7 +24,9 @@ import {
   listarAnalisesConformidade,
   OrdenacaoHistorico,
   PeriodoHistorico,
-  persistirAnaliseConformidade,
+  iniciarJobAnalise,
+  atualizarProgressoJob,
+  finalizarJobAnalise,
 } from '@/lib/ia/persistencia-analise'
 import { getIdempotentResponse, saveIdempotentResponse } from '@/lib/idempotency'
 import { randomUUID } from 'crypto'
@@ -41,6 +43,7 @@ async function analisarConformidadeHandler(request: NextRequest) {
   const requestId = request.headers.get('x-request-id') ?? randomUUID();
   const idempotencyKey = request.headers.get('idempotency-key');
   const log = createRequestLogger(request, 'api.ia.analisar-conformidade')
+  let currentJobId = '';
 
   try {
     log.info({ requestId, idempotencyKey }, 'Análise de conformidade iniciada');
@@ -69,6 +72,16 @@ async function analisarConformidadeHandler(request: NextRequest) {
       }
     }
 
+    // Iniciar Job no Banco
+    const { documentoId, jobId } = await iniciarJobAnalise({
+      nomeArquivo: body.metadata?.nomeArquivo as string || `analise-${randomUUID().slice(0, 8)}.txt`,
+      tipoDocumento: body.tipoDocumento,
+      normasAplicaveis: body.normasAplicaveis ?? [],
+    });
+    currentJobId = jobId;
+
+    await atualizarProgressoJob(jobId, 'extracting', 10);
+
     const estrategia = body.estrategiaProcessamento ?? 'completo'
     const timestamp = new Date().toISOString()
     const modeloUsado = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : 'llama-4-scout-17b-16e-instruct'
@@ -79,6 +92,8 @@ async function analisarConformidadeHandler(request: NextRequest) {
       totalChunks: 0,
       fonte: 'local',
     }
+
+    await atualizarProgressoJob(jobId, 'analyzing', 20);
 
     if (estrategia === 'incremental') {
       const chunks = dividirDocumentoEmChunks(body.documento)
@@ -132,6 +147,9 @@ async function analisarConformidadeHandler(request: NextRequest) {
           }
         }
       )
+
+      await atualizarProgressoJob(jobId, 'consolidating', 90);
+
       const versoesBase = new Set(resultadosPorChunk.map((item) => item.versaoBase))
       const chunkIdsValidos = resultadosPorChunk.flatMap((item) => item.chunkIdsLocais)
       evidenciasPersistencia = resultadosPorChunk.flatMap((item) => item.evidencias)
@@ -180,15 +198,16 @@ async function analisarConformidadeHandler(request: NextRequest) {
       }
     }
 
-    // Persistir no banco
-    await persistirAnaliseConformidade(
-      {
-        ...body,
-        evidenciasNormativas: evidenciasPersistencia,
-        contextoBaseConhecimento: contextoPersistencia,
-      },
-      respostaCompleta
-    )
+    // Preparar body com contexto enriquecido para persistência final
+    const bodyComContexto: AnaliseConformidadeRequest = {
+      ...body,
+      documento: body.documento, // Garantir que o texto esteja presente se mutado
+      evidenciasNormativas: evidenciasPersistencia,
+      contextoBaseConhecimento: contextoPersistencia,
+    }
+
+    // Finalizar Job de forma estruturada
+    await finalizarJobAnalise(jobId, documentoId, bodyComContexto, respostaCompleta);
 
     if (idempotencyKey) {
       saveIdempotentResponse(idempotencyKey, body, respostaCompleta)
@@ -205,11 +224,12 @@ async function analisarConformidadeHandler(request: NextRequest) {
     }, 'Análise de conformidade concluída com sucesso');
 
     const successResponse = createSuccessResponse(
-      respostaCompleta,
+      { ...respostaCompleta, jobId },
       "Análise de conformidade concluída com sucesso",
       200
     );
     successResponse.headers.set('x-request-id', requestId);
+    successResponse.headers.set('x-job-id', jobId);
     return successResponse;
 
   } catch (error) {
@@ -222,6 +242,10 @@ async function analisarConformidadeHandler(request: NextRequest) {
       tempoProcessamento,
       error: message,
     }, 'Erro na análise de conformidade');
+
+    if (currentJobId) {
+      await atualizarProgressoJob(currentJobId, 'error', 0, message);
+    }
 
     const errorResponse = createErrorResponse(
       statusCode === 409 ? 'Conflito de idempotência' : "Erro interno do servidor na análise de conformidade",
@@ -278,11 +302,27 @@ function validarEvidenciasDaResposta(
 // Exportar função simplificada
 export const POST = analisarConformidadeHandler;
 
-// GET /api/ia/analisar-conformidade - Listar análises
+// GET /api/ia/analisar-conformidade - Listar ou buscar uma análise
 export async function GET(request: NextRequest) {
-  const log = createRequestLogger(request, 'api.ia.analisar-conformidade.listar')
+  const log = createRequestLogger(request, 'api.ia.analisar-conformidade.get')
   try {
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    // Se um ID for fornecido, retornar apenas essa análise
+    if (id) {
+      const { buscarAnalisePorId } = await import('@/lib/ia/persistencia-analise')
+      const analise = await buscarAnalisePorId(id)
+
+      if (!analise) {
+        return createErrorResponse('Análise não encontrada', 404)
+      }
+
+      // IMPORTANTE: Criamos um wrapper compatível com o que o frontend espera (lista ou objeto)
+      // O AnaliseCliente espera payload.data.analises[0]
+      return createSuccessResponse({ analises: [analise] })
+    }
+
     const limite = Math.min(Math.max(parseInt(searchParams.get('limite') || '10'), 1), 100)
     const pagina = Math.max(parseInt(searchParams.get('pagina') || '1'), 1)
     const periodo = parsePeriodo(searchParams.get('periodo'))
