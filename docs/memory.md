@@ -1,7 +1,7 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-21 (V1.9.0: UX/UI Mestre)
+> Atualizado em: 2026-02-21
 
 - **Versão Atual**: `1.9.0`
 - **Última Atualização**: 2026-02-21
