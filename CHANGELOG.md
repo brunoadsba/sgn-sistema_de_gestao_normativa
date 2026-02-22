@@ -10,6 +10,7 @@
 ### Alterado
 - Melhoria nos rótulos de botões em `AnaliseCliente.tsx` para clareza funcional.
 - Atualização do componente `ResultadoAnalise.tsx` para priorizar visualmente riscos mais graves.
+- **Manutenção**: Atualização seletiva de dependências (`Next.js`, `React`, `Sentry`, `Drizzle`) para melhoria de estabilidade.
 
 Todas as mudanças relevantes do SGN são documentadas neste arquivo.
 

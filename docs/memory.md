@@ -234,6 +234,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 32 | 2026-02-21 | V1.8.0: Evolução de Infraestrutura (Turso DB), UX (Progress Polling) e Produto (PDF Export). |
 | 33 | 2026-02-21 | Estabilização de Deploy: Ajuste de ignore rules, rotas dinâmicas async (Next 15) e conexão Lazy DB via Proxy. |
 | 34 | 2026-02-21 | V1.9.0: UX/UI Mestre - Auto-Sugestão de NRs, Accordions para Gaps e otimização de Canvas. |
+| 35 | 2026-02-21 | Manutenção: Atualização de pacotes principais (`Next 16`, `React 19`, `Sentry`) e auditoria de segurança das dependências. |
 
 ---
 
