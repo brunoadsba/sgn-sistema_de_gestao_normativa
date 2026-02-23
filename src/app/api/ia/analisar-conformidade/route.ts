@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 import { analisarConformidade } from '@/lib/ia/groq'
 import { analisarConformidadeOllama } from '@/lib/ia/ollama'
 import { analisarConformidadeZai } from '@/lib/ia/zai'
@@ -196,6 +197,13 @@ export async function POST(request: NextRequest) {
   const syncMode = request.nextUrl.searchParams.get('mode') === 'sync'
   const log = createRequestLogger(request, 'api.ia.analisar-conformidade')
 
+  const cookieStore = await cookies()
+  let sessionId = cookieStore.get('sgn_session')?.value
+
+  if (!sessionId) {
+    sessionId = randomUUID()
+  }
+
   try {
     const bodyValidation = await validateRequestBody(CreateAnaliseSchema, request)
     if (!bodyValidation.success) return createErrorResponse(bodyValidation.error, 400)
@@ -213,7 +221,7 @@ export async function POST(request: NextRequest) {
       nomeArquivo: body.metadata?.nomeArquivo as string || `analise-${randomUUID().slice(0, 8)}.txt`,
       tipoDocumento: body.tipoDocumento,
       normasAplicaveis: body.normasAplicaveis ?? [],
-    }, 'pending')
+    }, 'pending', sessionId)
 
     // Orquestração
     const promise = executarProcessamentoSgn(jobId, documentoId, body, requestId, startTime)
@@ -232,11 +240,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Retorno Imediato conforme RFC 7231 (202 Accepted)
-    return createSuccessResponse(
+    const response = createSuccessResponse(
       { jobId, status: 'pending', pollUrl: `/api/ia/jobs/${jobId}` },
       'Análise iniciada com sucesso em background',
       202
     )
+
+    // Setar cookie de sessão se não existir
+    response.cookies.set('sgn_session', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 1 semana
+      path: '/',
+    })
+
+    return response
 
   } catch (error) {
     log.error({ error }, 'Erro fatal no endpoint de análise')

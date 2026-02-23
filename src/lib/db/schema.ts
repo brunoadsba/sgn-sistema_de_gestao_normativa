@@ -31,6 +31,7 @@ export const analiseJobs = sqliteTable('analise_jobs', {
   erroDetalhes: text('erro_detalhes'),
   parametros: text('parametros', { mode: 'json' }).$type<Record<string, unknown>>(),
   metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
+  sessionId: text('session_id'),
   createdAt: text('created_at').notNull().default(nowDefault),
   startedAt: text('started_at'),
   completedAt: text('completed_at'),

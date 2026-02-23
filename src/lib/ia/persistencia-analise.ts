@@ -31,7 +31,8 @@ export type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'scor
 
 export async function iniciarJobAnalise(
   entrada: { nomeArquivo: string; tipoDocumento: string; normasAplicaveis: string[] },
-  initialStatus: string = 'extracting'
+  initialStatus: string = 'extracting',
+  sessionId?: string
 ): Promise<{ documentoId: string; jobId: string }> {
   const { id: documentoId } = await db
     .insert(schema.documentos)
@@ -51,6 +52,7 @@ export async function iniciarJobAnalise(
       status: initialStatus,
       progresso: 0,
       tipoAnalise: 'completa',
+      sessionId: sessionId || null,
       startedAt: new Date().toISOString(),
     })
     .returning({ id: schema.analiseJobs.id })

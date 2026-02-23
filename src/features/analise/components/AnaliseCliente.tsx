@@ -445,10 +445,15 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         </div>
                     </div>
 
-                    {/* Erro */}
+                    {/* Erro ou Info */}
                     {erro && (
                         <div className="animate-in fade-in zoom-in-95 duration-300">
-                            <ErrorDisplay message={erro} onRetry={executarAnalise} compact />
+                            <ErrorDisplay
+                                message={erro}
+                                onRetry={executarAnalise}
+                                compact
+                                variant={erro.includes('IA pré-selecionou') ? 'info' : 'error'}
+                            />
                         </div>
                     )}
 

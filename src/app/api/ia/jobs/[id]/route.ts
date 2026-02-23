@@ -1,14 +1,31 @@
 import { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
 import { db, schema } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation';
+import { rateLimit } from '@/lib/security/rate-limit';
 
 export async function GET(
-    _request: NextRequest,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id: jobId } = await params;
+
+        // 1. Rate Limiting (Hardening)
+        const rl = rateLimit(request, {
+            windowMs: 60 * 1000,
+            max: 60, // 60 requisições por minuto por IP para polling
+            keyPrefix: 'rl:jobs'
+        });
+
+        if (rl.limitExceeded) {
+            return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429);
+        }
+
+        // 2. Buscar Job e Validar Sessão
+        const cookieStore = await cookies();
+        const currentSession = cookieStore.get('sgn_session')?.value;
 
         const job = await db.query.analiseJobs.findFirst({
             where: eq(schema.analiseJobs.id, jobId),
@@ -19,6 +36,11 @@ export async function GET(
 
         if (!job) {
             return createErrorResponse('Job não encontrado', 404);
+        }
+
+        // Validação de Propriedade (Session Match)
+        if (job.sessionId && job.sessionId !== currentSession) {
+            return createErrorResponse('Acesso negado ao status deste job', 403);
         }
 
         // Buscar resultado se estiver concluído

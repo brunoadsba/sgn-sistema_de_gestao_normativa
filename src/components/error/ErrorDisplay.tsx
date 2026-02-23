@@ -7,20 +7,27 @@ type ErrorDisplayProps = {
   message: string
   onRetry?: () => void
   compact?: boolean
+  variant?: 'error' | 'info'
 }
 
-export function ErrorDisplay({ message, onRetry, compact = false }: ErrorDisplayProps) {
+export function ErrorDisplay({ message, onRetry, compact = false, variant = 'error' }: ErrorDisplayProps) {
+  const isInfo = variant === 'info'
+
   return (
     <div
       role="alert"
-      className={`flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50/90 p-4 text-red-800 shadow-sm dark:border-red-900/60 dark:bg-red-950/50 dark:text-red-300 ${
-        compact ? 'text-sm' : ''
-      }`}
+      className={`flex items-start gap-3 rounded-2xl border backdrop-blur-md transition-all duration-300 ${isInfo
+          ? 'border-blue-200 bg-blue-50/80 text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 shadow-blue-500/10'
+          : 'border-red-200 bg-red-50/90 p-4 text-red-800 shadow-sm dark:border-red-900/60 dark:bg-red-950/50 dark:text-red-300'
+        } p-4 ${compact ? 'text-sm' : ''}`}
     >
-      <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
+      <AlertCircle
+        className={`h-5 w-5 flex-shrink-0 ${isInfo ? 'text-blue-500 dark:text-blue-400' : 'text-red-500 dark:text-red-400'
+          }`}
+      />
       <div className="flex-1 space-y-2">
-        <p className="font-medium">{message}</p>
-        {onRetry ? (
+        <p className="font-medium leading-relaxed">{message}</p>
+        {onRetry && !isInfo ? (
           <Button
             type="button"
             variant="outline"
