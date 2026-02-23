@@ -58,6 +58,9 @@ const AnaliseConformidadeResponseSchema = z.object({
       impacto: z.string().optional(),
       normasRelacionadas: z.array(z.string()).optional(),
       evidencias: z.array(EvidenciaNormativaSchema).default([]),
+      citacaoDocumento: z.string().optional(),
+      paginaDocumento: z.number().optional(),
+      linhaDocumento: z.string().optional(),
     })
   ).default([]),
   resumo: z.string().default('Análise concluída sem resumo detalhado.'),
@@ -81,6 +84,16 @@ export function sanitizeInput(input: string): string {
     .replace(/\bignore\b.*\binstructions?\b/gi, '[removido]')
     .replace(/\bforget\b.*\bprevious\b/gi, '[removido]')
     .trim()
+}
+
+/**
+ * Injeta marcadores de linha para rastreabilidade [L1], [L2]...
+ */
+function injetarNumerosLinha(texto: string): string {
+  return texto
+    .split('\n')
+    .map((linha, i) => `[L${i + 1}] ${linha}`)
+    .join('\n')
 }
 
 function sleep(ms: number): Promise<void> {
@@ -203,6 +216,7 @@ export async function analisarConformidade(
 // Gerar prompt especializado
 export function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
   const documentoSanitizado = sanitizeInput(request.documento)
+  const documentoComLinhas = injetarNumerosLinha(documentoSanitizado)
   const tipoSanitizado = sanitizeInput(request.tipoDocumento)
   const evidenciasSanitizadas = (request.evidenciasNormativas ?? []).map((e) => ({
     chunkId: e.chunkId,
@@ -216,8 +230,8 @@ export function gerarPromptAnalise(request: AnaliseConformidadeRequest): string 
   return `
 ANÁLISE DE CONFORMIDADE SST - DOCUMENTO: ${tipoSanitizado}
 
-DOCUMENTO PARA ANÁLISE:
-${documentoSanitizado}
+DOCUMENTO PARA ANÁLISE (COM MARCADORES DE LINHA [LX]):
+${documentoComLinhas}
 
 NORMAS APLICÁVEIS: ${request.normasAplicaveis?.join(', ') || 'NRs gerais'}
 VERSÃO BASE DE CONHECIMENTO: ${request.contextoBaseConhecimento?.versaoBase || 'nao_informada'}
@@ -234,6 +248,10 @@ INSTRUÇÕES CRÍTICAS (DEVE SEGUIR ESTRITAMENTE):
 6. Forneça recomendações práticas e objetivas.
 7. Calcule score de 0-100 refletindo a aderência geral (Zero gaps = 100).
 8. MANDATÓRIO: Para CADA gap listado, você DEVE OBRIGATORIAMENTE preencher o array "evidencias" referenciando QUAL "chunkId" embasou aquela crítica. Copie os dados (chunkId, normaCodigo, secao, conteudo, score, fonte) EXATAMENTE como estão no JSON de Evidencias enviado a você. Não deixe campos vazios. Se você não encontrar um chunkId compatível, não liste o gap. Um gap SEM EVIDÊNCIA ou com chunkId vazio será rejeitado pelo sistema.
+9. RASTREABILIDADE (PADRÃO INDÚSTRIA): Para cada gap identificado, preencha também:
+   - "citacaoDocumento": O trecho exato do documento do usuário que motivou o gap.
+   - "paginaDocumento": O número da página (tente inferir de cabeçalhos/rodapés ou assuma 1 como base).
+   - "linhaDocumento": O marcador de linha [LX] onde o trecho se inicia (ex: "L45").
 
 FORMATO DE RESPOSTA (JSON):
 {
@@ -247,6 +265,9 @@ FORMATO DE RESPOSTA (JSON):
       "categoria": "EPI",
       "recomendacao": "Recomendação específica",
       "prazo": "30 dias",
+      "citacaoDocumento": "Trecho literal do documento do usuário",
+      "paginaDocumento": 1,
+      "linhaDocumento": "L12",
       "evidencias": [
         {
           "chunkId": "COPIE EXATAMENTE O ID AQUI",

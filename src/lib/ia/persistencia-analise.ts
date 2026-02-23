@@ -134,6 +134,9 @@ export async function finalizarJobAnalise(
           recomendacao: gap.recomendacao,
           prazoSugerido: gap.prazo,
           impacto: gap.impacto,
+          citacaoDocumento: gap.citacaoDocumento,
+          paginaDocumento: gap.paginaDocumento,
+          linhaDocumento: gap.linhaDocumento,
         }))
       );
     }

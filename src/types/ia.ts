@@ -48,6 +48,9 @@ export interface GapConformidade {
     chunkIdsUsados: string[]
     ordemProcessamento: number[]
   }
+  citacaoDocumento?: string | null
+  paginaDocumento?: number | null
+  linhaDocumento?: string | null
 }
 
 export interface EvidenciaNormativa {

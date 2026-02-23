@@ -80,6 +80,9 @@ export const conformidadeGaps = sqliteTable('conformidade_gaps', {
   recomendacao: text('recomendacao'),
   prazoSugerido: text('prazo_sugerido'),
   impacto: text('impacto'),
+  citacaoDocumento: text('citacao_documento'),
+  paginaDocumento: integer('pagina_documento'),
+  linhaDocumento: text('linha_documento'),
   createdAt: text('created_at').notNull().default(nowDefault),
 });
 

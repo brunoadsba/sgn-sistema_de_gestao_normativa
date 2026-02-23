@@ -32,5 +32,8 @@ export function normalizarGap(raw: typeof schema.conformidadeGaps.$inferSelect):
     prazo: raw.prazoSugerido ?? 'Não definido',
     ...(raw.impacto ? { impacto: raw.impacto } : {}),
     ...(raw.normaId ? { normasRelacionadas: [`NR-${raw.normaId}`] } : {}),
+    ...(raw.citacaoDocumento ? { citacaoDocumento: raw.citacaoDocumento } : {}),
+    ...(raw.paginaDocumento ? { paginaDocumento: raw.paginaDocumento } : {}),
+    ...(raw.linhaDocumento ? { linhaDocumento: raw.linhaDocumento } : {}),
   };
 }

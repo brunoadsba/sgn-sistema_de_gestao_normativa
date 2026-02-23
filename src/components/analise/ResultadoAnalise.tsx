@@ -114,9 +114,44 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
         </div>
 
         <div className="bg-white dark:bg-gray-800/60 rounded-xl p-4 border border-gray-100 dark:border-gray-700/50 shadow-sm mb-3">
-          <div className="flex items-start gap-2">
-            <Shield className={`h-4 w-4 shrink-0 mt-0.5 ${config.icon}`} />
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-medium">{gap.recomendacao}</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-2">
+              <Shield className={`h-4 w-4 shrink-0 mt-0.5 ${config.icon}`} />
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Recomendação Técnica:</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-medium">{gap.recomendacao}</p>
+              </div>
+            </div>
+
+            {gap.citacaoDocumento && (
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700/50">
+                <div className="flex items-start gap-2">
+                  <div className="p-1 rounded bg-indigo-50 dark:bg-indigo-950/40 mt-1">
+                    <ArrowRight className="h-3 w-3 text-indigo-500" />
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Evidência no Documento:</span>
+                      <div className="flex gap-2">
+                        {gap.paginaDocumento && (
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-50/50 dark:bg-indigo-900/40 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                            PÁG. {gap.paginaDocumento}
+                          </span>
+                        )}
+                        {gap.linhaDocumento && (
+                          <span className="px-1.5 py-0.5 rounded bg-indigo-50/50 dark:bg-indigo-900/40 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                            LINHA: {gap.linhaDocumento.replace('[', '').replace(']', '')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-indigo-900/80 dark:text-indigo-200/80 italic leading-relaxed font-serif bg-indigo-50/20 dark:bg-indigo-950/20 p-2 rounded-lg border-l-2 border-indigo-300 dark:border-indigo-800">
+                      "{gap.citacaoDocumento}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
