@@ -30,7 +30,8 @@ export type PeriodoHistorico = 'today' | '7d' | '30d';
 export type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc';
 
 export async function iniciarJobAnalise(
-  entrada: { nomeArquivo: string; tipoDocumento: string; normasAplicaveis: string[] }
+  entrada: { nomeArquivo: string; tipoDocumento: string; normasAplicaveis: string[] },
+  initialStatus: string = 'extracting'
 ): Promise<{ documentoId: string; jobId: string }> {
   const { id: documentoId } = await db
     .insert(schema.documentos)
@@ -47,7 +48,7 @@ export async function iniciarJobAnalise(
     .values({
       documentoId,
       normaIds: entrada.normasAplicaveis,
-      status: 'extracting',
+      status: initialStatus,
       progresso: 0,
       tipoAnalise: 'completa',
       startedAt: new Date().toISOString(),

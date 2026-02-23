@@ -1,0 +1,115 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { analisarNR6 } from '@/lib/ia/analisador-nr6'
+import { AnaliseNR6Request } from '@/lib/ia/analisador-nr6'
+import { createRequestLogger } from '@/lib/logger'
+
+// POST /api/nr6/analisar
+export async function POST(request: NextRequest) {
+  const logger = createRequestLogger(request, 'api.nr6')
+  try {
+    const body = await request.json()
+
+    // Validar entrada específica para NR-6
+    const validacao = validarEntradaNR6(body)
+    if (!validacao.valida) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Dados de entrada inválidos para análise NR-6',
+          detalhes: validacao.erros
+        },
+        { status: 400 }
+      )
+    }
+
+    const inicioProcessamento = Date.now()
+
+    // Executar análise específica da NR-6
+    const resultado = await analisarNR6(body as AnaliseNR6Request)
+
+    const tempoProcessamento = Date.now() - inicioProcessamento
+
+    // Adicionar metadados específicos da NR-6
+    const respostaCompleta = {
+      ...resultado,
+      timestamp: new Date().toISOString(),
+      modeloUsado: 'llama-4-scout-17b-16e-instruct',
+      tempoProcessamento,
+      norma: 'NR-6',
+      versao: '2024.1'
+    }
+
+    // Log específico da NR-6
+    logger.info({
+      score: resultado.score,
+      gaps: resultado.gaps.length,
+      conformidadeNR6: resultado.conformidadeNR6,
+      tempoProcessamento
+    }, 'Análise NR-6 concluída')
+
+    // Salvar análise no banco (implementar depois)
+
+    return NextResponse.json({
+      success: true,
+      data: respostaCompleta,
+      timestamp: new Date().toISOString(),
+      requestId: generateRequestId()
+    })
+
+  } catch (error) {
+    logger.error({ error: error instanceof Error ? error.message : 'Erro desconhecido' }, 'Erro na análise NR-6')
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Erro interno do servidor na análise NR-6',
+        detalhes: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString(),
+        requestId: generateRequestId()
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// Validação específica para NR-6
+type EntradaNR6Parcial = {
+  documento?: unknown;
+  tipoDocumento?: unknown;
+};
+
+function validarEntradaNR6(body: EntradaNR6Parcial): { valida: boolean; erros: string[] } {
+  const erros: string[] = []
+
+  if (!body.documento || typeof body.documento !== 'string') {
+    erros.push('Campo "documento" é obrigatório para análise NR-6')
+  }
+
+  if (!body.tipoDocumento) {
+    erros.push('Campo "tipoDocumento" é obrigatório para análise NR-6')
+  }
+
+  const tiposValidos = ['ficha_entrega_epi', 'treinamento_epi', 'inspecao_epi', 'pgr', 'nr1_gro', 'ppra', 'outro']
+  // PGR e NR-1-GRO são os documentos principais (NR-1 GRO substituiu PPRA)
+  // PPRA mantido para compatibilidade com documentos legados
+  if (typeof body.tipoDocumento === 'string' && !tiposValidos.includes(body.tipoDocumento)) {
+    erros.push(`Tipo de documento inválido. Tipos válidos: ${tiposValidos.join(', ')}`)
+  }
+
+
+
+  // Validar tamanho específico para NR-6
+  if (typeof body.documento === 'string' && body.documento.length > 30000) {
+    erros.push('Documento muito grande para análise NR-6. Máximo 30.000 caracteres')
+  }
+
+  return {
+    valida: erros.length === 0,
+    erros
+  }
+}
+
+// Função para gerar ID único
+function generateRequestId(): string {
+  return `nr6_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}

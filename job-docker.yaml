@@ -1,0 +1,14 @@
+job_name: sgn-backlog-cleanup-v18-marathon
+jobs_dir: jobs
+agents:
+  - name: aider
+    model_name: ollama/qwen2.5-coder:14b
+    kwargs:
+      OLLAMA_API_BASE: "http://172.17.0.1:11435"
+      LITELLM_TIMEOUT: 3600
+environment:
+  type: docker
+  force_build: true
+tasks:
+  - name: sgn-async-worker
+    path: harbor-tasks/sgn-async-worker

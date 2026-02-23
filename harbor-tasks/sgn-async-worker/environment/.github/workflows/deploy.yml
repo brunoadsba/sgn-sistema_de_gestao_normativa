@@ -1,0 +1,216 @@
+name: Deploy Pipeline
+
+# Desativado: executa apenas manualmente (Actions > Deploy Pipeline > Run workflow)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: Pre-deploy checks
+  pre-deploy:
+    name: Pre-deploy Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate required secrets (staging)
+        run: |
+          [ -n "${{ secrets.STAGING_GROQ_API_KEY }}" ] || (echo "Missing STAGING_GROQ_API_KEY" && exit 1)
+          [ -n "${{ secrets.VERCEL_TOKEN }}" ] || (echo "Missing VERCEL_TOKEN" && exit 1)
+          [ -n "${{ secrets.VERCEL_ORG_ID }}" ] || (echo "Missing VERCEL_ORG_ID" && exit 1)
+          [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ] || (echo "Missing VERCEL_PROJECT_ID" && exit 1)
+        
+      - name: Run tests
+        run: npm run test:ci
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Check build
+        run: |
+          test -f .next/standalone/server.js || (echo "Build failed" && exit 1)
+          echo "Build successful"
+
+  # Job 2: Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    if: github.ref == 'refs/heads/master' || github.event.inputs.environment == 'staging'
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build for staging
+        run: npm run build
+        env:
+          NODE_ENV: production
+          GROQ_API_KEY: ${{ secrets.STAGING_GROQ_API_KEY }}
+          DATABASE_PATH: ./data/sgn.db
+          
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+          
+      - name: Wait for deployment
+        run: sleep 30
+        
+      - name: Health check staging
+        run: |
+          curl -f https://sgn-staging.vercel.app/api/health || exit 1
+          echo "Staging deployment successful"
+
+  # Job 3: Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, deploy-staging]
+    if: github.ref == 'refs/heads/master' && github.event.inputs.environment == 'production'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate required secrets (production)
+        run: |
+          [ -n "${{ secrets.PROD_GROQ_API_KEY }}" ] || (echo "Missing PROD_GROQ_API_KEY" && exit 1)
+          [ -n "${{ secrets.VERCEL_TOKEN }}" ] || (echo "Missing VERCEL_TOKEN" && exit 1)
+          [ -n "${{ secrets.VERCEL_ORG_ID }}" ] || (echo "Missing VERCEL_ORG_ID" && exit 1)
+          [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ] || (echo "Missing VERCEL_PROJECT_ID" && exit 1)
+        
+      - name: Build for production
+        run: npm run build
+        env:
+          NODE_ENV: production
+          GROQ_API_KEY: ${{ secrets.PROD_GROQ_API_KEY }}
+          DATABASE_PATH: ./data/sgn.db
+          
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+          
+      - name: Wait for deployment
+        run: sleep 30
+        
+      - name: Health check production
+        run: |
+          curl -f https://sgn.vercel.app/api/health || exit 1
+          echo "Production deployment successful"
+          
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: '🚀 SGN deployed to production successfully!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Job 4: Post-deploy tests
+  post-deploy:
+    name: Post-deploy Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Test staging environment
+        if: needs.deploy-staging.result == 'success'
+        run: |
+          echo "Testing staging environment..."
+          curl -f https://sgn-staging.vercel.app/api/health
+          curl -f https://sgn-staging.vercel.app/api/normas/stats
+          echo "Staging tests passed"
+          
+      - name: Test production environment
+        if: needs.deploy-production.result == 'success'
+        run: |
+          echo "Testing production environment..."
+          curl -f https://sgn.vercel.app/api/health
+          curl -f https://sgn.vercel.app/api/normas/stats
+          echo "Production tests passed"
+
+  # Job 5: Rollback (if needed)
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    
+    steps:
+      - name: Rollback notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: '🚨 SGN deployment failed! Manual rollback may be required.'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Create rollback issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Deployment Failed - Rollback Required`,
+              body: `Deployment failed for commit ${context.sha}. Manual intervention required.`,
+              labels: ['bug', 'deployment', 'urgent']
+            })

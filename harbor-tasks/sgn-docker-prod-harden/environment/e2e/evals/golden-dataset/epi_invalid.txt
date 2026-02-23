@@ -1,0 +1,12 @@
+Formulário de Controle de Equipamentos de Proteção Individual
+
+Empresa: Metalúrgica SGN
+Setor: Usinagem
+
+Itens verificados:
+- Protetor auricular: Em uso pelos funcionários.
+- Óculos de segurança: Presentes.
+- Luvas de proteção: Fornecidas.
+
+Problema Detectado:
+Durante a inspeção técnica, verificou-se que as luvas de proteção contra agentes abrasivos e escoriantes estão sendo utilizadas sem a devida identificação do Certificado de Aprovação (CA) gravado no equipamento. Além disso, não há registro de higienização periódica das máscaras respiratórias, contrariando as diretrizes da NR-6 sobre a guarda, conservação e substituição de itens danificados ou extraviados. A falta de CA válido ou legível invalida a proteção legal e técnica do trabalhador.

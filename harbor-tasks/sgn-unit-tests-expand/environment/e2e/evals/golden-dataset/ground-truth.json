@@ -1,0 +1,155 @@
+{
+    "test_cases": [
+        {
+            "id": "cipa-missing-001",
+            "file": "cipa_missing.txt",
+            "normas": [
+                "5"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-5",
+                    "keywords": [
+                        "comissão interna",
+                        "cipa",
+                        "eleição",
+                        "dimensionamento"
+                    ],
+                    "severidade": "alta"
+                }
+            ]
+        },
+        {
+            "id": "epi-invalid-001",
+            "file": "epi_invalid.txt",
+            "normas": [
+                "6"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-6",
+                    "keywords": [
+                        "ca",
+                        "certificado de aprovação",
+                        "higienização",
+                        "substituição"
+                    ],
+                    "severidade": "media"
+                }
+            ]
+        },
+        {
+            "id": "pgr-basic-001",
+            "file": "pgr_baseline.txt",
+            "normas": [
+                "NR-01"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-1",
+                    "keywords": [
+                        "pgr",
+                        "gerenciamento de riscos",
+                        "inventário",
+                        "plano de ação"
+                    ],
+                    "severidade": "critica"
+                }
+            ]
+        },
+        {
+            "id": "machines-risk-001",
+            "file": "maquinas_risco.txt",
+            "normas": [
+                "NR-12"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-12",
+                    "keywords": [
+                        "proteção",
+                        "intertravamento",
+                        "zona de perigo",
+                        "parada de emergência"
+                    ],
+                    "severidade": "critica"
+                }
+            ]
+        },
+        {
+            "id": "cross-nr-001",
+            "file": "multi_norma_cross.txt",
+            "normas": [
+                "NR-01",
+                "NR-10",
+                "NR-12"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-1",
+                    "keywords": [
+                        "gro",
+                        "identificação de perigos"
+                    ],
+                    "severidade": "alta"
+                },
+                {
+                    "norma": "NR-10",
+                    "keywords": [
+                        "risco elétrico",
+                        "prontuário"
+                    ],
+                    "severidade": "critica"
+                },
+                {
+                    "norma": "NR-12",
+                    "keywords": [
+                        "máquina",
+                        "proteção"
+                    ],
+                    "severidade": "alta"
+                }
+            ]
+        },
+        {
+            "id": "portuario-029",
+            "file": "portuario-invalid-029.txt",
+            "normas": [
+                "29"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-29",
+                    "keywords": [
+                        "quebra-peito",
+                        "rede de proteção",
+                        "salva-vidas",
+                        "sinaleiro",
+                        "inclinação"
+                    ],
+                    "severidade": "critica"
+                }
+            ]
+        },
+        {
+            "id": "aquaviario-030",
+            "file": "aquaviario-invalid-030.txt",
+            "normas": [
+                "30"
+            ],
+            "expected_gaps": [
+                {
+                    "norma": "NR-30",
+                    "keywords": [
+                        "gsstb",
+                        "primeiros socorros",
+                        "camarote",
+                        "sobreposição",
+                        "reuniões"
+                    ],
+                    "severidade": "alta"
+                }
+            ]
+        }
+    ]
+}

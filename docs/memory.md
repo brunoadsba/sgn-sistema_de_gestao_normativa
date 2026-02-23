@@ -1,10 +1,10 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-21
+> Atualizado em: 2026-02-22
 
-- **Versão Atual**: `1.9.0`
-- **Última Atualização**: 2026-02-21
+- **Versão Atual**: `1.9.2`
+- **Última Atualização**: 2026-02-22
 
 ---
 
@@ -27,13 +27,14 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
-| IA | GROQ (Llama 3.3 70B) + Ollama (Llama 3.2) | 1.8.0 |
+| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama | 1.9.3 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
 | Testes E2E | Playwright | instalado (sessão 15) |
 | Deploy | Docker (self-hosted) | - |
 | Logging | Pino | 10.1.0 |
+| Agentes IA | Harbor (Aider, Oracle, Qwen-Coder) | 0.1.44 |
 
 **Arquitetura simplificada:** Next.js + SQLite local (Drizzle ORM) + GROQ. Sem Redis, sem Supabase, sem React Query, sem autenticação. NRs armazenadas em arquivo TypeScript local (`src/lib/data/normas.ts`). Deploy via Docker com volume persistente para dados.
 
@@ -62,8 +63,9 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 /                                   # Raiz do projeto
 ├── .github/workflows/              # CI/CD (ci, deploy, release)
 ├── docker/                         # nginx.conf + .env.example
-├── docs/                           # memory.md, Guia-Vercel.md
+├── docs/                           # memory.md, Guia-Vercel.md, harbor/
 ├── e2e/                            # Testes Playwright (api, navegacao, normas, nr6, pagina-inicial)
+├── harbor-tasks/                   # Tarefas Harbor (async-worker, unit-tests, docker-harden)
 ├── public/                         # sw.js
 ├── src/
 │   ├── app/
@@ -169,7 +171,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 19. **Deploy Vercel estabilizado**: correções de `vercel.json` e CSP
 20. **Performance web/mobile otimizada**: Canvas low-power, lazy-load e cache de KB
 21. **Branding modernizado**: ícones PWA, splash nativa e abertura premium
-22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local)
+22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local). Expansão para Z.AI (GLM-4.7) como provider principal do Harbor.
 23. **RAG de Alta Precisão**: ranking híbrido e normalização inteligente com 100% de Recall em casos críticos (CIPA/EPI/Portos)
 24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
 25. **Infraestrutura Turso DB**: Migração para `@libsql/client` (LibSQL) garantindo persistência real no Vercel (Cloud SQLite).
@@ -235,6 +237,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 33 | 2026-02-21 | Estabilização de Deploy: Ajuste de ignore rules, rotas dinâmicas async (Next 15) e conexão Lazy DB via Proxy. |
 | 34 | 2026-02-21 | V1.9.0: UX/UI Mestre - Auto-Sugestão de NRs, Accordions para Gaps e otimização de Canvas. |
 | 35 | 2026-02-21 | Manutenção: Atualização de pacotes principais (`Next 16`, `React 19`, `Sentry`) e auditoria de segurança das dependências. |
+| 36 | 2026-02-22 | Integração Harbor & Infra: Concluído hardening de Docker de produção, expansão de testes unitários de IA e estabilização do script Harbor Scorecard. Implementado Ollama Proxy (11435) para monitoramento de modelos locais. Patches críticos no agente Aider para suportar indexação rápida (fast-indexing) e timeouts de 1h (necessário para processamento estrutural via CPU no hardware local). Iniciado Worker Assíncrono (pendente conclusão). Versão 1.9.2. |
+| 37 | 2026-02-23 | Migração de Infra Harbor: Identificado gargalo de rede entre Docker/Ollama local. Migrada infraestrutura de agentes (Aider) para **Z.AI (GLM-4.7)**. Roteamento validado via API Cloud, eliminando Connection Refused e aumentando a velocidade de processamento dos agentes. Atualizados todos os `task.toml` e `.env.local`. |
 
 ---
 
@@ -345,3 +349,17 @@ Página de normas (/normas) — Server Component
 - `src/components/analise/SeletorNormas.tsx` — grid de NRs com filtro, chips e ações em lote
 - `src/components/analise/ResultadoAnalise.tsx` — exibição completa do resultado com dark mode
 - `src/components/ui/CanvasBackground.tsx` — background animado com canvas (partículas índigo)
+### Sessão 37 (23/02/2026) — Estabilização de Infra IA & Worker Assíncrono
+**Objetivo:** Resolver bloqueios de conectividade com Ollama e implementar fluxo assíncrono padrão indústria.
+
+**Principais Ações:**
+1. **Migração Estratégica**: Transição do Harbor para o provedor **Z.AI (GLM-4.7)** como motor principal de cloud, resolvendo problemas de rede entre Docker e Host.
+2. **Fix de Autenticação**: Identificado e neutralizado conflito de `OPENAI_API_KEY` legado no `.bashrc` que impedia o funcionamento de agentes externos.
+3. **Async Worker (Feature Complete)**:
+    - `POST /api/ia/analisar-conformidade` refatorado para ser 100% assíncrono com retorno `202 Accepted`.
+    - Implementação de polling em `/api/ia/jobs/[id]`.
+    - Suporte a `mode=sync` em query params para retrocompatibilidade.
+4. **Expansão de Testes**: Cobertura de testes unitários para o core do sistema (IA, persistência e APIs) expandida com sucesso via agentes autônomos.
+5. **Memory.md Update**: Documentação técnica atualizada para refletir a nova stack de IA Híbrida.
+
+**Status Final:** Infraestrutura estável e feature de worker performando em background. Pronto para escalar volumes de análise.

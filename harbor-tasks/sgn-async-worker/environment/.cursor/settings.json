@@ -1,0 +1,28 @@
+{
+  "plugins": {
+    "vercel": {
+      "enabled": true
+    },
+    "figma": {
+      "enabled": true
+    },
+    "functions": {
+      "enabled": true
+    },
+    "parallel": {
+      "enabled": true
+    },
+    "context7-plugin": {
+      "enabled": true
+    },
+    "superpowers": {
+      "enabled": true
+    },
+    "compound-engineering": {
+      "enabled": true
+    },
+    "amplitude-analysis": {
+      "enabled": true
+    }
+  }
+}

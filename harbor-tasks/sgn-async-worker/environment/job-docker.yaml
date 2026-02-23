@@ -1,0 +1,13 @@
+job_name: sgn-tests-aider-v5
+jobs_dir: jobs
+agents:
+  - name: aider
+    model_name: openai/openai/qwen2.5-coder:14b
+    kwargs:
+      OPENAI_API_KEY: "ollama"
+environment:
+  type: docker
+  force_build: true
+tasks:
+  - name: sgn-unit-tests-expand
+    path: harbor-tasks/sgn-unit-tests-expand
