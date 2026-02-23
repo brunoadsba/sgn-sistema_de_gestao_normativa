@@ -146,7 +146,7 @@ function GapItem({ gap, index }: { gap: GapConformidade; index: number }) {
                       </div>
                     </div>
                     <p className="text-sm text-indigo-900/80 dark:text-indigo-200/80 italic leading-relaxed font-serif bg-indigo-50/20 dark:bg-indigo-950/20 p-2 rounded-lg border-l-2 border-indigo-300 dark:border-indigo-800">
-                      "{gap.citacaoDocumento}"
+                      &quot;{gap.citacaoDocumento}&quot;
                     </p>
                   </div>
                 </div>
