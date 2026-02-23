@@ -31,6 +31,7 @@ export interface NormaReduzida {
     id: string
     codigo: string
     titulo: string
+    categoria: string
 }
 
 interface AnaliseClienteProps {

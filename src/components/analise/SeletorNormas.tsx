@@ -5,11 +5,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, X, CheckSquare, Sparkles } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface Norma {
   id: string
   codigo: string
   titulo: string
+  categoria: string
 }
 
 interface SeletorNormasProps {
@@ -36,6 +43,31 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       n.titulo.toLowerCase().includes(termo)
     )
   }, [normas, filtro])
+
+  // Agrupamento por categoria
+  const categoriasAgrupadas = useMemo(() => {
+    const grupos: Record<string, Norma[]> = {}
+
+    // Primeiro as sugeridas (se houver e não estiver filtrando)
+    const normasSextraidas = sugeridas.length > 0 && !filtro
+      ? normasFiltradas.filter(n => sugeridas.includes(n.codigo))
+      : []
+
+    if (normasSextraidas.length > 0) {
+      grupos['Sugeridas pela IA'] = normasSextraidas
+    }
+
+    normasFiltradas.forEach(norma => {
+      // Se já está nas sugeridas, não duplica na categoria original se estivermos no topo
+      if (normasSextraidas.some(s => s.id === norma.id)) return
+
+      const cat = norma.categoria || 'Geral'
+      if (!grupos[cat]) grupos[cat] = []
+      grupos[cat].push(norma)
+    })
+
+    return grupos
+  }, [normasFiltradas, sugeridas, filtro])
 
   const toggleNorma = (codigo: string) => {
     if (selecionadas.includes(codigo)) {
@@ -66,9 +98,15 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
           <Skeleton className="h-8 w-24 rounded-lg" />
           <Skeleton className="h-8 w-24 rounded-lg" />
         </div>
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-hidden">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        <div className="flex-1 space-y-4 overflow-hidden">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-6 w-32 rounded" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -147,55 +185,93 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
         )}
       </div>
 
-      {/* Lista de normas — Scroll customizado */}
+      {/* Accordion Categorizado */}
       <div className="flex-1 overflow-y-auto pr-2 -mr-2 
         scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent hover:scrollbar-thumb-indigo-300">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {normasFiltradas.map((norma) => {
-            const codigoCurto = extrairCodigoCurto(norma.codigo)
-            const selecionada = selecionadas.includes(norma.codigo)
-            const sugeridaIA = sugeridas.includes(norma.codigo)
+
+        <Accordion
+          type="multiple"
+          defaultValue={sugeridas.length > 0 ? ["Sugeridas pela IA"] : []}
+          className="space-y-3"
+        >
+          {Object.entries(categoriasAgrupadas).map(([categoria, normasDoGrupo]) => {
+            const isIA = categoria === 'Sugeridas pela IA'
+            const selecionadasNoGrupo = normasDoGrupo.filter(n => selecionadas.includes(n.codigo)).length
 
             return (
-              <button
-                key={norma.id}
-                type="button"
-                onClick={() => toggleNorma(norma.codigo)}
-                title={norma.titulo}
-                className={`
-                  relative flex flex-col items-start p-2.5 rounded-xl border text-left transition-all duration-200
-                  ${selecionada
-                    ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
-                    : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
-                  }
-                  ${sugeridaIA && !selecionada ? 'border-blue-400 dark:border-blue-800 animate-neural-pulse' : ''}
-                `}
+              <AccordionItem
+                key={categoria}
+                value={categoria}
+                className="border-none bg-white/30 dark:bg-gray-800/20 rounded-2xl overflow-hidden"
               >
-                <div className="flex items-start justify-between w-full mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`font-bold text-sm leading-none ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                      {codigoCurto}
+                <AccordionTrigger className={`
+                  px-4 py-3 hover:no-underline transition-all
+                  ${isIA ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}
+                `}>
+                  <div className="flex items-center gap-2 text-left">
+                    {isIA && <Sparkles className="h-4 w-4 text-blue-500 animate-pulse" />}
+                    <span className={`text-sm font-bold ${isIA ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                      {categoria}
                     </span>
-                    {sugeridaIA && (
-                      <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-[8px] font-black uppercase text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                        <Sparkles className="h-2 w-2" /> IA
+                    {selecionadasNoGrupo > 0 && (
+                      <span className="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-400 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                        {selecionadasNoGrupo}
                       </span>
                     )}
                   </div>
-                  <div className={`shrink-0 ml-2 rounded flex items-center justify-center h-4 w-4 border transition-colors
-                    ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
-                    {selecionada && <CheckSquare className="h-3 w-3 text-white" />}
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-4 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {normasDoGrupo.map((norma) => {
+                      const codigoCurto = extrairCodigoCurto(norma.codigo)
+                      const selecionada = selecionadas.includes(norma.codigo)
+                      const sugeridaIA = sugeridas.includes(norma.codigo)
+
+                      return (
+                        <button
+                          key={norma.id}
+                          type="button"
+                          onClick={() => toggleNorma(norma.codigo)}
+                          title={norma.titulo}
+                          className={`
+                            relative flex flex-col items-start p-2.5 rounded-xl border text-left transition-all duration-200
+                            ${selecionada
+                              ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
+                              : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
+                            }
+                            ${sugeridaIA && !selecionada && !isIA ? 'border-blue-400 dark:border-blue-800 animate-neural-pulse' : ''}
+                          `}
+                        >
+                          <div className="flex items-start justify-between w-full mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`font-bold text-sm leading-none ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                                {codigoCurto}
+                              </span>
+                              {sugeridaIA && !isIA && (
+                                <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-[8px] font-black uppercase text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                                  <Sparkles className="h-2 w-2" /> IA
+                                </span>
+                              )}
+                            </div>
+                            <div className={`shrink-0 ml-2 rounded flex items-center justify-center h-4 w-4 border transition-colors
+                              ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
+                              {selecionada && <CheckSquare className="h-3 w-3 text-white" />}
+                            </div>
+                          </div>
+                          {norma.titulo && (
+                            <span className={`text-[11px] leading-tight block truncate w-full ${selecionada ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {norma.titulo}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
-                </div>
-                {norma.titulo && (
-                  <span className={`text-[11px] leading-tight block truncate w-full ${selecionada ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
-                    {norma.titulo}
-                  </span>
-                )}
-              </button>
+                </AccordionContent>
+              </AccordionItem>
             )
           })}
-        </div>
+        </Accordion>
 
         {normasFiltradas.length === 0 && filtro && (
           <div className="text-center py-10">

@@ -6,7 +6,8 @@ export default function AnalisePage() {
   const normas = normasCompletas.map(n => ({
     id: n.id,
     codigo: n.codigo,
-    titulo: n.titulo
+    titulo: n.titulo,
+    categoria: n.categoria
   }))
 
   return <AnaliseCliente normasIniciais={normas} />
