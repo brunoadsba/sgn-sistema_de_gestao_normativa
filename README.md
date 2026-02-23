@@ -25,13 +25,13 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Estado de busca na URL com `nuqs` (`?search=`)
    - Página detalhada com links oficiais e anexos mapeados
    - Normalização inteligente de códigos (ex: "5" -> "NR-5")
-3. **Assistente de Consultoria Neural (LEX)**
+3. **Assistente de Consultoria Neural (NEX)**
    - Um Chat Copilot atrelado 100% ao contexto do documento analisado.
    - Interface premium de 80vw, Glassmorphism interativo.
    - Grounding restrito: evita alucinação do modelo consultando apenas o escopo extraído.
 4. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
-- 🚀 **Versão 1.10.0**: Assistente Neural LEX Integrado, Auto-Sugestões, Performance Otimizada.
+- 🚀 **Versão 1.10.0**: Assistente Neural NEX Integrado, Auto-Sugestões, Performance Otimizada.
 5. **Persistência e histórico**
    - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
    - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação

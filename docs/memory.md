@@ -27,7 +27,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
-| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + LEX RAG | 1.10.0 |
+| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG | 1.10.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -364,11 +364,11 @@ Página de normas (/normas) — Server Component
 
 **Status Final:** Infraestrutura estável e feature de worker performando em background com **UX Reativa (Canvas)** integrada. O sistema agora exibe feedback visual neural durante o processamento. Pronto para escalar.
 
-### Sessão 38 (23/02/2026) — Integração do Assistente LEX (Consultoria Neural)
+### Sessão 38 (23/02/2026) — Integração do Assistente NEX (Consultoria Neural)
 **Objetivo:** Elevar a robustez e o UX da plataforma através de um Assistente de Consultoria Interativo ligado diretamente ao contexto de análise de documentos.
 
 **Principais Ações:**
 1. **Chat UI/UX Premium Interface:** Desenvolvimento de Componentes de Chat interativos (`ChatFloatingBubble.tsx` e `ChatInterface.tsx`) baseados em design *Glassmorphism*, abrangendo 80vw da tela.
-2. **Branding e Posicionamento Visual:** Criação da identidade do robô nomeado **LEX** [SGN.ai], proporcionando personificação da autoridade normativa de IA, focada em responder com zero alucinação por atrelar (Grounding Estrito) todo seu banco de respostas à base PDF submetida pelo cliente.
+2. **Branding e Posicionamento Visual:** Criação da identidade do robô nomeado **NEX** [SGN.ai], proporcionando personificação da autoridade normativa de IA, focada em responder com zero alucinação por atrelar (Grounding Estrito) todo seu banco de respostas à base PDF submetida pelo cliente.
 3. **Engine RAG de Background:** Rotina independente de leitura (`/api/extrair-texto`) injetada via useEffect no client, que faz o *parsing* textual completo silenciosamente em background sem atrapalhar a pipeline principal.
 4. **Proteção Cognitiva RAG:** Novo endpoint de backend `api/chat-documento` estabelecido com System Prompt de blindagem. Ele força a IA a interagir usando apenas o contexto provido, em Língua Portuguesa padrão (BR).

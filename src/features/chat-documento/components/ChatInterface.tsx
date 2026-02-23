@@ -20,7 +20,7 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
         {
             id: '1',
             role: 'assistant',
-            content: 'Olá! Sou seu consultor sênior de SST. Analisei seu documento e estou pronto para tirar dúvidas específicas ou ajudar na remediação dos gaps. O que deseja saber?',
+            content: 'Olá! Sou seu assistente normativo, NEX. Analisei o seu documento e estou pronto para tirar dúvidas específicas ou ajudar na remediação dos gaps. O que deseja saber?',
             timestamp: new Date()
         }
     ])

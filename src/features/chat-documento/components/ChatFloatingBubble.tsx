@@ -26,12 +26,12 @@ export function ChatFloatingBubble({ documentContext }: ChatFloatingBubbleProps)
                             onClick={() => setIsOpen(false)}
                         />
 
-                        {/* Container do Chat */}
+                        {/* Container do Chat (UX Desktop Retangular - Max Width 5xl) */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 0, x: '-50%', transformOrigin: 'center center' }}
+                            initial={{ opacity: 0, scale: 0.95, y: 0, x: '-50%', transformOrigin: 'center center' }}
                             animate={{ opacity: 1, scale: 1, y: '-50%', x: '-50%' }}
-                            exit={{ opacity: 0, scale: 0.9, y: '-50%', x: '-50%' }}
-                            className="fixed top-1/2 left-1/2 w-[95vw] sm:w-[85vw] md:w-[80vw] h-[90vh] sm:h-[85vh] md:h-[80vh] bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] dark:shadow-indigo-500/10 border border-gray-100 dark:border-white/10 overflow-hidden flex flex-col z-[100]"
+                            exit={{ opacity: 0, scale: 0.95, y: '-50%', x: '-50%' }}
+                            className="fixed top-1/2 left-1/2 w-[calc(100vw-2rem)] max-w-5xl h-[600px] max-h-[85vh] bg-white/95 dark:bg-gray-950/95 backdrop-blur-3xl rounded-[2rem] shadow-[0_30px_100px_-15px_rgba(0,0,0,0.6)] dark:shadow-indigo-500/10 border border-gray-200/50 dark:border-white/10 overflow-hidden flex flex-col z-[100]"
                         >
                             {/* Header Premium */}
                             <div className="p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between border-b border-white/10 shrink-0">
@@ -40,8 +40,11 @@ export function ChatFloatingBubble({ documentContext }: ChatFloatingBubbleProps)
                                         <MessageSquare className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-black uppercase tracking-tight leading-tight">Consultoria Neural</h4>
-                                        <p className="text-[10px] opacity-80 font-bold uppercase tracking-widest mt-0.5">Chat com Documento</p>
+                                        <h4 className="flex items-center gap-2 text-[15px] font-black tracking-tight leading-tight">
+                                            NEX
+                                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-white/20 uppercase tracking-widest shadow-sm">SGN.ai</span>
+                                        </h4>
+                                        <p className="text-[10px] opacity-80 font-bold uppercase tracking-widest mt-0.5">Especialista Neural de SST</p>
                                     </div>
                                 </div>
                                 <button

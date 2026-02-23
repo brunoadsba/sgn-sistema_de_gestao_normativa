@@ -2,7 +2,7 @@
 
 ## [1.10.0] - 2026-02-23
 ### Adicionado
-- **LEX (Consultoria Neural)**: Novo assistente interativo integrado. Possibilita aos usuários sanar dúvidas instantaneamente referenciadas num contexto estrito e baseadas no conteúdo extraído do documento avaliado.
+- **NEX (Consultoria Neural)**: Novo assistente interativo integrado. Possibilita aos usuários sanar dúvidas instantaneamente referenciadas num contexto estrito e baseadas no conteúdo extraído do documento avaliado.
 - **Floating Bubble (Chat)**: Inteface de chat imersiva que domina 80% do viewport, com sobreposição focal escurecida (backdrop-blur) implementando Glassmorphism.
 - **Extração Analítica em Background**: O documento carregado passa a ter seu conteúdo bruto processado e acoplado no contexto do RAG sem impactar a tela de análise.
 - **Segurança Cognitiva:** Prompt System robusto blindado contra injeções, limitando o robô a entregar respostas baseadas unicamente no conteúdo do texto.
