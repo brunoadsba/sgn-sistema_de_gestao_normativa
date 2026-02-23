@@ -30,7 +30,7 @@ export async function analisarConformidadeZai(
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4-flash',
+                    model: attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4',
                     messages: [
                         {
                             role: 'system',
