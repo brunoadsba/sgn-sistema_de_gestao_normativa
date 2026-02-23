@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { analisarConformidade } from '@/lib/ia/groq'
 import { analisarConformidadeOllama } from '@/lib/ia/ollama'
+import { analisarConformidadeZai } from '@/lib/ia/zai'
 import { env } from '@/lib/env'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 import { CreateAnaliseSchema } from '@/schemas'
@@ -25,12 +26,35 @@ export const maxDuration = 300 // Aumentado para lidar com chunks pesados
 const MAX_CHUNKS_INCREMENTAL = 8
 const INCREMENTAL_CONCURRENCY = 3
 
-// Selecionar provider de IA
+// Selecionar provider de IA com Fallback Híbrido
 async function analisarConformidadeProvider(request: AnaliseConformidadeRequest) {
   if (env.AI_PROVIDER === 'ollama') {
     return analisarConformidadeOllama(request)
   }
-  return analisarConformidade(request)
+
+  if (env.AI_PROVIDER === 'zai') {
+    return analisarConformidadeZai(request)
+  }
+
+  try {
+    // Tenta Groq primeiro (Default Cloud)
+    return await analisarConformidade(request)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : ''
+
+    // Fallback automático para Z.AI (GLM) em erros de rate limit ou tokens excedidos
+    const isRateLimit = errorMessage.includes('413') ||
+      errorMessage.includes('rate_limit') ||
+      errorMessage.includes('tokens') ||
+      errorMessage.includes('TPM')
+
+    if (isRateLimit) {
+      console.warn(`[IA-FALLBACK] Groq atingiu limite (${errorMessage}). Migrando para Z.AI GLM...`)
+      return analisarConformidadeZai(request)
+    }
+
+    throw error
+  }
 }
 
 /**
@@ -48,7 +72,7 @@ async function executarProcessamentoSgn(
   try {
     const estrategia = body.estrategiaProcessamento ?? 'completo'
     const timestamp = new Date().toISOString()
-    const modeloUsado = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : 'llama-4-scout-17b-instruct'
+    const modeloUsado = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : 'hybrid-cloud (groq/zai)'
 
     let respostaCompleta: AnaliseConformidadeResponse
     let evidenciasPersistencia = [] as NonNullable<AnaliseConformidadeRequest['evidenciasNormativas']>

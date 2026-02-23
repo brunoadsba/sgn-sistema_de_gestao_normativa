@@ -5,7 +5,7 @@ import { iaLogger } from '@/lib/logger'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 
 // Configuração do cliente GROQ
-const groq = new Groq({
+export const groq = new Groq({
   apiKey: env.GROQ_API_KEY,
   dangerouslyAllowBrowser: false // Apenas para server-side
 })
@@ -66,11 +66,13 @@ const AnaliseConformidadeResponseSchema = z.object({
   proximosPassos: z.array(z.string()).default([]),
 })
 
+export { AnaliseConformidadeResponseSchema }
+
 /**
- * Sanitiza input do usuário antes de enviar à IA.
- * Remove tentativas de prompt injection e limita tamanho.
- */
-function sanitizeInput(input: string): string {
+* Sanitiza input do usuário antes de enviar à IA.
+* Remove tentativas de prompt injection e limita tamanho.
+*/
+export function sanitizeInput(input: string): string {
   return input
     .slice(0, MAX_DOCUMENT_LENGTH)
     .replace(/```/g, '')
@@ -199,7 +201,7 @@ export async function analisarConformidade(
 }
 
 // Gerar prompt especializado
-function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
+export function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
   const documentoSanitizado = sanitizeInput(request.documento)
   const tipoSanitizado = sanitizeInput(request.tipoDocumento)
   const evidenciasSanitizadas = (request.evidenciasNormativas ?? []).map((e) => ({
