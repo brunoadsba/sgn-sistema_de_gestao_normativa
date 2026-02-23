@@ -112,7 +112,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
                 {dragging ? 'Solte para Iniciar' : 'Mergulhe seu documento aqui'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT</span>
+                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT (Máx 4.5MB em nuvem)</span>
               </p>
             </div>
           </div>

@@ -38,6 +38,17 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
     const handleSend = async () => {
         if (!input.trim() || isTyping) return
 
+        if (!documentContext) {
+            const errorMsg: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: '⚠️ **Atenção:** O NEX não conseguiu acessar o contexto deste documento (provavelmente por exceder o limite de 4.5MB da Vercel). O chat está desabilitado para esta fonte.',
+                timestamp: new Date()
+            }
+            setMessages(prev => [...prev, errorMsg])
+            return
+        }
+
         const userMsg: Message = {
             id: Date.now().toString(),
             role: 'user',
@@ -56,7 +67,7 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-                    documentContext: documentContext
+                    documentContext: documentContext?.slice(0, 100000)
                 })
             })
 

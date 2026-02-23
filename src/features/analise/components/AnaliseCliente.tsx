@@ -116,6 +116,10 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                     if (res.ok) {
                         const data = await res.json()
                         if (data.success) setTextoExtraidoChat(data.data.texto)
+                    } else if (res.status === 413) {
+                        console.error('Documento muito grande para o limite de 4.5MB da Vercel (Extração Silenciosa).')
+                        // Não dispara erro visível para não degradar a UX de análise,
+                        // mas impede que ChatContext seja populado erroneamente.
                     }
                 } catch (e) {
                     console.error('Erro na extração silenciosa para chat:', e)
@@ -255,6 +259,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             }, { retries: 3, timeoutMs: 60_000 })
 
             if (!extractRes.ok) {
+                if (extractRes.status === 413) {
+                    throw new Error('O arquivo excede o limite de 4.5MB permitido pelo ambiente em nuvem (Vercel). Para documentos maiores, utilize a plataforma via Docker Local ou divida o arquivo.')
+                }
                 const err = await extractRes.json().catch(() => ({}))
                 throw new Error(err.error || `Erro ${extractRes.status} ao extrair texto`)
             }
