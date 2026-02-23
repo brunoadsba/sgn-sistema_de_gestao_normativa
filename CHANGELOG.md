@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0] - 2026-02-23
+### Adicionado
+- **LEX (Consultoria Neural)**: Novo assistente interativo integrado. Possibilita aos usuários sanar dúvidas instantaneamente referenciadas num contexto estrito e baseadas no conteúdo extraído do documento avaliado.
+- **Floating Bubble (Chat)**: Inteface de chat imersiva que domina 80% do viewport, com sobreposição focal escurecida (backdrop-blur) implementando Glassmorphism.
+- **Extração Analítica em Background**: O documento carregado passa a ter seu conteúdo bruto processado e acoplado no contexto do RAG sem impactar a tela de análise.
+- **Segurança Cognitiva:** Prompt System robusto blindado contra injeções, limitando o robô a entregar respostas baseadas unicamente no conteúdo do texto.
+
 ## [1.9.2] - 2026-02-22
 ### Adicionado
 - **Patches Agênticos Harbor**: Implementação de indexação rápida (fast-indexing) e aumento de timeout para 1 hora (`3600s`) no agente Aider, permitindo refatorações complexas em hardware local (Ollama/CPU).
