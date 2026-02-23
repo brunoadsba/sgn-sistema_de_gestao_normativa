@@ -27,11 +27,15 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Normalização inteligente de códigos (ex: "5" -> "NR-5")
 3. **Assistente de Consultoria Neural (NEX)**
    - Um Chat Copilot atrelado 100% ao contexto do documento analisado.
-   - Interface premium de 80vw, Glassmorphism interativo.
+   - Interface premium integrada nativamente ao Workspace.
    - Grounding restrito: evita alucinação do modelo consultando apenas o escopo extraído.
-4. **Análise específica NR-6**
+4. **Layout Workspace NotebookLM (v2.0)**
+   - Redesign completo em 3 colunas simultâneas: **Fontes | NEX Chat | Estúdio**.
+   - Coluna de Chat centralizada para consulta em tempo real sem interrupção do fluxo.
+   - UI responsiva com suporte a monitores Ultra-Wide.
+5. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
-- 🚀 **Versão 1.10.0**: Assistente Neural NEX Integrado, Auto-Sugestões, Performance Otimizada.
+- 🚀 **Versão 2.0.0**: Redesign Workspace, NEX Native Chat, 3-Col Layout.
 5. **Persistência e histórico**
    - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
    - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação

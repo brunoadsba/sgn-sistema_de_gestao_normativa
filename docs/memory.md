@@ -3,7 +3,7 @@
 > Documento de contexto para qualquer LLM que acesse este projeto.
 > Atualizado em: 2026-02-23
 
-- **Versão Atual**: `1.10.0`
+- **Versão Atual**: `2.0.0`
 - **Última Atualização**: 2026-02-23
 
 ---
@@ -27,7 +27,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
-| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG | 1.10.0 |
+| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG | 2.0.0 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -49,6 +49,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 - **Identidade PWA SGN**: ícones gerados em `src/app/icon.tsx` e `src/app/apple-icon.tsx` com tema escuro no manifest.
 - **Abertura web padronizada**: tela full-screen premium (card glass, iluminação difusa e textura geométrica) com CTA `Acessar Plataforma`, exibida uma única vez por dispositivo via `SessionSplashGate` (`localStorage`); loading interno em navegação usa skeleton leve.
 - **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
+- **Layout Workspace (v2.0)**: Inspirado no NotebookLM, utiliza 3 colunas paralelas em desktops (Fontes | NEX Chat | Estúdio) para centralizar a interação com o documento.
 - **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
 - Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
 - **Títulos com `bg-clip-text`**: usar `leading-normal` e `pb-2`+ para evitar corte de descendentes (g, j, p). Gradiente dark: `dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100` para visibilidade.
@@ -178,6 +179,8 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real das análises assíncronas.
 27. **Exportação PDF e Rastreabilidade**: Laudos técnicos otimizados para impressão corporativa com ID de Job e Nome de Arquivo.
 28. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
+- **Workspace NotebookLM (v2.0)**: Layout de 3 colunas integrando Chat NEX nativamente ao lado da fonte e do setup de normas.
+- **Desacoplamento de UI**: ChatSidePanel removido em favor da coluna central nativa; ChatFloatingBubble ativado via eventos para suporte em visões de resultado full-screen.
 ---
 
 ## O que NÃO funciona / está incompleto
@@ -238,7 +241,9 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 34 | 2026-02-21 | V1.9.0: UX/UI Mestre - Auto-Sugestão de NRs, Accordions para Gaps e otimização de Canvas. |
 | 35 | 2026-02-21 | Manutenção: Atualização de pacotes principais (`Next 16`, `React 19`, `Sentry`) e auditoria de segurança das dependências. |
 | 36 | 2026-02-22 | Integração Harbor & Infra: Concluído hardening de Docker de produção, expansão de testes unitários de IA e estabilização do script Harbor Scorecard. Implementado Ollama Proxy (11435) para monitoramento de modelos locais. Patches críticos no agente Aider para suportar indexação rápida (fast-indexing) e timeouts de 1h (necessário para processamento estrutural via CPU no hardware local). Iniciado Worker Assíncrono (pendente conclusão). Versão 1.9.2. |
-| 37 | 2026-02-23 | Migração de Infra Harbor: Identificado gargalo de rede entre Docker/Ollama local. Migrada infraestrutura de agentes (Aider) para **Z.AI (GLM-4.7)**. Roteamento validado via API Cloud, eliminando Connection Refused e aumentando a velocidade de processamento dos agentes. Atualizados todos os `task.toml` e `.env.local`. |
+| 37 | 2026-02-23 | Migração de Infra Harbor para Z.AI (GLM-4.7). |
+| 38 | 2026-02-23 | Introdução do NEX [SGN.ai] e Grounding de Chat RAG. |
+| 39 | 2026-02-23 | **V2.0.0**: Redesign Workspace Style (3 Colunas) inspirado no NotebookLM. Chat Central Nativo, descarte de SidePanels redundantes e estabilização de layout ultra-wide. |
 
 ---
 
@@ -246,7 +251,12 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
 
-### Fase 5 - Produção
+### Fase 5 - Produção & Multi-Contexto
+
+- **Sprint 2026-W09: Multi-Fontes (Prioridade Crítica)**
+  - Implementar suporte para múltiplos arquivos simultâneos na Coluna de Fontes.
+  - Orquestrar contexto concatenado para análise cross-document.
+  - UI de listagem e gerenciamento de repositório local.
 
 - **Implementar Worker Assíncrono para Filas de Long Running Jobs**
   - Orquestrar filas pesadas sem travar a requisição cliente usando SQLite persistente ou Background Workers do App Router.

@@ -24,23 +24,23 @@
 4. Verificar se o documento esta na versao mais recente.
 
 ## 5) Procedimento operacional (passo a passo)
-
-1. Acessar o SGN na pagina `Analise de Conformidade` ou localizar uma NR no Catálogo e clicar em `Analisar documento com esta NR`.
-2. Fazer upload do documento.
-3. Selecionar as NRs aplicaveis.
-4. Clicar em `Analisar Conformidade com IA`.
-5. Aguardar finalizacao da analise.
-6. Ler o resultado completo:
-   1. score geral;
-   2. gaps identificados;
-   3. severidade dos gaps;
-   4. proximos passos sugeridos.
-7. Classificar prioridades:
+ 
+ 1. Acessar o SGN na pagina `Analise de Conformidade` (Workspace).
+ 2. Fazer upload do documento na **Coluna 1 (Fontes)**.
+ 3. Selecionar as NRs aplicaveis na **Coluna 3 (Estúdio)**.
+ 4. Opcional: Consultar o assistente **NEX** na **Coluna 2 (Chat)** para tirar duvidas sobre o conteudo ou interpretacao normativa antes da geracao do laudo.
+ 5. Clicar em `Gerar Laudo SGN` (ou `Analisar Conformidade`).
+ 6. Aguardar finalizacao da analise no Stepper visual.
+ 7. Ler o resultado completo:
+    1. score geral;
+    2. gaps identificados;
+    3. severidade dos gaps;
+    4. proximos passos sugeridos.
+ 8. Utilizar o Chat Flutuante (NEX) na tela de resultados para aprofundar a remediacao de gaps especificos.
+9. Classificar prioridades:
    1. Critico/Alto: acao imediata;
    2. Medio: programar em curto prazo;
    3. Baixo: incluir em melhoria continua.
-8. Registrar plano de acao interno com responsavel e prazo por gap.
-9. Exportar historico em CSV para arquivo de evidencia.
 10. Reanalisar apos correcoes para validar evolucao.
 
 ## 6) Criterios de decisao

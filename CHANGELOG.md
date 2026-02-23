@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0] - 2026-02-23
+### Adicionado
+- **Workspace NotebookLM (Redesign)**: Interface transformada em 3 colunas paralelas (Fontes | NEX Chat | Estúdio), otimizando o fluxo de análise e consulta.
+- **Chat Native Integration**: O NEX Copilot agora é parte central e nativa do layout, eliminando a dependência de sidebars para interação primária.
+- **Ultra-Wide Support**: Layout dinâmico que expande para 1700px em resoluções altas para acomodar as 3 colunas.
+- **Sistema de Eventos UI**: Comunicação via CustomEvents para orquestrar a abertura do chat entre componentes remotos.
+
+### Alterado
+- **Limpeza de UI**: Removidos componentes redundantes (`ChatSidePanel`) e estados de interface obsoletos.
+- **Branding NEX**: Atualização visual da área de chat com novos indicadores de status e tipografia premium.
+
 ## [1.10.0] - 2026-02-23
 ### Adicionado
 - **NEX (Consultoria Neural)**: Novo assistente interativo integrado. Possibilita aos usuários sanar dúvidas instantaneamente referenciadas num contexto estrito e baseadas no conteúdo extraído do documento avaliado.
