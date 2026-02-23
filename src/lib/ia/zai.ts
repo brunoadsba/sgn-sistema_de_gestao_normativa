@@ -30,22 +30,20 @@ export async function analisarConformidadeZai(
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: env.ZAI_MODEL || 'glm-4.7',
+                    model: attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4-flash',
                     messages: [
                         {
                             role: 'system',
-                            content: 'Você é um especialista em SST (Segurança e Saúde no Trabalho) e análise de conformidade com normas regulamentadoras brasileiras. Responda APENAS com JSON válido.'
+                            content: 'Você é um Assistente especializado em SST. Responda estritamente em formato JSON válido, conforme o schema solicitado.'
                         },
                         {
                             role: 'user',
                             content: prompt
                         }
                     ],
-                    temperature: 0.2,
+                    temperature: 0.1,
                     max_tokens: 4096,
-                    top_p: 0.9,
-                    // Garante que o modelo retorne JSON se o provider suportar
-                    response_format: { type: 'json_object' }
+                    top_p: 0.8,
                 }),
                 signal: AbortSignal.timeout(ZAI_TIMEOUT_MS)
             })
@@ -56,10 +54,16 @@ export async function analisarConformidadeZai(
             }
 
             const data = await response.json()
-            const content = data.choices[0]?.message?.content
+
+            // Log para debug de resposta vazia
+            if (!data.choices?.[0]?.message?.content) {
+                console.error('[ZAI-DEBUG] Resposta sem conteúdo:', JSON.stringify(data, null, 2))
+            }
+
+            const content = data.choices?.[0]?.message?.content
 
             if (!content) {
-                throw new Error('Resposta vazia da Z.AI')
+                throw new Error('Resposta vazia da Z.AI (verificar logs de debug)')
             }
 
             // Limpar resposta e extrair JSON (mesmo fallback do groq)

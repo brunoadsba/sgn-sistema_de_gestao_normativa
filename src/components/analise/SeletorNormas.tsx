@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, X, CheckSquare } from 'lucide-react'
+import { Search, X, CheckSquare, Sparkles } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Norma {
   id: string
@@ -16,6 +17,7 @@ interface SeletorNormasProps {
   selecionadas: string[]
   onSelecaoChange: (codigos: string[]) => void
   carregando?: boolean
+  sugeridas?: string[]
 }
 
 function extrairCodigoCurto(codigo: string): string {
@@ -23,7 +25,7 @@ function extrairCodigoCurto(codigo: string): string {
   return match ? `NR-${parseInt(match[1])}` : codigo.split(' - ')[0]
 }
 
-export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregando }: SeletorNormasProps) {
+export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregando, sugeridas = [] }: SeletorNormasProps) {
   const [filtro, setFiltro] = useState('')
 
   const normasFiltradas = useMemo(() => {
@@ -58,9 +60,17 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
 
   if (carregando) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
-        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent mr-3" />
-        Carregando normas regulamentadoras...
+      <div className="space-y-4 h-full flex flex-col">
+        <Skeleton className="h-11 w-full rounded-xl" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-24 rounded-lg" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+        </div>
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-hidden">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
       </div>
     )
   }
@@ -144,6 +154,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
           {normasFiltradas.map((norma) => {
             const codigoCurto = extrairCodigoCurto(norma.codigo)
             const selecionada = selecionadas.includes(norma.codigo)
+            const sugeridaIA = sugeridas.includes(norma.codigo)
 
             return (
               <button
@@ -157,12 +168,20 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
                     ? 'border-indigo-400 dark:border-indigo-700 bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-100 shadow-sm shadow-indigo-100 dark:shadow-indigo-950/20'
                     : 'border-gray-200/80 dark:border-gray-700/60 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/30'
                   }
+                  ${sugeridaIA && !selecionada ? 'border-blue-400 dark:border-blue-800 animate-neural-pulse' : ''}
                 `}
               >
                 <div className="flex items-start justify-between w-full mb-1">
-                  <span className={`font-bold text-sm leading-none ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                    {codigoCurto}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-bold text-sm leading-none ${selecionada ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                      {codigoCurto}
+                    </span>
+                    {sugeridaIA && (
+                      <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-[8px] font-black uppercase text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                        <Sparkles className="h-2 w-2" /> IA
+                      </span>
+                    )}
+                  </div>
                   <div className={`shrink-0 ml-2 rounded flex items-center justify-center h-4 w-4 border transition-colors
                     ${selecionada ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'}`}>
                     {selecionada && <CheckSquare className="h-3 w-3 text-white" />}

@@ -275,7 +275,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         const sugeridas = sugestaoData.sugeridas as string[]
                         setNormasSelecionadas(sugeridas)
                         const normasTexto = sugeridas.map(n => n.toUpperCase()).join(', ')
-                        setErro(`A IA identificou relevância para: ${normasTexto}. Revise e clique em 'Analisar' para continuar.`)
+                        setErro(`Sugestão de Aplicabilidade: ${normasTexto}. Valide as normas selecionadas e inicie a análise.`)
                     }
                 } else {
                     setErro("Não foi possível inferir as normas com IA. Por favor, selecione-as manualmente.")
@@ -440,11 +440,52 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                         normas={normasIniciais}
                                         selecionadas={normasSelecionadas}
                                         onSelecaoChange={(s) => { setNormasSelecionadas(s); setErro(null) }}
-                                        carregando={false}
+                                        carregando={analisando && progresso < 30}
+                                        sugeridas={normasSelecionadas.length > 0 && !analisando ? normasSelecionadas : []}
                                     />
                                 </CardContent>
                             </Card>
                         </div>
+                    </div>
+
+                    {/* Botão de Ação Dinâmico */}
+                    <div className="flex justify-center pt-4">
+                        <Button
+                            size="lg"
+                            onClick={executarAnalise}
+                            disabled={!arquivo || analisando || sugerindoNrs}
+                            className={`
+                                h-14 px-10 rounded-2xl font-bold text-lg transition-all duration-500 shadow-xl group
+                                ${!arquivo ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed' :
+                                    normasSelecionadas.length === 0 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/20' :
+                                        'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-500/20 animate-in zoom-in-95'
+                                }
+                            `}
+                        >
+                            {analisando ? (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Processando...</span>
+                                </div>
+                            ) : sugerindoNrs ? (
+                                <div className="flex items-center gap-3">
+                                    <Sparkles className="w-5 h-5 animate-pulse" />
+                                    <span>IA Mapeando Normas...</span>
+                                </div>
+                            ) : !arquivo ? (
+                                "Aguardando Documento"
+                            ) : normasSelecionadas.length === 0 ? (
+                                <div className="flex items-center gap-3">
+                                    <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                    <span>Sugerir Aplicabilidade</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <CheckSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                    <span>Confirmar e Analisar</span>
+                                </div>
+                            )}
+                        </Button>
                     </div>
 
                     {/* Erro ou Info */}
@@ -454,7 +495,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 message={erro}
                                 onRetry={executarAnalise}
                                 compact
-                                variant={(erro.includes('IA pré-selecionou') || erro.includes('IA identificou relevância')) ? 'info' : 'error'}
+                                variant={(erro.includes('IA pré-selecionou') || erro.includes('Sugestão de Aplicabilidade')) ? 'info' : 'error'}
                             />
                         </div>
                     )}

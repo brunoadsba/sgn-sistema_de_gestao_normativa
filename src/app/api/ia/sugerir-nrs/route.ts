@@ -70,7 +70,6 @@ APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`;
                         ],
                         temperature: 0.1,
                         max_tokens: 150,
-                        response_format: { type: 'json_object' }
                     })
                 });
 
