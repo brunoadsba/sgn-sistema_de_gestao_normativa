@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MessageSquare, X, Minus, Bot } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChatInterface } from './ChatInterface'
@@ -11,6 +11,12 @@ interface ChatFloatingBubbleProps {
 
 export function ChatFloatingBubble({ documentContext }: ChatFloatingBubbleProps) {
     const [isOpen, setIsOpen] = useState(false)
+
+    useEffect(() => {
+        const handleOpenExternal = () => setIsOpen(true)
+        window.addEventListener('sgn-open-chat', handleOpenExternal)
+        return () => window.removeEventListener('sgn-open-chat', handleOpenExternal)
+    }, [])
 
     return (
         <>
