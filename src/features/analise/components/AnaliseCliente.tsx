@@ -272,8 +272,10 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                 if (sugestaoRes.ok) {
                     const sugestaoData = await sugestaoRes.json()
                     if (sugestaoData.success && sugestaoData.sugeridas) {
-                        setNormasSelecionadas(sugestaoData.sugeridas)
-                        setErro("A IA pré-selecionou as normas sugeridas. Revise e clique em 'Analisar' para continuar.")
+                        const sugeridas = sugestaoData.sugeridas as string[]
+                        setNormasSelecionadas(sugeridas)
+                        const normasTexto = sugeridas.map(n => n.toUpperCase()).join(', ')
+                        setErro(`A IA identificou relevância para: ${normasTexto}. Revise e clique em 'Analisar' para continuar.`)
                     }
                 } else {
                     setErro("Não foi possível inferir as normas com IA. Por favor, selecione-as manualmente.")
@@ -452,7 +454,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 message={erro}
                                 onRetry={executarAnalise}
                                 compact
-                                variant={erro.includes('IA pré-selecionou') ? 'info' : 'error'}
+                                variant={(erro.includes('IA pré-selecionou') || erro.includes('IA identificou relevância')) ? 'info' : 'error'}
                             />
                         </div>
                     )}
