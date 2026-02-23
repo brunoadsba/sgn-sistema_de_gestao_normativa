@@ -55,12 +55,17 @@ export function CanvasBackground() {
     if (!ctx) return
 
     let animationFrameId: number | null = null
+    let analysisState: 'idle' | 'processing' = 'idle'
 
     let particles: Particle[] = []
     const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const isMobile = window.matchMedia('(max-width: 767px)').matches
     const isLowPowerProfile = isReducedMotion || isMobile
-    const connectionDistance = isLowPowerProfile ? 85 : 150
+
+    // Configurações dinâmicas
+    let currentSpeedFactor = isLowPowerProfile ? 0.3 : 0.5
+    let currentConnectionDistance = isLowPowerProfile ? 85 : 150
+    let currentAlphaRange = isLowPowerProfile ? 0.2 : 0.35
 
     const resize = () => {
       canvas.width = window.innerWidth
@@ -71,38 +76,47 @@ export function CanvasBackground() {
     const initParticles = () => {
       particles = []
       const divider = isLowPowerProfile ? 42000 : 15000
-      const maxParticles = isLowPowerProfile ? 35 : 140
+      const baseMax = isLowPowerProfile ? 35 : 140
+      const maxParticles = analysisState === 'processing' ? baseMax * 1.5 : baseMax
+
       const numberOfParticles = Math.min(Math.floor((canvas.width * canvas.height) / divider), maxParticles)
       for (let i = 0; i < numberOfParticles; i++) {
         particles.push(
-          new Particle(canvas.width, canvas.height, isLowPowerProfile ? 0.3 : 0.5, 0.12, isLowPowerProfile ? 0.2 : 0.35)
+          new Particle(
+            canvas.width,
+            canvas.height,
+            currentSpeedFactor,
+            0.12,
+            currentAlphaRange
+          )
         )
       }
     }
 
     const connectParticles = () => {
+      const distanceLimit = analysisState === 'processing' ? currentConnectionDistance * 1.3 : currentConnectionDistance
+      const alphaBase = analysisState === 'processing' ? 0.3 : 0.18
+
       for (let a = 0; a < particles.length; a++) {
         for (let b = a; b < particles.length; b++) {
           const dx = particles[a].x - particles[b].x
           const dy = particles[a].y - particles[b].y
           const distance = Math.hypot(dx, dy)
 
-          if (distance < connectionDistance) {
+          if (distance < distanceLimit) {
             ctx.beginPath()
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.18 - distance / (connectionDistance * 10)})`
-            ctx!.lineWidth = 1
-            ctx!.moveTo(particles[a].x, particles[a].y)
-            ctx!.lineTo(particles[b].x, particles[b].y)
-            ctx!.stroke()
+            const opacity = alphaBase - distance / (distanceLimit * 10)
+            ctx.strokeStyle = `rgba(99, 102, 241, ${opacity})`
+            ctx.lineWidth = analysisState === 'processing' ? 1.5 : 1
+            ctx.moveTo(particles[a].x, particles[a].y)
+            ctx.lineTo(particles[b].x, particles[b].y)
+            ctx.stroke()
           }
         }
       }
     }
 
-
-
     const animate = () => {
-      // Se não estiver visível (ou explicitamente pausado), não agenda próximo frame
       if (document.hidden) {
         if (animationFrameId !== null) {
           cancelAnimationFrame(animationFrameId)
@@ -114,6 +128,8 @@ export function CanvasBackground() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = 0; i < particles.length; i++) {
+        particles[i].speedX = (particles[i].speedX / Math.abs(particles[i].speedX || 1)) * currentSpeedFactor
+        particles[i].speedY = (particles[i].speedY / Math.abs(particles[i].speedY || 1)) * currentSpeedFactor
         particles[i].update(canvas.width, canvas.height)
         particles[i].draw(ctx)
       }
@@ -124,19 +140,38 @@ export function CanvasBackground() {
 
     const onVisibilityChange = () => {
       if (!document.hidden && animationFrameId === null) {
-        // Retoma animação ao voltar o foco
         animationFrameId = requestAnimationFrame(animate)
       }
     }
 
+    const handleAnalysisStart = () => {
+      analysisState = 'processing'
+      currentSpeedFactor = isLowPowerProfile ? 0.8 : 2.0
+      currentAlphaRange = 0.5
+      initParticles() // Adiciona mais partículas para efeito neural
+    }
+
+    const handleAnalysisStop = () => {
+      analysisState = 'idle'
+      currentSpeedFactor = isLowPowerProfile ? 0.3 : 0.5
+      currentAlphaRange = isLowPowerProfile ? 0.2 : 0.35
+      // Reduz partículas gradualmente (reinicia)
+      initParticles()
+    }
+
     window.addEventListener('resize', resize)
     document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('sgn-analysis-start' as any, handleAnalysisStart)
+    window.addEventListener('sgn-analysis-stop' as any, handleAnalysisStop)
+
     resize()
     animate()
 
     return () => {
       window.removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('sgn-analysis-start' as any, handleAnalysisStart)
+      window.removeEventListener('sgn-analysis-stop' as any, handleAnalysisStop)
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId)
       }

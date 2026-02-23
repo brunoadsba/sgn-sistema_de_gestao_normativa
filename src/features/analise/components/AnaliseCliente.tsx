@@ -171,6 +171,8 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     useEffect(() => {
         if (!jobId || !analisando) return
 
+        window.dispatchEvent(new CustomEvent('sgn-analysis-start'))
+
         let timer: NodeJS.Timeout
 
         const checkStatus = async () => {
@@ -195,6 +197,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                 setEtapa(statusMap[job.status] || job.status)
 
                 if (job.status === 'completed' && job.resultadoId) {
+                    window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
                     // Buscar o resultado completo
                     const resFinal = await fetch(`/api/ia/analisar-conformidade?id=${job.resultadoId}`)
                     const payloadFinal = await resFinal.json()
@@ -205,6 +208,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                         void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
                     }
                 } else if (job.status === 'error') {
+                    window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
                     setErro(job.erroDetalhes || 'Erro ao processar documento')
                     setAnalisando(false)
                     setJobId(null)
@@ -228,6 +232,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
             return
         }
         setAnalisando(true)
+        window.dispatchEvent(new CustomEvent('sgn-analysis-start'))
         setErro(null)
         setProgresso(0)
         setResultado(null)
@@ -317,12 +322,14 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                 await carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
             }
         } catch (err) {
+            window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
             setErro(err instanceof Error ? err.message : 'Erro desconhecido na análise')
             setAnalisando(false)
         }
     }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
     const novaAnalise = () => {
+        window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
         setArquivo(null)
         setNormasSelecionadas([])
         setResultado(null)
@@ -400,7 +407,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                         {/* Esquerda - Upload */}
                         <div className="md:col-span-7">
-                            <Card className="h-full border-white/10 dark:border-gray-700/40 shadow-xl shadow-blue-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl transition-all duration-300 hover:shadow-blue-900/10 dark:hover:shadow-black/20">
+                            <Card className="h-full glass-mora shadow-blue-900/5">
                                 <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">1</div>
@@ -419,7 +426,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
 
                         {/* Direita - Normas */}
                         <div className="md:col-span-5">
-                            <Card className="h-full border-white/10 dark:border-gray-700/40 shadow-xl shadow-indigo-900/5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl transition-all duration-300 hover:shadow-indigo-900/10 dark:hover:shadow-black/20">
+                            <Card className="h-full glass-mora shadow-indigo-900/5">
                                 <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">2</div>
@@ -466,7 +473,7 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 ].map((s, idx) => (
                                     <div key={s.key} className="flex flex-col items-center gap-3 relative z-10">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 shadow-lg ${progresso >= s.step
-                                            ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-blue-500/20'
+                                            ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-blue-500/20 animate-neural'
                                             : 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 text-gray-400'
                                             }`}>
                                             {progresso > s.step ? (
@@ -492,9 +499,9 @@ export function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-800/30 animate-pulse">
-                                <div className="h-2 w-2 rounded-full bg-blue-500" />
-                                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 italic">
+                            <div className="flex items-center gap-3 py-3 px-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-800/30">
+                                <div className="h-2 w-2 rounded-full bg-blue-500 animate-ping" />
+                                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 italic shimmer-text">
                                     {etapa}
                                 </span>
                             </div>

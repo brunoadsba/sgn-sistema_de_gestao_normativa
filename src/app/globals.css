@@ -128,18 +128,46 @@ html {
   will-change: box-shadow;
 }
 
-/* Custom Scrollbar */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* 🚀 DESIGN PREMIUM: Glassmorphism & Shimmer */
+.glass-mora {
+  @apply bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl border border-white/20 dark:border-gray-800/50 shadow-xl;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+
+.glass-mora:hover {
+  @apply border-white/40 dark:border-gray-700/80 shadow-2xl;
+  transform: translateY(-2px);
 }
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--tw-scrollbar-thumb, #cbd5e1);
-  border-radius: 20px;
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
-.scrollbar-thin:hover::-webkit-scrollbar-thumb {
-  background-color: var(--tw-scrollbar-thumb-hover, #94a3b8);
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes neural-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(99, 102, 241, 0)); }
+  50% { transform: scale(1.1); opacity: 0.8; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6)); }
+}
+
+.animate-neural {
+  animation: neural-pulse 2s infinite ease-in-out;
+}
+
+/* Custom Scrollbar Dark */
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #1e293b;
+}
+.dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background-color: #334155;
 }

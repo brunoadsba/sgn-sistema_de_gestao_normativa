@@ -36,7 +36,7 @@ export default function RootLayout({
         <NuqsAdapter>
           <CanvasBackgroundShell />
           <SessionSplashGate>
-            <header className="sticky top-0 z-50 w-full border-b border-white/10 dark:border-gray-800/80 bg-white/60 dark:bg-gray-950/80 backdrop-blur-md shadow-sm dark:shadow-black/30">
+            <header className="sticky top-0 z-50 w-full glass-mora !bg-white/60 dark:!bg-gray-950/80 !border-b !border-white/10 dark:!border-gray-800/80 !shadow-sm dark:!shadow-black/30">
               <div className="container mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
                 <Link href="/" className="flex items-center gap-3 group">
                   <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
