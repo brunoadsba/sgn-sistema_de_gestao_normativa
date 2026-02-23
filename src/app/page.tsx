@@ -1,5 +1,5 @@
 import { getNormas } from '@/lib/data/normas'
-import { AnaliseCliente } from '@/features/analise/components/AnaliseCliente'
+import AnaliseCliente from '@/features/analise/components/AnaliseCliente'
 
 export default function AnalisePage() {
   const normasCompletas = getNormas()

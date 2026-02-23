@@ -84,18 +84,24 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* Busca + ações */}
-      <div className="flex flex-col gap-3">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400" />
+      <div className="flex flex-col gap-4">
+        <div className="relative w-full group">
+          <div className="absolute inset-0 bg-indigo-500/5 blur-xl group-focus-within:bg-indigo-500/10 transition-colors -z-10" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors" />
           <Input
-            placeholder="Buscar norma..."
+            placeholder="Buscar Norma Regulamentadora"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="pl-10 h-11 bg-white/50 dark:bg-gray-800/50 dark:text-gray-100 dark:placeholder:text-gray-500 border-indigo-100 dark:border-indigo-900/50 focus-visible:ring-indigo-500 rounded-xl shadow-sm text-base"
+            className="text-center h-14 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-2xl shadow-xl text-base dark:text-gray-100 placeholder:text-gray-400 backdrop-blur-md transition-all"
           />
         </div>
-        <div className="flex flex-wrap gap-2 shrink-0 justify-between sm:justify-start">
-          <Button variant="secondary" size="sm" onClick={selecionarTodas} className="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg h-7 text-[10px] uppercase font-bold">
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={selecionarTodas}
+            className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl h-8 px-4 text-[10px] uppercase font-black tracking-widest transition-all"
+          >
             Todas
           </Button>
           <Button
@@ -103,7 +109,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             size="sm"
             onClick={limparSelecao}
             disabled={selecionadas.length === 0}
-            className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg h-7 text-[10px] uppercase font-bold"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl h-8 px-4 text-[10px] uppercase font-black tracking-widest transition-all"
           >
             Limpar
           </Button>
@@ -111,21 +117,21 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       </div>
 
       {/* Chips das normas selecionadas */}
-      <div className="min-h-[40px]">
+      <div className="min-h-[44px]">
         {normasSelecionadasObjetos.length > 0 && (
           <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2">
             {normasSelecionadasObjetos.map((norma) => (
               <span
                 key={norma.id}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-500 text-white shadow-sm"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 uppercase tracking-tight"
               >
                 {extrairCodigoCurto(norma.codigo)}
                 <button
                   type="button"
                   onClick={(e) => removerNorma(e, norma.codigo)}
-                  className="ml-1 rounded-full hover:bg-white/20 p-0.5"
+                  className="rounded-full hover:bg-black/20 p-0.5 transition-colors"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </span>
             ))}
@@ -137,13 +143,13 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       <div className="flex-1 overflow-y-auto pr-2 -mr-2 scrollbar-none">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="lista-normas" className="border-none">
-            <AccordionTrigger className="flex w-full items-center justify-between p-3 rounded-2xl bg-white/40 dark:bg-gray-800/20 border border-indigo-100/50 dark:border-indigo-900/30 hover:no-underline group">
-              <div className="flex items-center gap-2">
-                <div className="bg-indigo-500/10 p-1.5 rounded-lg group-hover:bg-indigo-500/20 transition-colors">
-                  <CheckSquare className="h-4 w-4 text-indigo-500" />
+            <AccordionTrigger className="flex w-full items-center justify-between p-4 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/10 hover:no-underline group transition-all">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                  <CheckSquare className="h-5 w-5 text-indigo-400" />
                 </div>
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                  {filtro ? 'Resultados da busca' : 'Selecionar Normas Aplicáveis'}
+                <span className="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
+                  {filtro ? 'Resultados Encontrados' : 'Catálogo de Normas'}
                 </span>
               </div>
             </AccordionTrigger>

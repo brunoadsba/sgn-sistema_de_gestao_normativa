@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
-import { ErrorDisplay } from '@/components/error/ErrorDisplay'
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 
 interface AnaliseResultado {
   score: number

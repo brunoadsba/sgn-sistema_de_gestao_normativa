@@ -30,7 +30,7 @@ export async function analisarConformidadeZai(
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4',
+                    model: attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4.5',
                     messages: [
                         {
                             role: 'system',
@@ -74,9 +74,11 @@ export async function analisarConformidadeZai(
             return AnaliseConformidadeResponseSchema.parse(parsed) as AnaliseConformidadeResponse
 
         } catch (error) {
+            const currentModel = attempt === 0 ? (env.ZAI_MODEL || 'glm-4.7') : 'glm-4.5'
             iaLogger.warn(
                 {
                     attempt: attempt + 1,
+                    model: currentModel,
                     error: error instanceof Error ? error.message : 'Erro desconhecido'
                 },
                 'Falha na chamada Z.AI'

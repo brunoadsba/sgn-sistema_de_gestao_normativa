@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const systemPrompt = `Você é um Assistente Operacional de SST (Segurança e Saúde no Trabalho).
-Sua ÚNICA função é ler o trecho inicial de um documento e inferir quais Normas Regulamentadoras (NRs) brasileiras se aplicam a ele.
-O usuário enviará os primeiros 5000 caracteres de um documento.
+        const systemPrompt = `Atue como um Engenheiro Sênior de Saúde e Segurança do Trabalho (SST) especialista em legislação brasileira.
+Sua tarefa é ler o trecho inicial de um documento e inferir quais Normas Regulamentadoras (NRs) se aplicam a ele.
+Priorize sempre compliance normativo e proteção.
 Responda APENAS com um objeto JSON contendo o array na chave "nrs".
 Exemplo: {"nrs": ["nr-1", "nr-6", "nr-35"]}
 APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`;

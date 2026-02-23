@@ -5,6 +5,7 @@ import Link from "next/link";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { CanvasBackgroundShell } from "@/components/ui/CanvasBackgroundShell";
 import { SessionSplashGate } from "@/components/loading/SessionSplashGate";
+import { GlobalNav } from "@/components/navigation/GlobalNav";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,20 +48,7 @@ export default function RootLayout({
                   </span>
                 </Link>
 
-                <nav className="flex items-center gap-1 sm:gap-2">
-                  <Link
-                    href="/"
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 rounded-full transition-all whitespace-nowrap"
-                  >
-                    Analisar
-                  </Link>
-                  <Link
-                    href="/normas"
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 rounded-full transition-all whitespace-nowrap"
-                  >
-                    Normas
-                  </Link>
-                </nav>
+                <GlobalNav />
               </div>
             </header>
 

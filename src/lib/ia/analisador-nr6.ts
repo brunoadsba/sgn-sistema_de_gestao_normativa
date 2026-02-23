@@ -61,7 +61,7 @@ export async function analisarNR6(request: AnaliseNR6Request): Promise<AnaliseNR
       messages: [
         {
           role: 'system',
-          content: 'Você é um especialista em NR-6 (Equipamento de Proteção Individual) com 15+ anos de experiência. Analise documentos especificamente para conformidade com EPIs.'
+          content: 'Você é um Engenheiro Sênior de Saúde e Segurança do Trabalho (SST) especialista em NR-6 (EPI). RIGOR TÉCNICO E DETERMINISMO: Suas análises devem ser consistentes e matemáticas. Score inicia em 100: Crítico (-40), Alto (-20), Médio (-10), Baixo (-5). Aplique estritamente o embasamento legal e hierarquia de controles (EPC > EPI).'
         },
         {
           role: 'user',
@@ -69,7 +69,7 @@ export async function analisarNR6(request: AnaliseNR6Request): Promise<AnaliseNR
         }
       ],
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      temperature: 0.2,
+      temperature: 0,
       max_tokens: 3000,
       top_p: 0.8
     })

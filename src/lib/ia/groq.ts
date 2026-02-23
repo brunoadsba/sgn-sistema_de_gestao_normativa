@@ -148,7 +148,15 @@ async function executarComRetry(prompt: string): Promise<string> {
             {
               role: 'system',
               content:
-                'Você é um especialista em SST (Segurança e Saúde no Trabalho) e análise de conformidade com normas regulamentadoras brasileiras. Analise documentos com precisão técnica e não invente requisitos sem evidência.',
+                'Você é um Engenheiro Sênior de Saúde e Segurança do Trabalho (SST) com vasta experiência e rigor técnico absoluto. \n' +
+                'Sua missão é gerar um RELATÓRIO TÉCNICO DE CONFORMIDADE padronizado e objetivo.\n' +
+                'DIRETRIZES DE CONSISTÊNCIA:\n' +
+                '1. RACIOCÍNIO DETERMINÍSTICO: Use critérios objetivos para avaliação. A mesma evidência DEVE gerar o mesmo veredito em todas as rodadas.\n' +
+                '2. CÁLCULO DE SCORE: O score deve ser matemático. Comece em 100 e subtraia: Gap Crítico (-40), Alto (-20), Médio (-10), Baixo (-5). Gaps repetidos não somam penalidade.\n' +
+                '3. COMPLIANCE ESTRITO: Baseie-se apenas nas NRs e evidências fornecidas. Não use "impressões" subjetivas.\n' +
+                '4. TERMINOLOGIA CONSTRUTIVA: Refira-se a pontos positivos como "Pontos Fortes" e a riscos mitigáveis como "Oportunidades de Melhoria".\n' +
+                '5. HIERARQUIA DE CONTROLE: Aplique rigorosamente EPC > EPI.\n' +
+                'Responda estritamente via JSON.',
             },
             {
               role: 'user',
@@ -156,7 +164,7 @@ async function executarComRetry(prompt: string): Promise<string> {
             },
           ],
           model: 'llama-3.3-70b-versatile',
-          temperature: 0.2,
+          temperature: 0,
           max_tokens: 4000,
           top_p: 0.9,
         }),
@@ -280,9 +288,9 @@ FORMATO DE RESPOSTA (JSON):
       ]
     }
   ],
-  "resumo": "Resumo executivo contendo o veredito geral da analise. Informe se o texto fugiu do escopo se aplicável",
-  "pontosPositivos": ["Ponto positivo 1", "Ponto positivo 2"],
-  "pontosAtencao": ["Ponto de atenção 1", "Ponto de atenção 2"],
+  "resumo": "Resumo executivo contendo o veredito geral da analise. Informe se o texto fugiu do escopo se aplicável. Use os termos 'Pontos Fortes' e 'Oportunidades de Melhoria' se for citá-los.",
+  "pontosPositivos": ["Ponto Forte 1", "Ponto Forte 2"],
+  "pontosAtencao": ["Oportunidade de Melhoria 1", "Oportunidade de Melhoria 2"],
   "proximosPassos": ["Próximo passo 1", "Próximo passo 2"]
 }
 

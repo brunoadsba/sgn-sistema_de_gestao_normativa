@@ -85,62 +85,75 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           onDragLeave={handleDragLeave}
           onClick={() => !desabilitado && fileInputRef.current?.click()}
           className={`
-            relative rounded-2xl border-2 border-dashed p-6 sm:p-10 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[240px] sm:min-h-[280px]
+            relative rounded-[2rem] border-2 border-dashed p-8 sm:p-10 text-center transition-all duration-500 overflow-hidden group
             ${desabilitado ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             ${dragging
-              ? 'border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 scale-[1.02] shadow-inner'
-              : 'border-blue-200 dark:border-blue-900/60 hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
+              ? 'border-blue-500 bg-blue-500/10 scale-[1.02] shadow-[0_0_30px_rgba(59,130,246,0.2)]'
+              : 'border-white/20 bg-white/5 dark:bg-white/5 hover:border-blue-400/50 hover:bg-white/10 dark:hover:bg-white/10 hover:shadow-2xl shadow-xl'
             }
+            backdrop-blur-xl
           `}
         >
-          <div className={`p-4 rounded-full mb-4 transition-colors duration-300 ${dragging ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/30'}`}>
-            <Upload className={`h-10 w-10 ${dragging ? 'text-blue-600 dark:text-blue-400 animate-bounce' : 'text-blue-400 dark:text-blue-500'}`} />
+          {/* Background Decorative Glow */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 blur-[100px] rounded-full group-hover:bg-blue-500/20 transition-colors" />
+
+          <div className="relative flex flex-col items-center gap-6">
+            <div className={`
+                p-5 rounded-2xl transition-all duration-500 
+                ${dragging
+                ? 'bg-blue-600 shadow-blue-500/40 rotate-0'
+                : 'bg-white/10 border border-white/10 group-hover:rotate-6 group-hover:scale-110 shadow-lg'
+              }
+            `}>
+              <Upload className={`h-8 w-8 ${dragging ? 'text-white animate-bounce' : 'text-blue-400/80'}`} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+                {dragging ? 'Solte para Iniciar' : 'Mergulhe seu documento aqui'}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT</span>
+              </p>
+            </div>
           </div>
-          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">
-            {dragging ? 'Solte o arquivo agora!' : 'Arraste seu documento SST aqui'}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            ou clique para buscar no seu computador
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">PDF</span>
-            <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">DOCX</span>
-            <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">TXT</span>
-          </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 font-medium">Máximo: 100MB</p>
+          {!dragging && (
+            <div className="absolute bottom-4 left-0 right-0">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest opacity-40">
+                Data Auditor Engine v4.0
+              </p>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800/50 rounded-2xl shadow-sm">
-          <div className="flex items-start sm:items-center gap-4 min-w-0">
-            <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-blue-100 dark:border-blue-900/50">
-              <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-2xl animate-in fade-in zoom-in-95">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 bg-indigo-500/10 rounded-lg">
+              <FileText className="h-5 w-5 text-indigo-500" />
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[180px] sm:max-w-xs" title={arquivo.name}>
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[150px] sm:max-w-xs" title={arquivo.name}>
                 {arquivo.name}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">{formatarTamanho(arquivo.size)}</span>
-                <span className="w-1 h-1 rounded-full bg-blue-300 dark:bg-blue-700"></span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">{arquivo.name.split('.').pop()}</span>
-              </div>
+              <p className="text-[10px] font-bold text-indigo-500/70 uppercase">
+                {formatarTamanho(arquivo.size)}
+              </p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onArquivoChange(null)}
-            className="self-end sm:self-auto text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 h-10 w-10 rounded-full transition-colors"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 h-8 w-8 rounded-full"
             disabled={desabilitado}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </Button>
         </div>
       )}
 
       {erroLocal && (
-        <p className="text-sm font-medium text-red-600 mt-3 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
-          <X className="h-4 w-4" />
+        <p className="text-xs font-bold text-red-500 mt-2 flex items-center gap-1.5 animate-in slide-in-from-top-1">
+          <X className="h-3 w-3" />
           {erroLocal}
         </p>
       )}
