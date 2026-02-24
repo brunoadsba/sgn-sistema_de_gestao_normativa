@@ -1,10 +1,10 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-23
+> Atualizado em: 2026-02-24
 
-- **Versão Atual**: `2.0.0`
-- **Última Atualização**: 2026-02-23
+- **Versão Atual**: `2.2.1`
+- **Última Atualização**: 2026-02-24
 
 ---
 
@@ -14,7 +14,7 @@ SGN (Sistema de Gestão Normativa) é uma plataforma local de análise de confor
 
 **Foco principal:** o usuário sobe documentos de SST e a IA analisa conformidade contra as NRs, gerando relatórios executivos.
 
-Projeto single-user, executado localmente. Única dependência externa: API do GROQ (LLM gratuito, open-source).
+Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI (GLM-4.7), Ollama (local).
 
 ---
 
@@ -27,7 +27,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
-| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG | 2.0.0 |
+| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG (Streaming) | 2.2.1 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -62,9 +62,9 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 ```
 /                                   # Raiz do projeto
-├── .github/workflows/              # CI/CD (ci, deploy, release)
+├── .github/workflows/              # CI principal (workflow `ci` ativo)
 ├── docker/                         # nginx.conf + .env.example
-├── docs/                           # memory.md, Guia-Vercel.md, harbor/
+├── docs/                           # README.md, architecture/, operations/, reference/, governance/, harbor/, archive/, memory.md
 ├── e2e/                            # Testes Playwright (api, navegacao, normas, nr6, pagina-inicial)
 ├── harbor-tasks/                   # Tarefas Harbor (async-worker, unit-tests, docker-harden)
 ├── public/                         # sw.js
@@ -134,7 +134,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | `documentos` | Documentos enviados pelo usuário (PGR, PCMSO, LTCAT, etc) |
 | `analise_jobs` | Jobs de análise (pending/processing/completed/failed/cancelled) |
 | `analise_resultados` | Resultados detalhados com scores |
-| `conformidade_gaps` | Gaps identificados (severidade: baixa/media/alta/critica) |
+| `conformidade_gaps` | Gaps identificados (severidade, GUT: probabilidade, pontuacao_gut, classificacao, prazo_dias, plano 5W2H em metadata) |
 
 ### Armazenamento
 
@@ -150,7 +150,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 1.  **Página principal de análise com IA** (Server Component + Client Component)
     - Upload de documento com drag-and-drop (PDF, DOCX, TXT) — até 100MB
     - Seletor de NRs: grid 2 colunas com filtro, chips de selecionadas, ações em lote
-    - Análise de conformidade via GROQ + Llama 4 Scout (~1.2s)
+    - Análise de conformidade via GROQ/Z.AI/Ollama (conforme AI_PROVIDER)
     - Resultado: score circular SVG animado, gaps ordenados por severidade, pontos positivos/atenção, próximos passos em grid
 2.  **Catálogo de normas com busca dinâmica** (filtro client-side instantâneo com `nuqs`, estado na URL `?search=`)
 3.  Análise especializada NR-6 (EPIs)
@@ -159,7 +159,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 6.  Exportação de dados (CSV/JSON)
 7.  API de health check
 8.  Logging estruturado com Pino
-9.  CI/CD com GitHub Actions (3 workflows: ci, deploy, release)
+9.  CI com GitHub Actions para qualidade contínua (`ci`)
 10. Docker multi-stage build
 11. Validação de env com Zod
 12. Schemas Zod para APIs (camelCase) — limite de documento: 2M chars
@@ -169,13 +169,13 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 16. **Observabilidade e resiliência**: Sentry integrado + retry/timeout + idempotência
 17. **Histórico avançado de uso**: filtros, ordenação, busca, paginação e exportação CSV com horário de Brasília
 18. **Estratégia incremental para arquivos grandes**: chunking com overlap, orquestração por chunk, consolidação final e persistência de metadados
-19. **Deploy Vercel estabilizado**: correções de `vercel.json` e CSP
+19. **Operação local estabilizada**: execução local padronizada com Docker e volume persistente
 20. **Performance web/mobile otimizada**: Canvas low-power, lazy-load e cache de KB
 21. **Branding modernizado**: ícones PWA, splash nativa e abertura premium
 22. **IA Híbrida consolidada**: seletor dinâmico entre Groq (cloud) e Ollama (local). Expansão para Z.AI (GLM-4.7) como provider principal do Harbor.
 23. **RAG de Alta Precisão**: ranking híbrido e normalização inteligente com 100% de Recall em casos críticos (CIPA/EPI/Portos)
 24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
-25. **Infraestrutura Turso DB**: Migração para `@libsql/client` (LibSQL) garantindo persistência real no Vercel (Cloud SQLite).
+25. **Infraestrutura LibSQL/Turso**: Migração para `@libsql/client` com suporte a persistência remota opcional sem alterar o domínio local.
 26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real das análises assíncronas.
 27. **Exportação PDF e Rastreabilidade**: Laudos técnicos otimizados para impressão corporativa com ID de Job e Nome de Arquivo.
 28. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
@@ -186,7 +186,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 ## O que NÃO funciona / está incompleto
 
 ### Prioridade Alta
-- Worker assíncrono real não existe (processamento é síncrono)
+- Fila dedicada externa para long-running jobs ainda não existe (há worker assíncrono interno com polling, sem orquestrador dedicado)
 
 ### Prioridade Média
 - Testes unitários: cobertura inicial criada para processamento incremental; ampliar para APIs críticas
@@ -244,6 +244,13 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 | 37 | 2026-02-23 | Migração de Infra Harbor para Z.AI (GLM-4.7). |
 | 38 | 2026-02-23 | Introdução do NEX [SGN.ai] e Grounding de Chat RAG. |
 | 39 | 2026-02-23 | **V2.0.0**: Redesign Workspace Style (3 Colunas) inspirado no NotebookLM. Chat Central Nativo, descarte de SidePanels redundantes e estabilização de layout ultra-wide. |
+| 40 | 2026-02-24 | **V2.2.0**: Oracular Streaming (NEX), Power Mode (50MB), NEX Drawer, extração proativa, botão "Analisar com IA". |
+| 41 | 2026-02-24 | **Extração estruturada GUT + 5W2H**: Metodologia GUT (probabilidade×severidade) em gaps, classificacao (CRITICO|ALTO|MEDIO|BAIXO), prazoDias automático, plano de ação 5W2H (what, who, prazoDias, evidenciaConclusao, kpi). Novos campos em conformidade_gaps e metadata. |
+| 42 | 2026-02-24 | **Otimização Z.AI e Chat NEX**: `thinking: { type: "disabled" }` no GLM-4.7 para evitar content vazio; max_tokens 16384 (análise) e 4096 (chat); timeout 55s no chat; headers de streaming aprimorados. |
+| 43 | 2026-02-24 | **Padronização documental (industry-style)**: estrutura de docs reorganizada por domínio (`architecture/`, `operations/`, `reference/`, `governance/`, `archive/`), criação de `docs/README.md`, atualização de arquitetura/POP/runbook, e manutenção de ponteiros para caminhos antigos. |
+| 44 | 2026-02-24 | **Hardening operacional (industry-style)**: health check passou a validar LLM conforme `AI_PROVIDER` (Groq/Z.AI/Ollama) e CI foi ativada para `push`/`pull_request` em `master` com `concurrency` para cancelamento de execuções redundantes. |
+| 45 | 2026-02-24 | **Diretriz operacional local-only**: projeto formalmente definido para execução apenas local (sem deploy); documentação e plano ajustados para runbook local e governança sem Vercel. |
+| 46 | 2026-02-24 | **Desativação definitiva de deploy/release**: workflows legados `.github/workflows/deploy.yml` e `.github/workflows/release.yml` removidos do repositório; `ci.yml` permanece como pipeline oficial. |
 
 ---
 
@@ -251,7 +258,7 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 
 > Ordem de prioridade. Cada item é uma tarefa independente que pode ser executada em uma sessão.
 
-### Fase 5 - Produção & Multi-Contexto
+### Fase 5 - Operação Local & Multi-Contexto
 
 - **Sprint 2026-W09: Multi-Fontes (Prioridade Crítica)**
   - Implementar suporte para múltiplos arquivos simultâneos na Coluna de Fontes.
@@ -266,13 +273,18 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
   - Adicionar métricas de negócio e dashboards
 
 
-- **Otimizar Docker para produção**
+- **Otimizar Docker para operação local contínua**
   - Testar `docker-compose.prod.yml` end-to-end
   - Verificar healthcheck, volume persistente, limites de memória
   - Configurar backup do SQLite (cron job que copia `./data/sgn.db`)
 
+- **Consolidar decisão local-only (sem deploy remoto)**
+  - Manter documentação e runbooks orientados apenas para execução local
+  - Garantir que apenas o workflow `ci` permaneça ativo na pasta `.github/workflows/`
+
 ### Fase 7 - Evolução (quando demandado)
 
+- **Extração estruturada avançada**: ver `docs/reference/prompt-extracao-estruturada-sgn.md` — GUT e 5W2H implementados; pendente: score por pilares e NRs por CNAE
 - **Gráficos de evolução de conformidade** (tendência de score ao longo do tempo)
 - **Timeline de análises realizadas**
 - **Comparações side-by-side de documentos**
@@ -284,7 +296,9 @@ Projeto single-user, executado localmente. Única dependência externa: API do G
 Copie `.env.example` para `.env.local` e configure:
 
 ```
-GROQ_API_KEY=                   # Chave da API GROQ para IA (obrigatório)
+AI_PROVIDER=zai                 # groq | zai | ollama
+GROQ_API_KEY=                   # Obrigatório na validação (placeholder se só Z.AI)
+ZAI_API_KEY=                    # Obrigatório se AI_PROVIDER=zai
 ```
 
 Opcionais:
@@ -292,6 +306,10 @@ Opcionais:
 DATABASE_PATH=./data/sgn.db     # Caminho do banco SQLite (default: ./data/sgn.db)
 PORT=3001                       # Porta do servidor (default: 3001)
 LOG_LEVEL=info                  # Nível de log: error, warn, info, debug
+ZAI_BASE_URL=                   # Default: https://api.z.ai/v1
+ZAI_MODEL=glm-4.7               # Modelo Z.AI
+OLLAMA_BASE_URL=                # Se AI_PROVIDER=ollama
+OLLAMA_MODEL=                   # Ex: llama3.2
 ```
 
 ---
@@ -341,7 +359,7 @@ Página inicial (/) — Server Component
       ├── 2. Selecionar NRs aplicáveis (grid 2 colunas com filtro e chips)
       ├── 3. Clicar "Analisar Conformidade com IA"
       │     ├── POST /api/extrair-texto (extrai texto do arquivo via pdf-parse/mammoth)
-      │     └── POST /api/ia/analisar-conformidade (GROQ + Llama 4 Scout 17B, trunca em 500k chars)
+      │     └── POST /api/ia/analisar-conformidade (GROQ/Z.AI/Ollama conforme AI_PROVIDER, chunking até 2M chars)
       └── 4. Ver resultado (score circular SVG, gaps por severidade, pontos positivos/atenção, plano de ação)
 
 Página de normas (/normas) — Server Component
@@ -382,3 +400,16 @@ Página de normas (/normas) — Server Component
 2. **Branding e Posicionamento Visual:** Criação da identidade do robô nomeado **NEX** [SGN.ai], proporcionando personificação da autoridade normativa de IA, focada em responder com zero alucinação por atrelar (Grounding Estrito) todo seu banco de respostas à base PDF submetida pelo cliente.
 3. **Engine RAG de Background:** Rotina independente de leitura (`/api/extrair-texto`) injetada via useEffect no client, que faz o *parsing* textual completo silenciosamente em background sem atrapalhar a pipeline principal.
 4. **Proteção Cognitiva RAG:** Novo endpoint de backend `api/chat-documento` estabelecido com System Prompt de blindagem. Ele força a IA a interagir usando apenas o contexto provido, em Língua Portuguesa padrão (BR).
+
+### Sessão 40 (24/02/2026) — V2.2.0: Oracular Streaming & Power Mode
+**Objetivo:** Suportar escala industrial com arquivos gigantes e feedback instantâneo no chat.
+
+**Principais Ações:**
+1. **Oracular Streaming (NEX)**: Refatoração do chat para suporte a `ReadableStream`. A resposta da IA agora flui em tempo real, reduzindo a latência percebida e eliminando o timeout em respostas longas.
+2. **Power Mode Local (50MB)**: Destravamento do sistema para arquivos gigantes. Limite de payload aumentado de 10MB para **50MB** e timeout de extração expandido para **120s**.
+3. **Studio UX Unificada**: Migração definitiva para o **NEX Drawer** (painel lateral opaco). O `ChatFloatingBubble` foi descontinuado para simplificar a interface e resolver conflitos de Z-index (sobreposição no header).
+4. **Extração Proativa**: Otimização do fluxo onde o chat inicia a extração de texto em background imediatamente após o upload, garantindo que o NEX esteja pronto para perguntas antes mesmo da análise técnica terminar.
+5. **Renomeação Estratégica**: Botão de ação principal alterado para **"Analisar com IA"** para melhor clareza funcional.
+6. **Hardening de Contexto**: Ajuste dinâmico de chunks para **80.000 caracteres** em provedores premium (Z.AI/GLM-4.7), maximizando o grounding documental.
+
+**Status Final:** Sistema estabilizado em "Power Mode", capaz de processar documentos de escala industrial com UX de ponta e feedback instantâneo.

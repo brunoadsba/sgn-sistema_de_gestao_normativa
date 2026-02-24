@@ -6,7 +6,8 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 
 ## Status do Projeto
 
-- `Status`: ativo, em produção local
+- `Versão`: 2.2.1 — Oracular Streaming, Power Mode (50MB), GUT + 5W2H, Z.AI otimizado
+- `Status`: ativo, operação local (sem deploy remoto)
 - `Arquitetura`: monolito Next.js (App Router)
 - `Modelo operacional`: single-user local
 - `Branch principal`: `master`
@@ -15,11 +16,13 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 ## Capacidades
 
 1. **Análise de conformidade com IA Híbrida**
-   - Suporte a **Groq (Cloud)** e **Ollama (Local)**
+   - Suporte a **Groq (Cloud)**, **Z.AI (GLM-4.7)** e **Ollama (Local)**
    - Upload de `PDF`, `DOCX` e `TXT` (até 100MB)
    - Extração de texto server-side (`pdf-parse` + `mammoth`)
-   - Modelos recomendados: `Llama 3.3 70B` (Groq) e `Llama 3.2` (Ollama)
+   - Modelos recomendados: `Llama 3.3 70B` (Groq), `GLM-4.7` (Z.AI) e `Llama 3.2` (Ollama)
    - Estratégia de processamento: `completo` ou `incremental` (chunking + consolidação)
+   - **Metodologia GUT** em gaps: probabilidade × severidade, classificação (CRITICO|ALTO|MEDIO|BAIXO), prazo em dias
+   - **Plano de ação 5W2H** estruturado: what, who, prazoDias, evidenciaConclusao, kpi
 2. **Catálogo de normas e RAG Otimizado**
    - 38 NRs com busca dinâmica e 100% de Recall em casos críticos (CIPA, EPI, PGR, Portos)
    - Estado de busca na URL com `nuqs` (`?search=`)
@@ -35,16 +38,15 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - UI responsiva com suporte a monitores Ultra-Wide.
 5. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
-- 🚀 **Versão 2.0.0**: Redesign Workspace, NEX Native Chat, 3-Col Layout.
-5. **Persistência e histórico**
+6. **Persistência e histórico**
    - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
    - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação
-6. **Confiabilidade e observabilidade**
+7. **Confiabilidade e observabilidade**
    - Retry com timeout para chamadas críticas
    - Idempotência em análise de IA
    - Sentry integrado (server, edge e client)
    - Health check com status de banco, API e LLM
-7. **Experiência mobile/web de abertura**
+8. **Experiência mobile/web de abertura**
    - Ícone PWA da marca SGN (`/icon` e `/apple-icon`)
    - Splash nativa com tema escuro (manifest)
    - Tela de abertura premium (card glass + iluminação + textura) com CTA **Acessar Plataforma**
@@ -60,7 +62,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 | UI | React 19 + Tailwind CSS + shadcn/ui |
 | Estado em URL | nuqs |
 | Banco | **Turso DB (libsql)** + Drizzle ORM |
-| IA | GROQ (`llama-3.3-70b-versatile`) + Ollama (`llama-3.2`) |
+| IA | GROQ + Z.AI (GLM-4.7) + Ollama — seleção via `AI_PROVIDER` |
 | Extração de texto | `pdf-parse` v2 + `mammoth` |
 | Testes E2E | Playwright |
 | Logging | Pino |
@@ -70,7 +72,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 ### Pré-requisitos
 
 - Node.js 18+
-- Chave GROQ (`GROQ_API_KEY`)
+- Chave de IA: `GROQ_API_KEY` (obrigatória) ou `ZAI_API_KEY` (quando `AI_PROVIDER=zai`)
 
 ### Execução local
 
@@ -84,8 +86,9 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    ```
 3. Configure `.env.local`:
    ```bash
-   AI_PROVIDER=groq # ou 'ollama'
-   GROQ_API_KEY=sua_chave_aqui
+   AI_PROVIDER=zai          # ou 'groq' | 'ollama'
+   ZAI_API_KEY=sua_chave    # obrigatório se AI_PROVIDER=zai
+   GROQ_API_KEY=sua_chave   # obrigatório (ou placeholder se usar só Z.AI)
    OLLAMA_BASE_URL=http://localhost:11434
    OLLAMA_MODEL=llama3.2
    ```
@@ -110,7 +113,8 @@ npm run docker:start
 4. Executar **Analisar Conformidade com IA**
 5. Avaliar resultado:
    - score
-   - gaps por severidade
+   - gaps por severidade (com classificação GUT e prazo em dias)
+   - plano de ação 5W2H (quando disponível)
    - pontos de atenção
    - próximos passos
 
@@ -118,7 +122,7 @@ npm run docker:start
 
 | Item | Valor |
 |------|-------|
-| Upload máximo | 100MB |
+| Upload máximo (Local) | 100MB |
 | Limite do texto extraído (validação) | 2.000.000 caracteres |
 | Texto enviado à IA (modo completo) | 500.000 caracteres |
 | Processamento incremental | chunks com overlap e consolidação final |
@@ -152,7 +156,7 @@ npm run docker:stop
 | Situação | Ação recomendada |
 |----------|------------------|
 | Erro de extração de texto | Validar arquivo (sem senha/corrupção) e formato suportado |
-| Chave GROQ inválida | Revisar `GROQ_API_KEY` em `.env.local` |
+| Chave IA inválida | Revisar `GROQ_API_KEY` ou `ZAI_API_KEY` em `.env.local` conforme `AI_PROVIDER` |
 | Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
 | Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
 | Home travada em "Carregando SGN..." | Revisar CSP (`script-src`) em `next.config.js` para não bloquear hidratação do Next.js |
@@ -160,10 +164,13 @@ npm run docker:stop
 
 ## Documentação
 
+- `docs/README.md` - índice oficial e estrutura documental
 - `docs/memory.md` - contexto operacional completo e histórico de sessões
-- `docs/sql/arquitetura.md` - arquitetura técnica consolidada
-- `docs/Guia-Vercel.md` - guia operacional de deploy e checklist
-- `docs/POP-Uso-do-SGN-Analise-de-Conformidade-SST.md` - POP e gate GO/NO-GO para operacao
+- `docs/architecture/arquitetura-tecnica.md` - arquitetura técnica consolidada
+- `docs/operations/operacao-local.md` - runbook operacional local
+- `docs/operations/pop-analise-conformidade-sst.md` - POP e gate GO/NO-GO de operacao
+- `docs/reference/prompt-extracao-estruturada-sgn.md` - mapeamento do prompt de extração estruturada (GUT, 5W2H)
+- `docs/governance/documentacao.md` - padrão e governança de documentação
 - `CHANGELOG.md` - histórico de mudanças
 - `SECURITY.md` - modelo de segurança e hardening
 - `CONTRIBUTING.md` - fluxo de contribuição

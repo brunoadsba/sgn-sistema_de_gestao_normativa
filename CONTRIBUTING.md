@@ -52,19 +52,21 @@ Exemplos:
    - Resultado esperado: suíte verde, sem cenários flaky.
 4. Revisar documentação:
    - `README.md`
+   - `docs/README.md`
    - `docs/memory.md`
-   - `docs/sql/arquitetura.md`
-   - `docs/Guia-Vercel.md` (quando houver impacto operacional/deploy)
+   - `docs/architecture/arquitetura-tecnica.md`
+   - `docs/operations/operacao-local.md` (quando houver impacto operacional)
+   - `docs/governance/documentacao.md` (quando houver criação/revisão documental)
    - `CHANGELOG.md`
    - `SECURITY.md` (quando houver impacto)
 5. Verificar segredos:
    ```bash
    git grep -i "api_key\|password\|secret"
    ```
-6. Quando houver impacto de deploy na Vercel:
-   - Confirmar `GROQ_API_KEY` em `production`, `preview` e `development`
-   - Confirmar `Framework Preset: Next.js`
-   - Usar `vercel redeploy <deployment-url> --target production` para reexecução controlada
+6. Quando houver impacto operacional local:
+   - Validar startup com `npm run dev` e `npm run docker:start`
+   - Confirmar health check em `GET /api/health`
+   - Validar backup e restore (`npm run db:backup` e `npm run db:restore`)
 
 ## Convenções de Engenharia
 
