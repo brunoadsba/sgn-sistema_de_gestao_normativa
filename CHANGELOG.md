@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.2.2] - 2026-02-25
+### Alterado
+- **Documentação canônica atualizada**: alinhamento de `README.md`, `SECURITY.md`, `docs/README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/operations/operacao-local.md`, `docs/operations/pop-analise-conformidade-sst.md` e `docs/memory.md` com estado real local-only.
+- **Runbook local refinado**: gate operacional consolidado com `npx tsc --noEmit`, `npm run lint`, `npm run build` (webpack) e `npm run test:e2e`.
+- **Governança local-only reforçada**: confirmação documental de pipeline único `ci` e ausência de workflows ativos de deploy/release.
+
+## [2.2.1] - 2026-02-24
+### Adicionado
+- **Extração estruturada GUT + 5W2H**: Metodologia GUT (probabilidade × severidade) em gaps, classificação (CRITICO|ALTO|MEDIO|BAIXO), prazo em dias automático, plano de ação 5W2H estruturado (what, who, prazoDias, evidenciaConclusao, kpi).
+- **Otimização Z.AI GLM-4.7**: Parâmetro `thinking: { type: "disabled" }` para evitar `content` vazio; `max_tokens` aumentado para 16384 na análise e 4096 no chat.
+
+### Alterado
+- **Chat NEX (Z.AI)**: max_tokens 4096, timeout 55s, headers de streaming aprimorados, tratamento de erro antes de retornar stream.
+- **Análise de conformidade**: Novos campos em gaps (probabilidade, pontuacaoGut, classificacao, prazoDias) e planoAcao no metadata.
+
+## [2.2.0] - 2026-02-24
+### Adicionado
+- **Oracular Streaming NEX**: Implementação de resposta em tempo real (streaming) no chat via `ReadableStream`, permitindo interação instantânea e fluida.
+- **Power Mode Local**: Suporte a "arquivos gigantes" de até 50MB no ambiente local, com aumento de timeout de extração para 120s e expansão de limites de payload no Next.js.
+- **Z.AI GLM-4.7 Nativo**: Priorização do provedor Z.AI com janela de contexto dinâmica (80k chars por chunk) otimizada para o modelo GLM-4.7.
+
+### Alterado
+- **Studio UX Unificada**: Chat NEX migrado para um Drawer lateral de alta visibilidade com correção de stacking context (Z-index) contra o header.
+- **Naming Funcional**: Botão principal renomeado para "Analisar com IA" para clareza funcional.
+- **Extração Proativa**: A extração de texto para o chat agora inicia imediatamente em background ao anexar o arquivo, sem aguardar a análise técnica.
+
+
+## [2.1.0] - 2026-02-24
+### Adicionado
+- **Studio Minimalista (Redesign Pivot)**: Migração do layout de 3 colunas para um fluxo centralizado e linear (`max-w-4xl`), reduzindo a carga cognitiva e priorizando o diagnóstico.
+- **NEX Side Drawer**: O assistente NEX foi movido para um painel lateral retrátil (Drawer) com animação spring, disponível sob demanda via botão "Consultar NEX".
+- **Foco em Auditoria**: Reorganização dos passos de configuração em uma pilha vertical lógica e intuitiva.
+
+### Alterado
+- **Ajustes de Viewport**: Remoção do suporte ultra-wide de 1700px em favor de um container focado de 896px-1024px.
+- **Hierarquia Visual**: Títulos e botões de ação redimensionados para melhor balanceamento em resoluções padrão.
+
 ## [2.0.0] - 2026-02-23
 ### Adicionado
 - **Workspace NotebookLM (Redesign)**: Interface transformada em 3 colunas paralelas (Fontes | NEX Chat | Estúdio), otimizando o fluxo de análise e consulta.

@@ -1,10 +1,10 @@
 # SGN - Memória do Projeto
 
 > Documento de contexto para qualquer LLM que acesse este projeto.
-> Atualizado em: 2026-02-24
+> Atualizado em: 2026-02-25
 
 - **Versão Atual**: `2.2.1`
-- **Última Atualização**: 2026-02-24
+- **Última Atualização**: 2026-02-25
 
 ---
 
@@ -24,7 +24,7 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 |--------|-----------|--------|
 | Framework | Next.js (App Router) | 16.1.6 |
 | Linguagem | TypeScript (strict mode) | 5.9.2 |
-| UI | React + Tailwind CSS + shadcn/ui | React 19.1.0 |
+| UI | React + Tailwind CSS + shadcn/ui | React 19.2.4 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
 | IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG (Streaming) | 2.2.1 |
@@ -32,11 +32,11 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
 | Testes E2E | Playwright | instalado (sessão 15) |
-| Deploy | Docker (self-hosted) | - |
+| Operação | Local-only (Node.js/Docker local) | - |
 | Logging | Pino | 10.1.0 |
 | Agentes IA | Harbor (Aider, Oracle, Qwen-Coder) | 0.1.44 |
 
-**Arquitetura simplificada:** Next.js + SQLite local (Drizzle ORM) + GROQ. Sem Redis, sem Supabase, sem React Query, sem autenticação. NRs armazenadas em arquivo TypeScript local (`src/lib/data/normas.ts`). Deploy via Docker com volume persistente para dados.
+**Arquitetura simplificada:** Next.js + SQLite local (Drizzle ORM) + provider IA configuravel (`groq`, `zai`, `ollama`). Sem Redis, sem Supabase, sem React Query, sem autenticação. NRs armazenadas em arquivo TypeScript local (`src/lib/data/normas.ts`). Operacao local via Node.js ou Docker com volume persistente para dados.
 
 **Padrão de componentes (sessão 21):** Server Components buscam dados → Client Components recebem via props e gerenciam interatividade. Features organizadas em `src/features/[nome]/components/`. URL state gerenciado com `nuqs` (query strings, sem useState para estados compartilháveis).
 
@@ -49,7 +49,7 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 - **Identidade PWA SGN**: ícones gerados em `src/app/icon.tsx` e `src/app/apple-icon.tsx` com tema escuro no manifest.
 - **Abertura web padronizada**: tela full-screen premium (card glass, iluminação difusa e textura geométrica) com CTA `Acessar Plataforma`, exibida uma única vez por dispositivo via `SessionSplashGate` (`localStorage`); loading interno em navegação usa skeleton leve.
 - **Glassmorphism**: header com `backdrop-blur-md`, cards com `bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl`.
-- **Layout Workspace (v2.0)**: Inspirado no NotebookLM, utiliza 3 colunas paralelas em desktops (Fontes | NEX Chat | Estúdio) para centralizar a interação com o documento.
+- **Studio UX atual**: fluxo linear (Documento Fonte -> Configuração de Auditoria -> Resultado) com NEX em drawer lateral sob demanda.
 - **CSS Variables dark**: background `225 25% 7%` (~`#0d1117`), card `225 25% 10%`, border `225 20% 18%`.
 - Todos os componentes possuem variantes `dark:` completas (Upload, SeletorNormas, ResultadoAnalise, páginas de normas).
 - **Títulos com `bg-clip-text`**: usar `leading-normal` e `pb-2`+ para evitar corte de descendentes (g, j, p). Gradiente dark: `dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100` para visibilidade.
@@ -179,8 +179,7 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real das análises assíncronas.
 27. **Exportação PDF e Rastreabilidade**: Laudos técnicos otimizados para impressão corporativa com ID de Job e Nome de Arquivo.
 28. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
-- **Workspace NotebookLM (v2.0)**: Layout de 3 colunas integrando Chat NEX nativamente ao lado da fonte e do setup de normas.
-- **Desacoplamento de UI**: ChatSidePanel removido em favor da coluna central nativa; ChatFloatingBubble ativado via eventos para suporte em visões de resultado full-screen.
+29. **Studio minimalista + NEX Drawer**: setup e análise em fluxo único, com chat contextual acionado sem sair da tela principal.
 ---
 
 ## O que NÃO funciona / está incompleto
@@ -251,6 +250,7 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 | 44 | 2026-02-24 | **Hardening operacional (industry-style)**: health check passou a validar LLM conforme `AI_PROVIDER` (Groq/Z.AI/Ollama) e CI foi ativada para `push`/`pull_request` em `master` com `concurrency` para cancelamento de execuções redundantes. |
 | 45 | 2026-02-24 | **Diretriz operacional local-only**: projeto formalmente definido para execução apenas local (sem deploy); documentação e plano ajustados para runbook local e governança sem Vercel. |
 | 46 | 2026-02-24 | **Desativação definitiva de deploy/release**: workflows legados `.github/workflows/deploy.yml` e `.github/workflows/release.yml` removidos do repositório; `ci.yml` permanece como pipeline oficial. |
+| 47 | 2026-02-25 | **Atualização geral de documentação**: alinhados `README.md`, `SECURITY.md`, `docs/README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/operations/*` e `CHANGELOG.md` ao estado real local-only/CI-only. Gate local validado: `tsc`, `lint`, `build` e `test:e2e` (33/33). |
 
 ---
 
@@ -274,11 +274,11 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 
 
 - **Otimizar Docker para operação local contínua**
-  - Testar `docker-compose.prod.yml` end-to-end
+  - Testar ciclo start/stop/status/logs com `npm run docker:*`
   - Verificar healthcheck, volume persistente, limites de memória
   - Configurar backup do SQLite (cron job que copia `./data/sgn.db`)
 
-- **Consolidar decisão local-only (sem deploy remoto)**
+- **Manter decisão local-only consolidada (sem deploy remoto)**
   - Manter documentação e runbooks orientados apenas para execução local
   - Garantir que apenas o workflow `ci` permaneça ativo na pasta `.github/workflows/`
 
@@ -319,7 +319,8 @@ OLLAMA_MODEL=                   # Ex: llama3.2
 ```bash
 # Desenvolvimento
 npm run dev          # Inicia dev server em localhost:3001
-npm run build        # Build de produção
+npx tsc --noEmit     # Tipagem estrita
+npm run build        # Build local (webpack)
 npm run lint         # Verifica linting
 
 # Testes E2E
@@ -357,7 +358,7 @@ Página inicial (/) — Server Component
   └── AnaliseCliente (Client Component, recebe normas via props)
       ├── 1. Upload documento (drag-and-drop: PDF, DOCX, TXT — até 100MB)
       ├── 2. Selecionar NRs aplicáveis (grid 2 colunas com filtro e chips)
-      ├── 3. Clicar "Analisar Conformidade com IA"
+      ├── 3. Clicar "Analisar com IA"
       │     ├── POST /api/extrair-texto (extrai texto do arquivo via pdf-parse/mammoth)
       │     └── POST /api/ia/analisar-conformidade (GROQ/Z.AI/Ollama conforme AI_PROVIDER, chunking até 2M chars)
       └── 4. Ver resultado (score circular SVG, gaps por severidade, pontos positivos/atenção, plano de ação)

@@ -1,5 +1,7 @@
 # Documento descontinuado
 
+> Atualizado em: 2026-02-25
+
 O projeto foi definido como local-only (sem deploy remoto).
 
 Runbook operacional ativo:

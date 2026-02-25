@@ -10,6 +10,7 @@ Definir padrao minimo de qualidade e manutencao para a documentacao do SGN.
 2. Clareza operacional acima de volume de texto.
 3. Documento executavel: deve orientar acao real, nao apenas descrever.
 4. Atualizacao junto com a mudanca de codigo/infra.
+5. Contexto operacional vigente: SGN local-only (sem deploy remoto).
 
 ## Tipos de documento
 

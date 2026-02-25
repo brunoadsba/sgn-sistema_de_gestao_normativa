@@ -2,6 +2,13 @@
 
 Este diretorio centraliza a documentacao oficial do projeto SGN com estrutura de padrao industria.
 
+## Estado atual (fonte unica)
+
+- Atualizado em: `2026-02-25`
+- Modelo operacional: `local-only`, single-user
+- CI ativo: workflow `ci` em `.github/workflows/ci.yml`
+- Deploy/release: descontinuados (sem workflow ativo)
+
 ## Estrutura oficial
 
 | Area | Caminho | Objetivo |
@@ -42,4 +49,5 @@ Este diretorio centraliza a documentacao oficial do projeto SGN com estrutura de
 - `docs/architecture/arquitetura-tecnica.md` atualizado
 - `docs/operations/operacao-local.md` atualizado (quando houver impacto operacional)
 - `docs/operations/pop-analise-conformidade-sst.md` atualizado (quando houver impacto no fluxo do usuario)
+- `SECURITY.md` atualizado (quando houver impacto de risco/controles)
 - `CHANGELOG.md` atualizado

@@ -1,6 +1,6 @@
 # SGN - Runbook de Operacao Local
 
-> Atualizado em: 2026-02-24
+> Atualizado em: 2026-02-25
 
 ## 1. Objetivo
 
@@ -11,10 +11,11 @@ Padronizar execucao, validacao e recuperacao operacional do SGN em ambiente loca
 1. Execucao via Node.js local.
 2. Execucao via Docker local.
 3. Backup, restore e troubleshooting operacional.
+4. Sem deploy remoto (operacao local-only).
 
 ## 3. Pre-requisitos
 
-1. Node.js 18+.
+1. Node.js 20+.
 2. `npm install` concluido.
 3. `.env.local` configurado a partir de `.env.example`.
 4. Chaves de IA validas para o provider em uso.
@@ -46,9 +47,11 @@ npm run docker:stop
 ```bash
 npx tsc --noEmit
 npm run lint
-npm run build
+npm run build   # padronizado com next build --webpack
 npm run test:e2e
 ```
+
+Snapshot validado em 2026-02-25: `33/33` cenarios E2E verdes.
 
 ## 7. Backup e restore
 

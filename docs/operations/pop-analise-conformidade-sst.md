@@ -1,6 +1,6 @@
 # POP - Uso do SGN para Analise de Conformidade SST
 
-> Atualizado em: 2026-02-24
+> Atualizado em: 2026-02-25
 
 ## 1. Objetivo
 
@@ -26,9 +26,9 @@ Aplicar em todo documento novo ou revisado de SST (`PGR`, `PCMSO`, `LTCAT` e cor
 ## 5. Procedimento operacional
 
 1. Acessar a tela principal de analise no SGN.
-2. Fazer upload do documento na coluna `Fontes`.
-3. Selecionar NRs aplicaveis na coluna `Estudio`.
-4. Opcional: consultar o NEX na coluna `Chat` para duvidas antes da analise.
+2. Fazer upload do documento na etapa `Documento Fonte`.
+3. Selecionar NRs aplicaveis na etapa `Configuracao de Auditoria`.
+4. Opcional: acionar `CONSULTAR NEX` para abrir o drawer lateral antes da analise.
 5. Acionar `Analisar com IA`.
 6. Acompanhar o progresso no stepper/polling ate conclusao.
 7. Validar resultado tecnico:
@@ -67,7 +67,7 @@ Aplicar em todo documento novo ou revisado de SST (`PGR`, `PCMSO`, `LTCAT` e cor
 ### GO
 
 1. Base normativa carregada e consistente.
-2. Qualidade tecnica verde (`lint`, `build`, `test:e2e`).
+2. Qualidade tecnica verde (`tsc`, `lint`, `build`, `test:e2e`).
 3. Resultado com rastreabilidade de evidencias.
 4. Plano para gaps criticos e altos definido.
 

@@ -2,6 +2,8 @@
 
 Este documento define o fluxo oficial de contribuição para o SGN.
 
+> Contexto atual: projeto local-only, sem deploy/release remoto. Pipeline oficial: `.github/workflows/ci.yml`.
+
 ## Estratégia de Branch
 
 1. Nunca desenvolver direto em `master`.
@@ -45,6 +47,7 @@ Exemplos:
    ```bash
    npm run build
    ```
+   - O script oficial usa `next build --webpack`.
 3. Executar testes disponíveis:
    ```bash
    npm run test:e2e

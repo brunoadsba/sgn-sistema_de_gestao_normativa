@@ -6,12 +6,13 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 
 ## Status do Projeto
 
-- `Versão`: 2.2.1 — Oracular Streaming, Power Mode (50MB), GUT + 5W2H, Z.AI otimizado
+- `Versão`: 2.2.1 — GUT + 5W2H, chat NEX em streaming e operação local-only
 - `Status`: ativo, operação local (sem deploy remoto)
 - `Arquitetura`: monolito Next.js (App Router)
 - `Modelo operacional`: single-user local
 - `Branch principal`: `master`
-- `Qualidade atual`: `lint` e `build` verdes no estado atual
+- `CI`: workflow único `ci` (quality + unit + e2e)
+- `Qualidade atual`: `npx tsc --noEmit`, `npm run lint`, `npm run build` e `npm run test:e2e` validados localmente (33/33) em `2026-02-25`
 
 ## Capacidades
 
@@ -30,12 +31,12 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
    - Normalização inteligente de códigos (ex: "5" -> "NR-5")
 3. **Assistente de Consultoria Neural (NEX)**
    - Um Chat Copilot atrelado 100% ao contexto do documento analisado.
-   - Interface premium integrada nativamente ao Workspace.
+   - Interface premium em drawer lateral, acionada durante setup e na tela de resultado.
    - Grounding restrito: evita alucinação do modelo consultando apenas o escopo extraído.
-4. **Layout Workspace NotebookLM (v2.0)**
-   - Redesign completo em 3 colunas simultâneas: **Fontes | NEX Chat | Estúdio**.
-   - Coluna de Chat centralizada para consulta em tempo real sem interrupção do fluxo.
-   - UI responsiva com suporte a monitores Ultra-Wide.
+4. **Studio de análise (fluxo linear)**
+   - Passos unificados: **Documento Fonte** -> **Configuração de Auditoria** -> **Analisar com IA**.
+   - Acompanhamento assíncrono por `jobId` com polling e stepper de progresso.
+   - Consulta ao NEX sem interromper o fluxo principal (drawer).
 5. **Análise específica NR-6**
    - Fluxo dedicado para EPIs
 6. **Persistência e histórico**
@@ -71,7 +72,7 @@ O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza co
 
 ### Pré-requisitos
 
-- Node.js 18+
+- Node.js 20+
 - Chave de IA: `GROQ_API_KEY` (obrigatória) ou `ZAI_API_KEY` (quando `AI_PROVIDER=zai`)
 
 ### Execução local
@@ -110,7 +111,7 @@ npm run docker:start
 1. Acessar `/`
 2. Enviar documento SST
 3. Selecionar NRs aplicáveis
-4. Executar **Analisar Conformidade com IA**
+4. Executar **Analisar com IA**
 5. Avaliar resultado:
    - score
    - gaps por severidade (com classificação GUT e prazo em dias)
@@ -133,6 +134,7 @@ npm run docker:start
 ```bash
 # desenvolvimento
 npm run dev
+npx tsc --noEmit
 npm run build
 npm run lint
 
@@ -160,6 +162,7 @@ npm run docker:stop
 | Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
 | Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
 | Home travada em "Carregando SGN..." | Revisar CSP (`script-src`) em `next.config.js` para não bloquear hidratação do Next.js |
+| Build local demora/trava | Usar `npm run build` (script padronizado com `next build --webpack`) |
 | Atalho mobile não atualiza ícone/splash | Remover atalho antigo, limpar cache do navegador e adicionar novamente à tela inicial |
 
 ## Documentação

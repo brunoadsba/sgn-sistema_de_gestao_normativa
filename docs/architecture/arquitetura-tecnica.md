@@ -1,11 +1,12 @@
 # SGN - Arquitetura Tecnica
 
-> Atualizado em: 2026-02-24
+> Atualizado em: 2026-02-25
 
 ## 1. Resumo
 
 O SGN e um monolito Next.js (App Router) para analise de conformidade SST com IA.
 O produto e operado em modo local single-user (sem deploy remoto).
+Pipeline remoto ativo apenas para qualidade continua (`.github/workflows/ci.yml`).
 
 ## 2. Stack oficial
 
@@ -16,7 +17,7 @@ O produto e operado em modo local single-user (sem deploy remoto).
 | UI | React 19 + Tailwind + shadcn/ui |
 | Estado URL | nuqs |
 | Banco | Drizzle ORM + LibSQL (`@libsql/client`) |
-| Persistencia | Turso (cloud) ou arquivo local (`file:./data/sgn.db`) |
+| Persistencia | SQLite local (`file:./data/sgn.db`) com opcao LibSQL/Turso |
 | IA | Groq, Z.AI (GLM-4.7), Ollama |
 | Observabilidade | Sentry + Pino |
 | Testes | Jest + Playwright |
@@ -91,6 +92,7 @@ Tabelas principais:
 4. Logs estruturados com correlacao de request.
 5. Error boundaries em App Router.
 6. Sentry em server, edge e client.
+7. Build padronizado em `npm run build` com `next build --webpack`.
 
 ## 9. Debito tecnico priorizado
 

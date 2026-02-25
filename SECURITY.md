@@ -1,5 +1,7 @@
 # SGN - Security
 
+> Atualizado em: 2026-02-25
+
 ## Escopo
 
 Este documento descreve o estado de segurança atual do SGN, riscos aceitos no modo single-user local e requisitos mínimos para evolução para ambiente público.
@@ -8,7 +10,7 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 
 - Aplicação local, single-user, sem autenticação.
 - Superfícies de entrada principais: upload de arquivos, payloads de API, variáveis de ambiente.
-- Comunicação externa: apenas API da GROQ para processamento de IA.
+- Comunicação externa: API do provedor configurado em `AI_PROVIDER` (`groq`, `zai` ou `ollama` local).
 
 ## Controles Implementados
 
@@ -22,13 +24,13 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 8. Observabilidade com Sentry (server, edge e client).
 9. Error boundaries globais e por rota para captura de falhas de renderização.
 10. Retry com timeout e idempotência em rotas críticas de análise IA.
-11. Política CSP ativa em produção e revisada para compatibilidade com hidratação do Next.js App Router.
+11. Política CSP ativa e revisada para compatibilidade com hidratação do Next.js App Router.
 
 ## Riscos Conhecidos (Estado Atual)
 
 1. APIs sem autenticação/autorização (aceito para uso local).
 2. Ausência de rate limiting específico para rotas de IA.
-3. Dependência de serviço externo GROQ para etapa crítica de análise.
+3. Dependência de serviço externo quando `AI_PROVIDER=groq` ou `AI_PROVIDER=zai`.
 4. Uso de SQLite local limita cenários multiusuário e alta concorrência.
 5. CSP atual usa `script-src 'unsafe-inline'` como mitigação de disponibilidade para evitar bloqueio de hidratação; reduzir esse risco exige implementação dedicada de nonce/hash alinhada ao App Router.
 
@@ -45,13 +47,16 @@ Este documento descreve o estado de segurança atual do SGN, riscos aceitos no m
 
 1. Segredos apenas em `.env.local`/cofre de ambiente.
 2. Proibido versionar tokens/chaves.
-3. Rotacionar `GROQ_API_KEY` em caso de vazamento.
+3. Rotacionar `GROQ_API_KEY` e/ou `ZAI_API_KEY` em caso de vazamento.
 
 Variáveis principais:
 
 ```bash
 NODE_ENV=development|production
-GROQ_API_KEY=                     # Obrigatória
+AI_PROVIDER=zai                   # groq | zai | ollama
+GROQ_API_KEY=                     # Obrigatória na validacao do ambiente (aceita placeholder local)
+ZAI_API_KEY=                      # Obrigatória se AI_PROVIDER=zai
+OLLAMA_BASE_URL=http://localhost:11434  # Obrigatória se AI_PROVIDER=ollama
 DATABASE_PATH=./data/sgn.db       # Opcional (default: ./data/sgn.db)
 PORT=3001                         # Opcional
 LOG_LEVEL=info                    # Opcional
@@ -72,7 +77,7 @@ LOG_LEVEL=info                    # Opcional
    ```bash
    npm run test:e2e
    ```
-4. Revisar alterações de API e schema antes de merge.
+4. Revisar alterações de API, schema e variáveis de ambiente antes de merge.
 
 ## Política de Divulgação de Vulnerabilidades
 
