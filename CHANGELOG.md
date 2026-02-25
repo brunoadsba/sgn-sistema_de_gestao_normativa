@@ -1,5 +1,92 @@
 # Changelog
 
+## [2.2.10] - 2026-02-25
+### Alterado
+- **Normalização segura de respostas da IA**: camada de pós-processamento corrige erros textuais recorrentes (ex.: “ouuições” -> “atribuições”), higieniza espaços/linhas e aplica antes de calcular hash/persistir, garantindo relatório e fingerprint consistentes.
+
+## [2.2.9] - 2026-02-25
+### Alterado
+- **Fingerprint auditável da análise**: resultado persistido com metadados técnicos de reprodutibilidade (`inputHash`, `documentHash`, `resultHash`, `provider`, `model`, `promptVersion`, `chunkingVersion`, `chunkCount`, `strictDeterminism`).
+- **Reuso estrito por hash de entrada**: `POST /api/ia/analisar-conformidade` reaproveita resultado existente quando a mesma fingerprint de entrada já foi concluída (`ANALYSIS_STRICT_REUSE=true`).
+- **Observabilidade de divergência**: finalização de job agora detecta e registra quando o mesmo `inputHash` gera `resultHash` diferente em nova execução.
+- **Endpoint técnico de diagnóstico**: novo `GET /api/ia/diagnostico-divergencias` para consulta histórica paginada de divergências por fingerprint.
+
+### Qualidade
+- Novos testes unitários para fingerprint de análise e para fluxo de reaproveitamento por fingerprint na API.
+
+## [2.2.8] - 2026-02-25
+### Alterado
+- **Determinismo estrito da análise**: adicionada flag `ANALYSIS_STRICT_DETERMINISM` (default `true`) para execução reprodutível em contexto local/single-user.
+- **Providers de IA em modo estrito**: `temperature=0` e `top_p=1` para Groq/Z.AI/Ollama quando modo estrito está ativo; retry no Z.AI mantém o mesmo modelo (sem troca silenciosa).
+- **Fallback controlado**: worker não faz fallback automático Groq -> Z.AI quando `ANALYSIS_STRICT_DETERMINISM=true`; erro fica explícito e rastreável.
+- **Score backend determinístico**: resultado final passa a ser recalculado por fórmula fixa (100 - penalidades por gaps únicos), aplicada nos fluxos completo e incremental.
+- **Resumo incremental**: removida mensagem técnica de consolidação por blocos; resumo passa a priorizar conteúdo analítico do próprio resultado.
+- **Idempotência automática no cliente**: frontend agora envia `Idempotency-Key` determinística para reaproveitar jobs/resultados da mesma entrada.
+- **Calibração inicial de estratégia de processamento**: decisão automática `completo` vs `incremental` passou a usar limiares por provider (`GROQ=60000`, `ZAI=120000`, `OLLAMA=50000`), reduzindo variação para documentos médios no contexto local/single-user.
+
+### Qualidade
+- Novos testes unitários para score determinístico e geração estável de `Idempotency-Key`.
+- Novo teste unitário para decisão de estratégia de processamento calibrada.
+
+## [2.2.7] - 2026-02-25
+### Alterado
+- **UX de relatorio PDF (print-first)**: fluxo em dois passos (`Visualizar para Impressao` -> `Imprimir / Salvar PDF`) com pre-visualizacao A4 em tela e orientacoes operacionais de impressao.
+- **Layout de impressao corporativo**: secao dedicada `only-print` no relatorio tecnico com capa, resumo executivo, matriz de gaps, plano de acao e rodape de rastreabilidade.
+- **Hardening de print global**: `@media print` com `@page A4`, utilitarios (`no-print`, `only-print`, `avoid-break`, `page-break-*`) e neutralizacao de elementos visuais que degradam output.
+- **Shell blindado para PDF**: header global e canvas de fundo removidos do fluxo de impressao.
+- **Sanitização do reporte técnico**: o resumo impresso não repete “Análise consolidada…” nem exibe “ID do Job”, as seções “Pontos Fortes”/“Pontos de Atenção” são mantidas próximas aos respectivos conteúdos, a “Matriz de Gaps” inicia junto à tabela e o arquivo salvo segue o padrão `Relatório_SGN_dd-mm-yyyy_HH-MM`.
+
+### Qualidade
+- **E2E dedicado de impressao**: nova suite `e2e/relatorio-print.spec.ts` cobrindo visualizacao, acao de imprimir e retorno ao modo interativo.
+- **Runbook operacional**: adicionado checklist manual para validacao de PDF em Chrome/Edge (`docs/operations/checklist-validacao-impressao-relatorio-pdf.md`).
+
+## [2.2.6] - 2026-02-25
+### Corrigido
+- **Polling de jobs mais enxuto**: `GET /api/ia/jobs/[id]` passou a retornar apenas metadados mínimos do documento (`id`, `nomeArquivo`, `tipoDocumento`), removendo payload desnecessário no loop de polling.
+- **Validação de ambiente por provider**: `GROQ_API_KEY` agora é exigida apenas quando `AI_PROVIDER=groq`; configuração condicional alinhada para `zai` e `ollama`.
+
+### Alterado
+- **Resiliência de idempotência**: limpeza periódica de `idempotency_keys` expiradas integrada ao worker com novo parâmetro `WORKER_IDEMPOTENCY_CLEANUP_INTERVAL_MS`.
+- **Governança de schema local**: baseline SQL `drizzle/0000` readequado ao modelo atual local-only/single-user e journal Drizzle atualizado para incluir `0002` e `0003`.
+- **Operação local**: runbook e README atualizados para fluxo canônico de sincronização de schema via `npm run db:push`.
+
+## [2.2.5] - 2026-02-25
+### Corrigido
+- **Liveness operacional desacoplado de dependências externas**: adicionado `GET /api/live` para checagem de processo vivo; `docker-compose` e `docker-deploy.sh` migrados para usar liveness em vez de `/api/health`.
+- **Resiliência do worker**: loop do worker passou a tolerar erros transitórios sem encerrar o processo, com retry interno e pausa controlada.
+
+### Alterado
+- **Detecção de jobs órfãos**: recuperação agora considera `heartbeat` de atividade do worker (além de `startedAt`) para reduzir falso positivo em jobs longos.
+- **Configuração de worker**: adicionada variável `WORKER_HEARTBEAT_INTERVAL_MS` no schema de ambiente e `.env.example`.
+- **Qualidade**: novas suítes `api-live` e `worker-runner` cobrindo liveness, resiliência do loop e heartbeat.
+
+## [2.2.4] - 2026-02-25
+### Adicionado
+- **Worker dedicado fora do ciclo HTTP**: novo runtime em `src/lib/ia/worker/*` para consumir fila de análises com claim de jobs `pending`, execução assíncrona, e persistência de metadados operacionais por job.
+- **Resiliência de fila**: retry com backoff, timeout por job, dead-letter lógico e recuperação periódica de jobs órfãos (`processing` antigo).
+
+### Alterado
+- **API `/api/ia/analisar-conformidade`**: agora atua como enfileirador (`202 Accepted`) e não processa mais jobs em `waitUntil` no fluxo padrão; modo `sync` mantido como fallback administrativo.
+- **Operação Docker local**: stack atualizado para `sgn-app` + `sgn-worker`; `docker-compose.prod.yml` alinhado ao modelo local-only sem Redis/nginx.
+- **Scripts operacionais**: `scripts/docker-deploy.sh` reescrito para fluxo local-only com validação de `sgn-worker`.
+- **UX de progresso**: status `processing` mapeado no stepper de análise.
+
+## [2.2.3] - 2026-02-25
+### Corrigido
+- **Health check operacional**: `/api/health` agora retorna erro (`503`) quando banco ou LLM estiverem indisponíveis, removendo falso positivo de prontidão.
+- **Idempotência de análise**: fluxo de `Idempotency-Key` migrado para persistência em banco com vínculo determinístico `key -> jobId` e conflito `409` para payload divergente.
+
+### Segurança
+- **Sanitização de logs**: removidos previews de conteúdo documental e dumps de resposta de LLM; rotas críticas passaram a usar logging estruturado com dados minimizados.
+- **Hardening do chat NEX**: bloqueio de `role=system` na entrada do cliente, validação de tamanho/quantidade de mensagens e remoção de fallback implícito para `OPENAI_API_KEY`.
+
+### Alterado
+- **Local-only consistente**: CORS configurável por `ALLOWED_ORIGINS`, remoção de redirect legado e ajuste de script de performance para alvo local.
+- **Qualidade**: novos testes unitários para `/api/chat-documento` e atualização de testes de `/api/health`; smoke E2E de health ajustado para cenários `200/503`.
+- **Gate de unit tests em CI**: `test:ci` ajustado para execução determinística sem bloqueio por cobertura global irreal nesta fase; cobertura segue disponível via script dedicado.
+- **Frente F ampliada**: adicionados testes de contrato para `/api/ia/analisar-conformidade`, `/api/ia/jobs/[id]`, `/api/extrair-texto` e serviço de idempotência.
+- **E2E do fluxo assíncrono**: adicionado cenário de criação de job + polling até estado terminal em `e2e/api.spec.ts`.
+
 ## [2.2.2] - 2026-02-25
 ### Alterado
 - **Documentação canônica atualizada**: alinhamento de `README.md`, `SECURITY.md`, `docs/README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/operations/operacao-local.md`, `docs/operations/pop-analise-conformidade-sst.md` e `docs/memory.md` com estado real local-only.

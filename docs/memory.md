@@ -3,7 +3,7 @@
 > Documento de contexto para qualquer LLM que acesse este projeto.
 > Atualizado em: 2026-02-25
 
-- **Versão Atual**: `2.2.1`
+- **Versão Atual**: `2.2.10`
 - **Última Atualização**: 2026-02-25
 
 ---
@@ -27,7 +27,7 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 | UI | React + Tailwind CSS + shadcn/ui | React 19.2.4 |
 | URL State | nuqs (query string state) | latest |
 | Banco de dados | Turso DB (@libsql/client) + Drizzle | v1.8.0 |
-| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG (Streaming) | 2.2.1 |
+| IA | GROQ (Llama 3.3 70B) + Z.AI (GLM-4.7) + Ollama + NEX RAG (Streaming) | 2.2.9 |
 | Validação | Zod | 4.1.5 |
 | Animações | Framer Motion | 12.23.12 |
 | Extração PDF | pdf-parse v2 (PDFParse class) | 2.4.5 |
@@ -141,7 +141,8 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 - Banco SQLite: `./data/sgn.db` (volume Docker persistente)
 - Uploads de documentos: `./data/uploads/` (filesystem local)
 - Schema: `src/lib/db/schema.ts`, Config: `drizzle.config.ts`
-- Migrations: `drizzle/` (geradas com `npm run db:generate`)
+- Migrations versionadas: `drizzle/` (baseline local-only alinhado e journal coerente)
+- Fluxo canônico local de sincronização de schema: `npm run db:push`
 
 ---
 
@@ -177,15 +178,15 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 24. **Harbor Scorecard**: suíte de validação de acurácia técnica com Golden Dataset consolidada
 25. **Infraestrutura LibSQL/Turso**: Migração para `@libsql/client` com suporte a persistência remota opcional sem alterar o domínio local.
 26. **Job Tracking & UX**: Sistema de polling e stepper visual para feedback de progresso em tempo real das análises assíncronas.
-27. **Exportação PDF e Rastreabilidade**: Laudos técnicos otimizados para impressão corporativa com ID de Job e Nome de Arquivo.
-28. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
-29. **Studio minimalista + NEX Drawer**: setup e análise em fluxo único, com chat contextual acionado sem sair da tela principal.
+27. **Worker dedicado resiliente (Frente G)**: API passou a apenas enfileirar (`pending`) e worker fora do ciclo HTTP consome a fila com retry/backoff, timeout por job, dead-letter lógico e recuperação de órfãos (`processing` antigo).
+28. **Operação docker app+worker**: `docker-compose` atualizado para `sgn-app` + `sgn-worker`, sem Redis/nginx no stack local-only.
+29. **Relatório técnico print-first**: fluxo em dois passos (`Visualizar para Impressão` → `Imprimir / Salvar PDF`), resumo sanitizado (sem “Análise consolidada…” ou “ID do Job”), nome padrão `Relatório_SGN_dd-mm-yyyy_HH-MM`, cabeçalho com Matriz de Gaps mantida ativa na mesma página e sem dados sensíveis expostos.
+30. **Fluxo de Análise via NR**: Início de diagnóstico direto pela página de detalhes da norma com pré-seleção automática.
+31. **Studio minimalista + NEX Drawer**: setup e análise em fluxo único, com chat contextual acionado sem sair da tela principal.
+32. **Diagnóstico de divergências**: fingerprint persistido com `inputHash`/`resultHash`, detector registra divergência quando hashes divergem e novo endpoint técnico `GET /api/ia/diagnostico-divergencias` permite consultas históricas paginadas por fingerprint.
 ---
 
 ## O que NÃO funciona / está incompleto
-
-### Prioridade Alta
-- Fila dedicada externa para long-running jobs ainda não existe (há worker assíncrono interno com polling, sem orquestrador dedicado)
 
 ### Prioridade Média
 - Testes unitários: cobertura inicial criada para processamento incremental; ampliar para APIs críticas
@@ -250,7 +251,19 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
 | 44 | 2026-02-24 | **Hardening operacional (industry-style)**: health check passou a validar LLM conforme `AI_PROVIDER` (Groq/Z.AI/Ollama) e CI foi ativada para `push`/`pull_request` em `master` com `concurrency` para cancelamento de execuções redundantes. |
 | 45 | 2026-02-24 | **Diretriz operacional local-only**: projeto formalmente definido para execução apenas local (sem deploy); documentação e plano ajustados para runbook local e governança sem Vercel. |
 | 46 | 2026-02-24 | **Desativação definitiva de deploy/release**: workflows legados `.github/workflows/deploy.yml` e `.github/workflows/release.yml` removidos do repositório; `ci.yml` permanece como pipeline oficial. |
-| 47 | 2026-02-25 | **Atualização geral de documentação**: alinhados `README.md`, `SECURITY.md`, `docs/README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/operations/*` e `CHANGELOG.md` ao estado real local-only/CI-only. Gate local validado: `tsc`, `lint`, `build` e `test:e2e` (33/33). |
+| 47 | 2026-02-25 | **Atualização geral de documentação**: alinhados `README.md`, `SECURITY.md`, `docs/README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/operations/*` e `CHANGELOG.md` ao estado real local-only/CI-only. Gate local validado naquela execução: `tsc`, `lint`, `build` e `test:e2e` (33/33). |
+| 48 | 2026-02-25 | **Hardening P0/P1 executado**: health check passou a refletir indisponibilidade de LLM (`503`), idempotência persistente por DB (`Idempotency-Key -> jobId`), sanitização de logs sensíveis nas rotas críticas, hardening do chat NEX (bloqueio de role `system` vinda do cliente), CORS local configurável por `ALLOWED_ORIGINS` e remoção de resíduos de script/redirect remoto. |
+| 49 | 2026-02-25 | **Frente G concluída**: API de análise virou enfileirador puro (`pending`), worker dedicado fora do ciclo HTTP implementado com retry/backoff, timeout por job, dead-letter lógico e recuperação de jobs órfãos. Docker e script operacional ajustados para stack `sgn-app` + `sgn-worker`. |
+| 50 | 2026-02-25 | **Hardening pós-Frente G**: criado endpoint de liveness (`/api/live`) para healthchecks de container sem dependência de LLM; loop do worker tornou-se resiliente a falhas transitórias; heartbeat por job introduzido para reduzir falso positivo na recuperação de órfãos; adicionadas suítes de teste `api-live` e `worker-runner`. |
+| 51 | 2026-02-25 | **Validação E2E completa pós-hardening**: suíte Playwright executada com sucesso (`34/34`), incluindo criação de job assíncrono com polling até estado terminal e fluxos de navegação/normas/NR-6. |
+| 52 | 2026-02-25 | **UX/UI de relatorio PDF elevada (Sprints 1-3 tecnico)**: adotado fluxo `Visualizar para Impressao -> Imprimir / Salvar PDF`, pre-visualizacao A4 em tela, layout print-first com utilitarios globais (`no-print`, `only-print`, `avoid-break`), shell blindado no print e nova suite E2E `relatorio-print.spec.ts`. Validacao E2E consolidada em `35/35`; checklist manual Chrome/Edge documentado em `docs/operations/checklist-validacao-impressao-relatorio-pdf.md`. |
+| 53 | 2026-02-25 | **Estabilização determinística da análise (P0)**: adicionado `ANALYSIS_STRICT_DETERMINISM` (default `true`), providers com `temperature=0/top_p=1` no modo estrito, bloqueio de fallback cross-provider em erro de Groq, score final recalculado no backend por fórmula fixa com deduplicação e idempotência automática no frontend via `idempotency-key` determinística. |
+| 54 | 2026-02-25 | **Calibração inicial por provider iniciada**: decisão automática `completo` vs `incremental` passou a usar limiares por provider (`GROQ=60000`, `ZAI=120000`, `OLLAMA=50000`). Baseline medido com PDF real de 41 páginas (`107.892` chars) em `docs/operations/calibracao-baseline-plano-mestre-ilheus.md`; no perfil Z.AI o caso passa a `completo`, reduzindo variabilidade por consolidação multi-chunk. |
+| 55 | 2026-02-25 | **Bateria de repetibilidade pré-LLM executada (5 rodadas)**: com `Plano-Mestre_Complexo-Portuario-de-Ilheus.pdf`, hash de texto, contagens de texto/chunks e idempotency key ficaram 100% estáveis. Resultado registrado em `docs/operations/calibracao-repetibilidade-plano-mestre-ilheus.md`. |
+| 56 | 2026-02-25 | **Bateria completa com LLM (5 rodadas, Z.AI) executada**: mesmo texto de entrada gerou variabilidade no resultado final (`score`, `nivelRisco`, `gaps` e `resultHash` instáveis; uma rodada retornou `70/medio/2 gaps`, demais `100/baixo/0 gaps`). Conclusão operacional: variabilidade residual está na inferência LLM; priorizar Frente D/E (fingerprint auditável + observabilidade + reuso estrito). |
+| 57 | 2026-02-25 | **Frentes D/E implementadas (parcial hardening)**: fingerprint auditável passou a ser persistida em metadata do resultado (`inputHash`, `documentHash`, `resultHash`, `provider`, `model`, `promptVersion`, `chunkingVersion`, `chunkCount`), endpoint de análise passou a reaproveitar resultado por hash de entrada (`ANALYSIS_STRICT_REUSE=true`) e fechamento do job ganhou detector de divergência para mesmo `inputHash`. |
+| 58 | 2026-02-25 | **Diagnóstico histórico de divergência implementado**: novo endpoint técnico `GET /api/ia/diagnostico-divergencias` com paginação/filtros (`dias`, `inputHash`, `incluirNaoDivergentes`), retornando agrupamento por fingerprint, hashes distintos e execuções recentes para auditoria operacional. |
+| 59 | 2026-02-25 | **Normalização de saída da IA**: camada pós-processamento adicionada para corrigir erros textuais recorrentes (ex.: “ouuições” → “atribuições”), higienizar espaços/linhas e aplicar antes de persistência e cálculo de hash, garantindo relatório e fingerprint consistentes. |
 
 ---
 
@@ -264,9 +277,6 @@ Projeto single-user, executado localmente. Provedores de IA: GROQ (cloud), Z.AI 
   - Implementar suporte para múltiplos arquivos simultâneos na Coluna de Fontes.
   - Orquestrar contexto concatenado para análise cross-document.
   - UI de listagem e gerenciamento de repositório local.
-
-- **Implementar Worker Assíncrono para Filas de Long Running Jobs**
-  - Orquestrar filas pesadas sem travar a requisição cliente usando SQLite persistente ou Background Workers do App Router.
 
 - **Evoluir observabilidade além de erro**
   - Definir alertas operacionais (falha de API, timeout IA, fila de processamento)
@@ -297,7 +307,12 @@ Copie `.env.example` para `.env.local` e configure:
 
 ```
 AI_PROVIDER=zai                 # groq | zai | ollama
-GROQ_API_KEY=                   # Obrigatório na validação (placeholder se só Z.AI)
+ANALYSIS_STRICT_DETERMINISM=true # Reprodutibilidade estrita (recomendado local/single-user)
+ANALYSIS_STRICT_REUSE=true       # Reaproveita resultado para mesma fingerprint de entrada
+ANALYSIS_INCREMENTAL_THRESHOLD_GROQ=60000
+ANALYSIS_INCREMENTAL_THRESHOLD_ZAI=120000
+ANALYSIS_INCREMENTAL_THRESHOLD_OLLAMA=50000
+GROQ_API_KEY=                   # Obrigatório se AI_PROVIDER=groq
 ZAI_API_KEY=                    # Obrigatório se AI_PROVIDER=zai
 ```
 
@@ -305,11 +320,16 @@ Opcionais:
 ```
 DATABASE_PATH=./data/sgn.db     # Caminho do banco SQLite (default: ./data/sgn.db)
 PORT=3001                       # Porta do servidor (default: 3001)
+ALLOWED_ORIGINS=http://localhost:3001  # Origem permitida para CORS da API (se necessário)
 LOG_LEVEL=info                  # Nível de log: error, warn, info, debug
 ZAI_BASE_URL=                   # Default: https://api.z.ai/v1
 ZAI_MODEL=glm-4.7               # Modelo Z.AI
 OLLAMA_BASE_URL=                # Se AI_PROVIDER=ollama
 OLLAMA_MODEL=                   # Ex: llama3.2
+WORKER_ENABLED=true             # Habilita worker fora do ciclo HTTP
+WORKER_MAX_RETRIES=2            # Retentativas por job
+WORKER_JOB_TIMEOUT_MS=300000    # Timeout por job (ms)
+WORKER_IDEMPOTENCY_CLEANUP_INTERVAL_MS=300000  # Limpeza periódica da tabela idempotency_keys
 ```
 
 ---
@@ -329,8 +349,8 @@ npm run test:e2e:ui      # Abre UI interativa do Playwright
 npm run test:e2e:report  # Abre relatório HTML da última execução
 
 # Banco de dados (Drizzle)
-npm run db:generate  # Gera migration SQL a partir do schema
-npm run db:push      # Aplica schema diretamente no banco (dev)
+npm run db:push      # Fluxo canônico local: sincroniza schema com o banco
+npm run db:generate  # Uso de manutenção: gera migration SQL versionada quando necessário
 npm run db:studio    # UI visual para inspecionar o banco
 
 # Docker
