@@ -21,14 +21,14 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
   })
 
   test('exibe a seção de upload de documento', async ({ page }) => {
-    await expect(page.getByText('Fontes')).toBeVisible()
+    await expect(page.getByText('Envio do Documento')).toBeVisible()
     await expect(
       page.getByText('Mergulhe seu documento aqui')
     ).toBeVisible()
   })
 
   test('exibe a seção de seleção de normas', async ({ page }) => {
-    await expect(page.getByText('Setup de Auditoria')).toBeVisible()
+    await expect(page.getByText('Normas Aplicáveis')).toBeVisible()
     await expect(page.getByText('Catálogo de Normas')).toBeVisible()
   })
 
@@ -46,7 +46,7 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
       buffer: conteudo,
     })
 
-    const botao = page.getByRole('button', { name: /Sugerir Normas IA/i })
+    const botao = page.getByRole('button', { name: /Sugerir Normas (com )?IA/i })
     await expect(botao).toBeVisible()
     await expect(botao).not.toBeDisabled()
   })
