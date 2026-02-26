@@ -1,179 +1,114 @@
-# SGN - Sistema de Gestão Normativa
+# SGN - Sistema de Gestao Normativa
 
-Plataforma local de análise de conformidade em SST (Saúde e Segurança no Trabalho) com IA.
+Plataforma local para analise de conformidade em SST (Seguranca e Saude no Trabalho) com apoio de IA.
 
-O SGN processa documentos corporativos (PGR, PCMSO, LTCAT e similares), cruza com Normas Regulamentadoras (NRs) e gera diagnóstico executivo com score, gaps, severidade e plano de ação.
+## Snapshot Atual
 
-## Status do Projeto
+- Atualizado em: `2026-02-26`
+- Versao documental: `2.2.15`
+- Modelo operacional: `local-only`, single-user
+- Branch principal: `master`
+- CI oficial: `.github/workflows/ci.yml`
 
-- `Versão`: 2.2.1 — GUT + 5W2H, chat NEX em streaming e operação local-only
-- `Status`: ativo, operação local (sem deploy remoto)
-- `Arquitetura`: monolito Next.js (App Router)
-- `Modelo operacional`: single-user local
-- `Branch principal`: `master`
-- `CI`: workflow único `ci` (quality + unit + e2e)
-- `Qualidade atual`: `npx tsc --noEmit`, `npm run lint`, `npm run build` e `npm run test:e2e` validados localmente (33/33) em `2026-02-25`
+## Estado Real do Repositorio
 
-## Capacidades
+- Arquitetura: monolito Next.js (App Router) com TypeScript.
+- Persistencia: SQLite/LibSQL via Drizzle.
+- Provedores IA: `groq`, `zai`, `ollama` (selecionados por `AI_PROVIDER`).
+- Fluxo de analise: assíncrono no endpoint (`202 Accepted`) com processamento em background no runtime da API.
+- Idempotencia: persistencia em banco (`idempotency_cache`) com fallback seguro para memoria quando schema estiver defasado.
+- Observabilidade: Pino + Sentry.
 
-1. **Análise de conformidade com IA Híbrida**
-   - Suporte a **Groq (Cloud)**, **Z.AI (GLM-4.7)** e **Ollama (Local)**
-   - Upload de `PDF`, `DOCX` e `TXT` (até 100MB)
-   - Extração de texto server-side (`pdf-parse` + `mammoth`)
-   - Modelos recomendados: `Llama 3.3 70B` (Groq), `GLM-4.7` (Z.AI) e `Llama 3.2` (Ollama)
-   - Estratégia de processamento: `completo` ou `incremental` (chunking + consolidação)
-   - **Metodologia GUT** em gaps: probabilidade × severidade, classificação (CRITICO|ALTO|MEDIO|BAIXO), prazo em dias
-   - **Plano de ação 5W2H** estruturado: what, who, prazoDias, evidenciaConclusao, kpi
-2. **Catálogo de normas e RAG Otimizado**
-   - 38 NRs com busca dinâmica e 100% de Recall em casos críticos (CIPA, EPI, PGR, Portos)
-   - Estado de busca na URL com `nuqs` (`?search=`)
-   - Página detalhada com links oficiais e anexos mapeados
-   - Normalização inteligente de códigos (ex: "5" -> "NR-5")
-3. **Assistente de Consultoria Neural (NEX)**
-   - Um Chat Copilot atrelado 100% ao contexto do documento analisado.
-   - Interface premium em drawer lateral, acionada durante setup e na tela de resultado.
-   - Grounding restrito: evita alucinação do modelo consultando apenas o escopo extraído.
-4. **Studio de análise (fluxo linear)**
-   - Passos unificados: **Documento Fonte** -> **Configuração de Auditoria** -> **Analisar com IA**.
-   - Acompanhamento assíncrono por `jobId` com polling e stepper de progresso.
-   - Consulta ao NEX sem interromper o fluxo principal (drawer).
-5. **Análise específica NR-6**
-   - Fluxo dedicado para EPIs
-6. **Persistência e histórico**
-   - **Turso DB (libsql)** e Drizzle: Persistência resiliente de jobs e resultados
-   - Histórico com rastreabilidade total (ID de Job, Nome do Arquivo) e exportação
-7. **Confiabilidade e observabilidade**
-   - Retry com timeout para chamadas críticas
-   - Idempotência em análise de IA
-   - Sentry integrado (server, edge e client)
-   - Health check com status de banco, API e LLM
-8. **Experiência mobile/web de abertura**
-   - Ícone PWA da marca SGN (`/icon` e `/apple-icon`)
-   - Splash nativa com tema escuro (manifest)
-   - Tela de abertura premium (card glass + iluminação + textura) com CTA **Acessar Plataforma**
-   - Gate de entrada exibido uma única vez por dispositivo (`localStorage`)
-   - Após a liberação inicial, navegação interna usa loading leve (skeleton), sem splash full-screen repetitiva
+ Qualidade observada em `2026-02-26`:
 
-## Stack Técnica
+- `npx tsc --noEmit`: passou.
+- `npm run lint`: passou.
+- `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
+- `npm run test:ci`: passou.
+- `npm run test:e2e`: passou (`33/33`).
+- Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (33 cenarios).
 
-| Camada | Tecnologia |
-|--------|------------|
-| Framework | Next.js 16 (App Router) |
-| Linguagem | TypeScript (strict) |
-| UI | React 19 + Tailwind CSS + shadcn/ui |
-| Estado em URL | nuqs |
-| Banco | **Turso DB (libsql)** + Drizzle ORM |
-| IA | GROQ + Z.AI (GLM-4.7) + Ollama — seleção via `AI_PROVIDER` |
-| Extração de texto | `pdf-parse` v2 + `mammoth` |
-| Testes E2E | Playwright |
-| Logging | Pino |
+## Capacidades Principais
+
+1. Analise de conformidade com upload de `PDF`, `DOCX`, `TXT`.
+2. Catalogo de NRs com busca e pagina de detalhe.
+3. Analise dedicada para NR-6.
+4. Assistente NEX contextual ao documento.
+5. Exportacao de dados em `CSV/JSON`.
+6. Health check em `GET /api/health`.
+
+## Endpoints API Ativos
+
+- `POST /api/extrair-texto`
+- `POST /api/ia/analisar-conformidade`
+- `POST /api/ia/sugerir-nrs`
+- `POST /api/nr6/analisar`
+- `GET /api/health`
+- `GET /api/normas`
+- `GET /api/normas/[id]`
+- `GET /api/normas/stats`
+- `GET /api/search`
+- `POST /api/chat-documento`
+- `GET /api/export`
 
 ## Quick Start
 
-### Pré-requisitos
+### Pre-requisitos
 
 - Node.js 20+
-- Chave de IA: `GROQ_API_KEY` (obrigatória) ou `ZAI_API_KEY` (quando `AI_PROVIDER=zai`)
+- `npm install`
+- `.env.local` criado a partir de `.env.example`
 
-### Execução local
+### Execucao local (dev)
 
-1. Instale dependências:
-   ```bash
-   npm install
-   ```
-2. Crie variáveis de ambiente:
-   ```bash
-   cp .env.example .env.local
-   ```
-3. Configure `.env.local`:
-   ```bash
-   AI_PROVIDER=zai          # ou 'groq' | 'ollama'
-   ZAI_API_KEY=sua_chave    # obrigatório se AI_PROVIDER=zai
-   GROQ_API_KEY=sua_chave   # obrigatório (ou placeholder se usar só Z.AI)
-   OLLAMA_BASE_URL=http://localhost:11434
-   OLLAMA_MODEL=llama3.2
-   ```
-4. Rode o projeto:
-   ```bash
-   npm run dev
-   ```
-5. Acesse:
-   - `http://localhost:3001`
+```bash
+npm run dev
+```
 
-### Execução com Docker
+Aplicacao: `http://localhost:3001`
+
+### Execucao com Docker
 
 ```bash
 npm run docker:start
 ```
-
-## Fluxo Funcional Principal
-
-1. Acessar `/`
-2. Enviar documento SST
-3. Selecionar NRs aplicáveis
-4. Executar **Analisar com IA**
-5. Avaliar resultado:
-   - score
-   - gaps por severidade (com classificação GUT e prazo em dias)
-   - plano de ação 5W2H (quando disponível)
-   - pontos de atenção
-   - próximos passos
-
-## Operação e Limites
-
-| Item | Valor |
-|------|-------|
-| Upload máximo (Local) | 100MB |
-| Limite do texto extraído (validação) | 2.000.000 caracteres |
-| Texto enviado à IA (modo completo) | 500.000 caracteres |
-| Processamento incremental | chunks com overlap e consolidação final |
-| Porta padrão | 3001 |
 
 ## Comandos Essenciais
 
 ```bash
 # desenvolvimento
 npm run dev
+npm run lint
 npx tsc --noEmit
 npm run build
-npm run lint
 
 # testes
+npm run test
+npm run test:ci
 npm run test:e2e
-npm run test:e2e:ui
-npm run test:e2e:report
 
-# banco (drizzle)
-npm run db:generate
+# banco
 npm run db:push
 npm run db:studio
+npm run db:backup
+npm run db:restore -- ./backups/arquivo.db.gz
 
 # docker
 npm run docker:start
+npm run docker:status
+npm run docker:logs
 npm run docker:stop
 ```
 
-## Problemas Comuns
+## Documentacao
 
-| Situação | Ação recomendada |
-|----------|------------------|
-| Erro de extração de texto | Validar arquivo (sem senha/corrupção) e formato suportado |
-| Chave IA inválida | Revisar `GROQ_API_KEY` ou `ZAI_API_KEY` em `.env.local` conforme `AI_PROVIDER` |
-| Documento muito grande | Reduzir arquivo para até 100MB ou dividir o conteúdo |
-| Falha em análise por indisponibilidade externa | Tentar novamente e validar status em `/api/health` (campo `llm`) |
-| Home travada em "Carregando SGN..." | Revisar CSP (`script-src`) em `next.config.js` para não bloquear hidratação do Next.js |
-| Build local demora/trava | Usar `npm run build` (script padronizado com `next build --webpack`) |
-| Atalho mobile não atualiza ícone/splash | Remover atalho antigo, limpar cache do navegador e adicionar novamente à tela inicial |
-
-## Documentação
-
-- `docs/README.md` - índice oficial e estrutura documental
-- `docs/memory.md` - contexto operacional completo e histórico de sessões
-- `docs/architecture/arquitetura-tecnica.md` - arquitetura técnica consolidada
-- `docs/operations/operacao-local.md` - runbook operacional local
-- `docs/operations/pop-analise-conformidade-sst.md` - POP e gate GO/NO-GO de operacao
-- `docs/reference/prompt-extracao-estruturada-sgn.md` - mapeamento do prompt de extração estruturada (GUT, 5W2H)
-- `docs/governance/documentacao.md` - padrão e governança de documentação
-- `CHANGELOG.md` - histórico de mudanças
-- `SECURITY.md` - modelo de segurança e hardening
-- `CONTRIBUTING.md` - fluxo de contribuição
+- `docs/README.md` - indice oficial e mapa de documentos ativos
+- `docs/architecture/arquitetura-tecnica.md` - arquitetura real do repositorio
+- `docs/operations/operacao-local.md` - runbook de operacao local
+- `docs/operations/pop-analise-conformidade-sst.md` - POP de uso operacional
+- `docs/governance/documentacao.md` - padrao de documentacao
+- `docs/governance/5s-documentacao.md` - matriz 5S documental
+- `docs/memory.md` - memoria operacional consolidada
+- `CHANGELOG.md` - historico de mudancas
+- `SECURITY.md` - postura atual de seguranca
+- `CONTRIBUTING.md` - fluxo de contribuicao

@@ -16,28 +16,29 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
 
   test('exibe a descrição da página', async ({ page }) => {
     await expect(
-      page.getByText(/Faça upload do seu documento SST, selecione as normas aplicáveis/i)
+      page.getByText(/Faça upload do seu documento SST e deixe nossa IA identificar gaps/i)
     ).toBeVisible()
   })
 
   test('exibe a seção de upload de documento', async ({ page }) => {
-    await expect(page.getByText('Envio do Documento')).toBeVisible()
+    await expect(page.getByText('Fontes')).toBeVisible()
     await expect(
-      page.getByText('Arraste seu documento SST aqui')
+      page.getByText('Mergulhe seu documento aqui')
     ).toBeVisible()
   })
 
   test('exibe a seção de seleção de normas', async ({ page }) => {
-    await expect(page.getByText('Normas Aplicáveis', { exact: true })).toBeVisible()
+    await expect(page.getByText('Setup de Auditoria')).toBeVisible()
+    await expect(page.getByText('Catálogo de Normas')).toBeVisible()
   })
 
-  test('botão começa com o rótulo de Descobrir Normas quando nenhuma norma está selecionada', async ({ page }) => {
-    const botao = page.getByRole('button', { name: /Descobrir Normas Aplicáveis com IA/i })
+  test('botão começa com o rótulo de Aguardando Documento quando nenhum arquivo está selecionado', async ({ page }) => {
+    const botao = page.getByRole('button', { name: /Aguardando Documento/i })
     await expect(botao).toBeVisible()
     await expect(botao).toBeDisabled()
   })
 
-  test('botão muda de função e fica habilitado ao subir documento sem normas (Auto-Sugestão)', async ({ page }) => {
+  test('botão muda para Sugerir Normas IA e fica habilitado ao subir documento sem normas', async ({ page }) => {
     const conteudo = Buffer.from('Documento SST de teste.')
     await page.setInputFiles('input[type="file"]', {
       name: 'pgr.txt',
@@ -45,8 +46,8 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
       buffer: conteudo,
     })
 
-    // Agora o botão se chama "Descobrir Normas" e DEVE estar habilitado para fazer a predição.
-    const botao = page.getByRole('button', { name: /Descobrir Normas Aplicáveis com IA/i })
+    const botao = page.getByRole('button', { name: /Sugerir Normas IA/i })
+    await expect(botao).toBeVisible()
     await expect(botao).not.toBeDisabled()
   })
 

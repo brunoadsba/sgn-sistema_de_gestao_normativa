@@ -137,6 +137,10 @@ export async function finalizarJobAnalise(
           citacaoDocumento: gap.citacaoDocumento,
           paginaDocumento: gap.paginaDocumento,
           linhaDocumento: gap.linhaDocumento,
+          probabilidade: gap.probabilidade,
+          pontuacaoGut: gap.pontuacaoGut,
+          classificacao: gap.classificacao,
+          prazoDias: gap.prazoDias,
         }))
       );
     }

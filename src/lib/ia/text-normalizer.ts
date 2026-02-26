@@ -32,9 +32,13 @@ function normalizarGapTexto(gap: GapConformidade): GapConformidade {
     categoria: normalizarTextoSeguro(gap.categoria),
     recomendacao: normalizarTextoSeguro(gap.recomendacao),
     prazo: normalizarTextoSeguro(gap.prazo),
-    impacto: normalizarTextoSeguro(gap.impacto),
-    citacaoDocumento: gap.citacaoDocumento ? normalizarTextoSeguro(gap.citacaoDocumento) : gap.citacaoDocumento,
-    linhaDocumento: gap.linhaDocumento ? normalizarTextoSeguro(gap.linhaDocumento) : gap.linhaDocumento,
+    ...(gap.impacto !== undefined ? { impacto: normalizarTextoSeguro(gap.impacto) } : {}),
+    ...(gap.citacaoDocumento !== undefined
+      ? { citacaoDocumento: gap.citacaoDocumento ? normalizarTextoSeguro(gap.citacaoDocumento) : gap.citacaoDocumento }
+      : {}),
+    ...(gap.linhaDocumento !== undefined
+      ? { linhaDocumento: gap.linhaDocumento ? normalizarTextoSeguro(gap.linhaDocumento) : gap.linhaDocumento }
+      : {}),
   }
 }
 
@@ -43,8 +47,18 @@ function normalizarPlanoAcao(acao: AcaoPlano5W2H): AcaoPlano5W2H {
     ...acao,
     what: normalizarTextoSeguro(acao.what),
     who: normalizarTextoSeguro(acao.who),
-    evidenciaConclusao: acao.evidenciaConclusao ? normalizarTextoSeguro(acao.evidenciaConclusao) : acao.evidenciaConclusao,
-    kpi: acao.kpi ? normalizarTextoSeguro(acao.kpi) : acao.kpi,
+    ...(acao.evidenciaConclusao !== undefined
+      ? {
+        evidenciaConclusao: acao.evidenciaConclusao
+          ? normalizarTextoSeguro(acao.evidenciaConclusao)
+          : acao.evidenciaConclusao,
+      }
+      : {}),
+    ...(acao.kpi !== undefined
+      ? {
+        kpi: acao.kpi ? normalizarTextoSeguro(acao.kpi) : acao.kpi,
+      }
+      : {}),
   }
 }
 
@@ -66,7 +80,9 @@ export function normalizarAnaliseResposta(
     pontosAtencao: normalizarLista(resposta.pontosAtencao),
     proximosPassos: normalizarLista(resposta.proximosPassos),
     gaps: gapsNormalizados,
-    planoAcao: resposta.planoAcao ? resposta.planoAcao.map(normalizarPlanoAcao) : resposta.planoAcao,
+    ...(resposta.planoAcao !== undefined
+      ? { planoAcao: resposta.planoAcao.map(normalizarPlanoAcao) }
+      : {}),
   }
 }
 

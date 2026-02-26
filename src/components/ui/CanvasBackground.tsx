@@ -46,6 +46,8 @@ class Particle {
 
 export function CanvasBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const analysisStartEvent = 'sgn-analysis-start'
+  const analysisStopEvent = 'sgn-analysis-stop'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -64,7 +66,7 @@ export function CanvasBackground() {
 
     // Configurações dinâmicas
     let currentSpeedFactor = isLowPowerProfile ? 0.3 : 0.5
-    let currentConnectionDistance = isLowPowerProfile ? 85 : 150
+    const currentConnectionDistance = isLowPowerProfile ? 85 : 150
     let currentAlphaRange = isLowPowerProfile ? 0.2 : 0.35
 
     const resize = () => {
@@ -159,10 +161,13 @@ export function CanvasBackground() {
       initParticles()
     }
 
+    const analysisStartListener: EventListener = () => handleAnalysisStart()
+    const analysisStopListener: EventListener = () => handleAnalysisStop()
+
     window.addEventListener('resize', resize)
     document.addEventListener('visibilitychange', onVisibilityChange)
-    window.addEventListener('sgn-analysis-start' as any, handleAnalysisStart)
-    window.addEventListener('sgn-analysis-stop' as any, handleAnalysisStop)
+    window.addEventListener(analysisStartEvent, analysisStartListener)
+    window.addEventListener(analysisStopEvent, analysisStopListener)
 
     resize()
     animate()
@@ -170,8 +175,8 @@ export function CanvasBackground() {
     return () => {
       window.removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', onVisibilityChange)
-      window.removeEventListener('sgn-analysis-start' as any, handleAnalysisStart)
-      window.removeEventListener('sgn-analysis-stop' as any, handleAnalysisStop)
+      window.removeEventListener(analysisStartEvent, analysisStartListener)
+      window.removeEventListener(analysisStopEvent, analysisStopListener)
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId)
       }

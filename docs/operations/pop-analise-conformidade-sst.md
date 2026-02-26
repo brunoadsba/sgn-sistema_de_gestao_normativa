@@ -1,82 +1,74 @@
 # POP - Uso do SGN para Analise de Conformidade SST
 
-> Atualizado em: 2026-02-25
+> Atualizado em: 2026-02-26
 
 ## 1. Objetivo
 
-Padronizar a execucao de analises SST no SGN, garantindo rastreabilidade e priorizacao das acoes corretivas.
+Padronizar a execucao de analises SST no SGN com rastreabilidade e priorizacao de acao.
 
 ## 2. Escopo
 
-Aplicar em todo documento novo ou revisado de SST (`PGR`, `PCMSO`, `LTCAT` e correlatos).
+Aplica-se a documentos SST (`PGR`, `PCMSO`, `LTCAT` e correlatos) em ambiente local.
 
 ## 3. Responsabilidades
 
-1. Executor: Tecnico(a) de SST.
-2. Revisor: Coordenacao/Responsavel SST.
+1. Executor: Tecnico(a) SST.
+2. Revisor: Coordenacao SST.
 3. Aprovador: Gestao da area.
 
 ## 4. Pre-requisitos
 
-1. SGN acessivel.
-2. Arquivo em `PDF`, `DOCX` ou `TXT` ate 100MB.
-3. NRs aplicaveis previamente definidas.
-4. Documento na versao vigente.
+1. SGN operacional em `http://localhost:3001`.
+2. Documento em `PDF`, `DOCX` ou `TXT`.
+3. NRs aplicaveis definidas.
+4. Versao vigente do documento de origem.
 
-## 5. Procedimento operacional
+## 5. Procedimento Operacional
 
-1. Acessar a tela principal de analise no SGN.
-2. Fazer upload do documento na etapa `Documento Fonte`.
-3. Selecionar NRs aplicaveis na etapa `Configuracao de Auditoria`.
-4. Opcional: acionar `CONSULTAR NEX` para abrir o drawer lateral antes da analise.
-5. Acionar `Analisar com IA`.
-6. Acompanhar o progresso no stepper/polling ate conclusao.
-7. Validar resultado tecnico:
-   - score geral
-   - gaps com severidade e classificacao GUT
-   - prazo sugerido
-   - plano 5W2H (quando disponivel)
-8. Se necessario, abrir o drawer do NEX para aprofundar orientacoes de remediacao.
-9. Classificar prioridade e abrir plano de acao.
-10. Reprocessar documento apos correcao para medir evolucao.
+1. Acessar a pagina principal de analise.
+2. Carregar documento na etapa `Documento Fonte`.
+3. Selecionar NRs na etapa `Configuracao de Auditoria`.
+4. Opcional: abrir `CONSULTAR NEX` para exploracao contextual.
+5. Executar `Analisar com IA`.
+6. Aguardar retorno do processamento.
+7. Validar resultado:
+   - score
+   - gaps por severidade
+   - recomendacoes
+   - proximos passos
+8. Registrar evidencias e abrir plano de acao.
+9. Reprocessar apos correcao para medir evolucao.
 
-## 6. Criterios de decisao
+## 6. Criterios de Decisao
 
-1. Gaps criticos: acao imediata no mesmo dia.
-2. Gaps altos: tratar com prazo curto formal.
-3. Queda de score: obrigatorio revisar causa-raiz.
-4. Falta de informacao no documento: solicitar complemento e reprocessar.
+1. Gap critico: acao imediata.
+2. Gap alto: acao de curto prazo com responsavel.
+3. Queda de score: revisao obrigatoria de causa-raiz.
+4. Falta de evidencias no documento: solicitar complemento e reprocessar.
 
-## 7. Evidencias obrigatorias
+## 7. Evidencias Obrigatorias
 
-1. Nome e versao do documento.
+1. Nome do arquivo e versao documental.
 2. Data/hora da analise.
 3. NRs selecionadas.
 4. Resultado (score e gaps).
-5. Exportacao do historico (CSV ou JSON).
-6. Plano de acao aprovado com responsavel e prazo.
+5. Exportacao em CSV/JSON quando aplicavel.
+6. Responsavel e prazo da acao corretiva.
 
-## 8. Frequencia recomendada
-
-1. A cada mudanca documental.
-2. Revisao semanal de status.
-3. Consolidacao mensal de evolucao.
-
-## 9. Gate GO/NO-GO
+## 8. Gate GO/NO-GO
 
 ### GO
 
-1. Base normativa carregada e consistente.
-2. Qualidade tecnica verde (`tsc`, `lint`, `build`, `test:e2e`).
-3. Resultado com rastreabilidade de evidencias.
-4. Plano para gaps criticos e altos definido.
+1. Base normativa consistente para o caso.
+2. Resultado com rastreabilidade suficiente para decisao.
+3. Plano de acao definido para gaps criticos/altos.
 
 ### NO-GO
 
-1. Norma essencial ausente para o contexto da analise.
-2. Falha em gate tecnico critico.
-3. Resultado sem rastreabilidade suficiente para decisao.
+1. Norma essencial ausente para o contexto.
+2. Resultado inconclusivo ou sem lastro minimo.
+3. Instabilidade operacional que comprometa a confiabilidade da analise.
 
-## 10. Observacao
+## 9. Observacao
 
-O SGN apoia a decisao tecnica, mas a responsabilidade final permanece com o profissional de SST.
+O SGN apoia decisao tecnica. A responsabilidade final permanece com o profissional de SST.

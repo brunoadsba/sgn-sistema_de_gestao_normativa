@@ -2,154 +2,234 @@ import { NextRequest, NextResponse } from 'next/server'
 import { groq } from '@/lib/ia/groq'
 import { iaLogger } from '@/lib/logger'
 import { env } from '@/lib/env'
+import { rateLimit } from '@/lib/security/rate-limit'
 
-export const maxDuration = 60 // Permite até 60s em Vercel Pro/Hobby Serverless
+export const maxDuration = 60
 export const runtime = 'nodejs'
 
-async function callGroq(messages: any[]) {
-    const response = await groq.chat.completions.create({
-        messages,
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.2, // Temperatura ideal para RAG Estrito
-        max_tokens: 1500
-    })
-    return response.choices?.[0]?.message?.content || 'Não consegui processar a resposta neural.'
+type ChatRole = 'system' | 'user' | 'assistant'
+type ChatMessage = {
+  role: ChatRole
+  content: string
 }
 
-async function callZai(messages: any[]) {
-    const apiKey = env.ZAI_API_KEY || process.env.OPENAI_API_KEY
-    if (!apiKey) throw new Error('ZAI_API_KEY ausente para fallback')
-
-    const response = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: env.ZAI_MODEL || 'glm-4.7',
-            messages,
-            temperature: 0.2,
-            max_tokens: 1500,
-        }),
-        signal: AbortSignal.timeout(45000)
-    })
-
-    if (!response.ok) {
-        throw new Error(`Erro na API Z.AI (${response.status})`)
+type ZaiCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string
     }
-
-    const data = await response.json()
-    return data.choices?.[0]?.message?.content || 'Não consegui processar a resposta neural via Fallback.'
+  }>
 }
 
-async function callOllama(messages: any[]) {
-    const url = `${env.OLLAMA_BASE_URL}/api/chat`
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: env.OLLAMA_MODEL,
-            messages,
-            stream: false,
-            options: {
-                temperature: 0.2,
-                num_predict: 1500,
-                num_ctx: 32768, // Expanded RAG window definition for Ollama Local
-            }
-        }),
-        signal: AbortSignal.timeout(90000)
-    })
-
-    if (!response.ok) {
-        throw new Error(`Erro na API Ollama (${response.status})`)
-    }
-    const data = await response.json()
-    return data.message?.content || 'Não consegui processar a resposta neural via Ollama.'
+type OllamaChatResponse = {
+  message?: {
+    content?: string
+  }
 }
 
-async function executarChatComFallback(messages: any[]): Promise<string> {
-    // 1. Ollama (Se o cliente explicitamente configurar como ambiente offline)
-    if (env.AI_PROVIDER === 'ollama') {
-        try {
-            return await callOllama(messages)
-        } catch (error: any) {
-            iaLogger.error({ error: error.message }, '[NEX-CHAT] Falha fixa no Ollama Local')
-            throw error
-        }
-    }
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error))
+}
 
-    // 2. ZAI (Se o cliente configurou primariamente)
-    if (env.AI_PROVIDER === 'zai') {
-        try {
-            return await callZai(messages)
-        } catch (error: any) {
-            iaLogger.error({ error: error.message }, '[NEX-CHAT] Falha fixa na ZAI')
-            throw error
-        }
-    }
+function normalizarMensagem(valor: unknown): ChatMessage | null {
+  if (!valor || typeof valor !== 'object') return null
 
-    // 3. GROQ (Primary Default) com Fallback Inteligente para ZAI (Rate Limits)
+  const role = (valor as { role?: unknown }).role
+  const content = (valor as { content?: unknown }).content
+
+  if ((role !== 'user' && role !== 'assistant' && role !== 'system') || typeof content !== 'string') {
+    return null
+  }
+
+  return {
+    role,
+    content: content.trim(),
+  }
+}
+
+async function callGroq(messages: ChatMessage[]): Promise<string> {
+  const response = await groq.chat.completions.create({
+    messages,
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.2,
+    max_tokens: 1500,
+  })
+
+  return response.choices?.[0]?.message?.content || 'Nao consegui processar a resposta neural.'
+}
+
+async function callZai(messages: ChatMessage[]): Promise<string> {
+  const apiKey = env.ZAI_API_KEY || process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error('ZAI_API_KEY ausente para fallback')
+
+  const response = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: env.ZAI_MODEL || 'glm-4.7',
+      messages,
+      temperature: 0.2,
+      max_tokens: 1500,
+    }),
+    signal: AbortSignal.timeout(45000),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro na API Z.AI (${response.status})`)
+  }
+
+  const data = (await response.json()) as ZaiCompletionResponse
+  return data.choices?.[0]?.message?.content || 'Nao consegui processar a resposta neural via fallback.'
+}
+
+async function callOllama(messages: ChatMessage[]): Promise<string> {
+  const url = `${env.OLLAMA_BASE_URL}/api/chat`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: env.OLLAMA_MODEL,
+      messages,
+      stream: false,
+      options: {
+        temperature: 0.2,
+        num_predict: 1500,
+        num_ctx: 32768,
+      },
+    }),
+    signal: AbortSignal.timeout(90000),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Erro na API Ollama (${response.status})`)
+  }
+
+  const data = (await response.json()) as OllamaChatResponse
+  return data.message?.content || 'Nao consegui processar a resposta neural via Ollama.'
+}
+
+async function executarChatComFallback(messages: ChatMessage[]): Promise<string> {
+  if (env.AI_PROVIDER === 'ollama') {
     try {
-        return await callGroq(messages)
-    } catch (error: any) {
-        const errStr = error?.message || String(error)
-        const isRateLimit = errStr.includes('413') || errStr.includes('rate_limit') || errStr.includes('tokens') || errStr.includes('TPM')
-
-        if (isRateLimit) {
-            iaLogger.warn({ error: errStr }, '[NEX-CHAT] Groq limit atingido. Ativando Fallback para Z.AI (GLM)...')
-            return await callZai(messages)
-        }
-        throw error
+      return await callOllama(messages)
+    } catch (error) {
+      const err = toError(error)
+      iaLogger.error({ error: err.message }, '[NEX-CHAT] Falha fixa no Ollama Local')
+      throw err
     }
+  }
+
+  if (env.AI_PROVIDER === 'zai') {
+    try {
+      return await callZai(messages)
+    } catch (error) {
+      const err = toError(error)
+      iaLogger.error({ error: err.message }, '[NEX-CHAT] Falha fixa na ZAI')
+      throw err
+    }
+  }
+
+  try {
+    return await callGroq(messages)
+  } catch (error) {
+    const err = toError(error)
+    const errStr = err.message
+    const isRateLimit =
+      errStr.includes('413') ||
+      errStr.includes('rate_limit') ||
+      errStr.includes('tokens') ||
+      errStr.includes('TPM')
+
+    if (isRateLimit) {
+      iaLogger.warn({ error: errStr }, '[NEX-CHAT] Groq limit atingido. Ativando fallback para Z.AI.')
+      return callZai(messages)
+    }
+
+    throw err
+  }
 }
 
 export async function POST(req: NextRequest) {
-    try {
-        const body = await req.json()
-        const { messages, documentContext } = body
+  try {
+    const rl = rateLimit(req, {
+      windowMs: 60 * 1000,
+      max: 120,
+      keyPrefix: 'rl:chat-documento',
+    })
 
-        if (!messages || !Array.isArray(messages)) {
-            return NextResponse.json({ success: false, error: 'O array de mensagens é obrigatório' }, { status: 400 })
-        }
-
-        if (!documentContext) {
-            return NextResponse.json({ success: false, error: 'O assistente NEX exige o contexto em escopo para operar.' }, { status: 400 })
-        }
-
-        // Limitando o tamanho dinamicamente para não estourar a janela do LLM
-        const safeContext = documentContext.slice(0, 80000)
-
-        const systemPrompt = `Você é NEX, o Especialista Neural de Saúde e Segurança do Trabalho (SST) da plataforma SGN.
-Você está interagindo DIRETAMENTE com um engenheiro ou auditor, auxiliando-o a sanar dúvidas baseadas no SEGUINTE DOCUMENTO EXTRAÍDO:
-
-===== CONTEXTO DO DOCUMENTO EXCLUSIVO =====
-${safeContext}
-===========================================
-
-REGRAS ESTABELECIDAS:
-1. Responda baseando-se ESTRITAMENTE no documento acima.
-2. Se a informação não constar neste documento, diga: "Segundo o escopo atual que estou avaliando, não há dados precisos sobre..." e oriente a procurar na NR aplicável.
-3. Não invente ou presuma informações sobre funcionários, métricas, locais ou riscos que não estão textualmente escritos.
-4. Responda em Português Brasileiro (pt-BR) de forma objetiva, direta e elegante.`
-
-        const contextualizedMessages = [
-            { role: 'system', content: systemPrompt },
-            ...messages.map((m: any) => ({ role: m.role, content: m.content }))
-        ]
-
-        const reply = await executarChatComFallback(contextualizedMessages)
-
-        return NextResponse.json({
-            success: true,
-            reply
-        })
-
-    } catch (error) {
-        iaLogger.error({ error }, '[NEX-CHAT] Falha Estrutural Crítica')
-        return NextResponse.json({
-            success: false,
-            error: 'Erro interno ao consultar o oráculo neural: ' + (error instanceof Error ? error.message : 'Falha desconhecida.')
-        }, { status: 500 })
+    if (rl.limitExceeded) {
+      return NextResponse.json(
+        { success: false, error: 'Muitas requisições. Tente novamente em breve.' },
+        { status: 429 }
+      )
     }
+
+    const body = (await req.json()) as {
+      messages?: unknown
+      documentContext?: unknown
+    }
+
+    if (!Array.isArray(body.messages)) {
+      return NextResponse.json({ success: false, error: 'O array de mensagens e obrigatorio' }, { status: 400 })
+    }
+
+    if (typeof body.documentContext !== 'string' || body.documentContext.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'O assistente NEX exige contexto do documento em escopo.' },
+        { status: 400 }
+      )
+    }
+
+    const mensagensCliente = body.messages
+      .map(normalizarMensagem)
+      .filter((m): m is ChatMessage => Boolean(m && m.content.length > 0))
+
+    if (mensagensCliente.length === 0) {
+      return NextResponse.json({ success: false, error: 'Nenhuma mensagem valida foi enviada.' }, { status: 400 })
+    }
+
+    if (mensagensCliente.some((m) => m.role === 'system')) {
+      return NextResponse.json(
+        { success: false, error: 'Mensagens com role=system nao sao permitidas na entrada do cliente.' },
+        { status: 400 }
+      )
+    }
+
+    const safeContext = body.documentContext.slice(0, 80000)
+
+    const systemPrompt = `Voce e NEX, o especialista neural de SST da plataforma SGN.
+Voce auxilia um engenheiro/auditor somente com base no contexto abaixo.
+
+===== CONTEXTO DO DOCUMENTO =====
+${safeContext}
+=================================
+
+REGRAS:
+1. Responda estritamente com base no documento.
+2. Se faltar dado no contexto, diga explicitamente que nao ha dados precisos no escopo atual.
+3. Nao invente informacoes.
+4. Responda em Portugues Brasileiro objetivo.`
+
+    const contextualizedMessages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...mensagensCliente,
+    ]
+
+    const reply = await executarChatComFallback(contextualizedMessages)
+
+    return NextResponse.json({ success: true, reply })
+  } catch (error) {
+    const err = toError(error)
+    iaLogger.error({ error: err.message }, '[NEX-CHAT] Falha estrutural')
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Erro interno ao consultar o assistente: ${err.message}`,
+      },
+      { status: 500 }
+    )
+  }
 }

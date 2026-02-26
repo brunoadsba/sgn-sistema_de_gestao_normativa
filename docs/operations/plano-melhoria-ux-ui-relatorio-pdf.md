@@ -2,6 +2,7 @@
 
 > Atualizado em: 2026-02-25  
 > Contexto: operacao local-only e single-user
+> Status: historico de implementacao (consultar `docs/operations/checklist-validacao-impressao-relatorio-pdf.md` para operacao atual)
 
 ## 1. Objetivo
 
@@ -147,11 +148,11 @@ Arquivos alvo:
 3. **Risco:** regressao de UX na tela interativa.  
    **Mitigacao:** separar claramente estilos de tela e estilos de impressao.
 
-## 10. Status de execucao (2026-02-25)
+## 10. Status de execucao (2026-02-26)
 
 1. Sprint 1 concluida.
 2. Sprint 2 concluida.
-3. Sprint 3 parcialmente executada.
+3. Sprint 3 em fechamento.
 4. Implementado:
    - folha de estilo global de impressao em `src/app/globals.css` com `@page A4`, utilitarios (`no-print`, `only-print`, `avoid-break`, `page-break-*`) e neutralizacao de efeitos visuais para print;
    - refatoracao do `ResultadoAnalise` com secao dedicada print-first (`only-print`) e isolamento da interface interativa (`no-print`);
@@ -159,12 +160,13 @@ Arquivos alvo:
    - fluxo UX em dois passos: `Visualizar para Impressao` -> `Imprimir / Salvar PDF`;
    - modo de pre-visualizacao A4 em tela com orientacoes operacionais de impressao.
    - resumo sanitizado sem “Análise consolidada…” nem “ID do Job”, nomenclatura “Pontos Fortes”/“Pontos de Atenção” mantida próxima aos parágrafos associados e “Matriz de Gaps” agrupada à tabela subsequente; download padronizado como `Relatório_SGN_dd-mm-yyyy_HH-MM`.
-   - suite E2E dedicada do fluxo de impressao em `e2e/relatorio-print.spec.ts`;
    - checklist operacional de validacao manual em `docs/operations/checklist-validacao-impressao-relatorio-pdf.md`.
+   - correcoes no `src/app/globals.css` para modo `print-preview-active` ocultar shell visual (header/canvas) e consolidar utilitarios de impressao (`no-print`, `only-print`, `avoid-break`, `print-keep-with-next`, `@media print` com `@page A4`).
+   - validacao técnica em Chrome (v143.0.7499.192) registrada em `test-results/print-validation-chrome.json` e `test-results/print-preview-chrome.png`.
 5. Validacao executada:
    - `npx tsc --noEmit` ✅
    - `npm run lint` ✅
    - `npm run test:ci` ✅
    - `npm run test:e2e` ✅
 6. Pendente para fechamento integral da Sprint 3:
-   - executar checklist manual nos navegadores alvo (Chrome e Edge) e registrar evidencias na tabela de execucao.
+   - executar checklist manual no Microsoft Edge e registrar evidencias na tabela de execucao.

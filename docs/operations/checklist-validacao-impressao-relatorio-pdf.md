@@ -1,6 +1,6 @@
 # Checklist de Validacao Manual — Impressao do Relatorio PDF
 
-> Atualizado em: 2026-02-25  
+> Atualizado em: 2026-02-26  
 > Escopo: operacao local-only/single-user
 
 ## 1. Pre-requisitos
@@ -54,5 +54,5 @@
 
 | Data | Navegador | Versao | Resultado | Observacoes |
 |---|---|---|---|---|
-| YYYY-MM-DD | Chrome | - | Pendente | - |
-| YYYY-MM-DD | Edge | - | Pendente | - |
+| 2026-02-26 | Chrome | 143.0.7499.192 | Aprovado | Checklist executado com fluxo completo de preview/impressao; evidencias em `test-results/print-validation-chrome.json` e `test-results/print-preview-chrome.png`. |
+| 2026-02-26 | Edge | - | Pendente (bloqueado) | Microsoft Edge nao disponivel neste ambiente local de validacao. |

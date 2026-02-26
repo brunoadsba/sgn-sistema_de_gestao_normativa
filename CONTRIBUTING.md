@@ -1,97 +1,90 @@
 # Contributing
 
-Este documento define o fluxo oficial de contribuição para o SGN.
+> Atualizado em: 2026-02-26
 
-> Contexto atual: projeto local-only, sem deploy/release remoto. Pipeline oficial: `.github/workflows/ci.yml`.
+Fluxo oficial de contribuicao para o SGN.
 
-## Estratégia de Branch
+## 1. Estrategia de Branch
 
-1. Nunca desenvolver direto em `master`.
-2. Criar branch por escopo:
+1. Nao desenvolver direto em `master`.
+2. Usar prefixos:
    - `feat/<tema>`
    - `fix/<tema>`
    - `docs/<tema>`
    - `chore/<tema>`
-3. Cada branch deve tratar um único objetivo de negócio/técnico.
+3. Uma branch por objetivo tecnico.
 
-## Padrão de Commit
+## 2. Padrao de Commit
 
-Formato obrigatório:
+Formato:
 
 ```text
-tipo(feature): descrição concisa
+tipo(scope): descricao
 ```
 
 Exemplos:
-- `feat(normas): adicionar busca por query string com nuqs`
-- `fix(api): corrigir parse de pdf na rota extrair-texto`
-- `docs(arquitetura): atualizar estado pós-refatoração server/client`
 
-## Pull Request
+- `feat(analise): adicionar validacao de payload`
+- `fix(api): corrigir timeout de extracao`
+- `docs(governance): aplicar 5s na documentacao`
 
-### Requisitos mínimos
+## 3. Pull Request
 
-1. Tipo e objetivo claros no título.
-2. Descrição do impacto funcional/técnico.
-3. Evidência de validação local.
-4. Atualização de documentação afetada.
+### Requisitos Minimos
 
-### Checklist antes de abrir PR
+1. Objetivo e impacto claros.
+2. Evidencia de validacao local.
+3. Atualizacao documental quando aplicavel.
 
-1. Executar qualidade estática:
+### Checklist Pre-PR
+
+1. Qualidade estatica:
    ```bash
    npx tsc --noEmit
    npm run lint
    ```
-2. Executar build:
+2. Build:
    ```bash
    npm run build
    ```
-   - O script oficial usa `next build --webpack`.
-3. Executar testes disponíveis:
+3. Testes:
    ```bash
+   npm run test:ci
    npm run test:e2e
    ```
-   - Resultado esperado: suíte verde, sem cenários flaky.
-4. Revisar documentação:
+4. Revisar docs afetadas:
    - `README.md`
-   - `docs/README.md`
-   - `docs/memory.md`
    - `docs/architecture/arquitetura-tecnica.md`
-   - `docs/operations/operacao-local.md` (quando houver impacto operacional)
-   - `docs/governance/documentacao.md` (quando houver criação/revisão documental)
+   - `docs/operations/operacao-local.md`
+   - `docs/memory.md`
    - `CHANGELOG.md`
-   - `SECURITY.md` (quando houver impacto)
+   - `SECURITY.md` (se houver impacto de risco)
 5. Verificar segredos:
    ```bash
-   git grep -i "api_key\|password\|secret"
+   git grep -i "api_key\|password\|secret\|token"
    ```
-6. Quando houver impacto operacional local:
-   - Validar startup com `npm run dev` e `npm run docker:start`
-   - Confirmar health check em `GET /api/health`
-   - Validar backup e restore (`npm run db:backup` e `npm run db:restore`)
 
-## Convenções de Engenharia
+## 4. Convencoes de Engenharia
 
-1. TypeScript em strict mode.
-2. Validação de entrada com Zod.
-3. Estrutura de resposta de API consistente (`success`, `data`, `error`).
-4. Logs exclusivamente via `@/lib/logger`.
-5. Princípios obrigatórios: DRY, KISS, YAGNI.
-6. Tamanho recomendado de arquivo: até 200 linhas (quebrar quando necessário).
-7. Server Components por padrão; usar `"use client"` apenas para interatividade.
-8. Dark mode obrigatório em componentes visuais (`dark:`).
+1. TypeScript strict mode.
+2. Zod para validacao de entrada.
+3. Logs via `@/lib/logger`.
+4. Server Components por padrao; `use client` apenas quando necessario.
+5. Dark mode deve ter suporte visual completo nos componentes de UI.
 
-## Padrão Arquitetural Atual
+## 5. Criticos para Merge
 
-1. Server Components fazem fetch de dados.
-2. Client Components recebem props e controlam estado/interação.
-3. Estado compartilhável na URL via `nuqs`.
+1. Nao quebrar rotas principais (`/`, `/normas`, `/normas/[id]`, `/nr6`).
+2. Nao quebrar APIs criticas (`/api/extrair-texto`, `/api/ia/analisar-conformidade`).
+3. Atualizar `CHANGELOG.md` para mudanca relevante.
+4. Atualizar documentacao no mesmo PR (politica 5S).
 
-## Critérios de Aceite para Merge
+## 6. Observacao Operacional
 
-1. Não quebrar fluxo principal (`/`, `/normas`, `/normas/[id]`, `/nr6`).
-2. Não introduzir regressão em extração de arquivos (`PDF`, `DOCX`, `TXT`).
-3. Não introduzir warnings/erros TypeScript.
-4. Não introduzir regressão em estabilidade E2E.
-5. Atualizar `CHANGELOG.md` para mudanças relevantes.
+Baseline atual em `2026-02-26`:
+
+1. `npx tsc --noEmit`: passou.
+2. `npm run lint`: passou.
+3. `npm run build`: passou.
+4. `npm run test:ci`: passou.
+5. `npm run test:e2e`: passou (`33/33`).

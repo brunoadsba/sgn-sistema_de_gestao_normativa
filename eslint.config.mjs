@@ -9,15 +9,18 @@ const config = defineConfig(
     ignores: [
       ".next/**",
       ".vercel/**",
+      "**/.vercel/**",
       "node_modules/**",
       "coverage/**",
       "dist/**",
       "build/**",
+      "harbor-tasks/**",
+      "jobs/**",
       "next-env.d.ts",
     ],
   },
   {
-    files: ["*.js", "*.cjs", "*.mjs"],
+    files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },

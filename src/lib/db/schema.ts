@@ -83,6 +83,10 @@ export const conformidadeGaps = sqliteTable('conformidade_gaps', {
   citacaoDocumento: text('citacao_documento'),
   paginaDocumento: integer('pagina_documento'),
   linhaDocumento: text('linha_documento'),
+  probabilidade: integer('probabilidade'),
+  pontuacaoGut: integer('pontuacao_gut'),
+  classificacao: text('classificacao'),
+  prazoDias: integer('prazo_dias'),
   createdAt: text('created_at').notNull().default(nowDefault),
 });
 
@@ -92,3 +96,21 @@ export const conformidadeGapsRelations = relations(conformidadeGaps, ({ one }) =
     references: [analiseResultados.id],
   }),
 }));
+
+// ====== IDEMPOTENCY LEGACY (compatibilidade histórica) ======
+export const idempotencyKeysLegacy = sqliteTable('idempotency_keys', {
+  key: text('key').primaryKey(),
+  requestHash: text('request_hash').notNull(),
+  jobId: text('job_id').references(() => analiseJobs.id, { onDelete: 'set null' }),
+  status: text('status').notNull().default('reserved'),
+  createdAt: text('created_at').notNull().default(nowDefault),
+  expiresAt: text('expires_at').notNull(),
+});
+
+// ====== IDEMPOTENCY CACHE ======
+export const idempotencyCache = sqliteTable('idempotency_cache', {
+  key: text('key').primaryKey(),
+  requestHash: text('request_hash').notNull(),
+  response: text('response', { mode: 'json' }).$type<unknown>().notNull(),
+  createdAtMs: integer('created_at_ms', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
+});

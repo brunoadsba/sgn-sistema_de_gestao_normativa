@@ -171,3 +171,159 @@ html {
 .dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
   background-color: #334155;
 }
+
+/* Print-first utilities + preview A4 shell */
+.no-print {
+  display: initial;
+}
+
+.only-print {
+  display: none;
+}
+
+.avoid-break {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.page-break-before {
+  break-before: page;
+  page-break-before: always;
+}
+
+.page-break-after {
+  break-after: page;
+  page-break-after: always;
+}
+
+.print-keep-with-next {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+
+body.print-preview-active {
+  background: #e5e7eb;
+}
+
+body.print-preview-active canvas,
+body.print-preview-active header {
+  display: none !important;
+}
+
+body.print-preview-active .no-print {
+  display: none !important;
+}
+
+body.print-preview-active .screen-print-preview-toolbar {
+  display: block !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #d1d5db;
+  backdrop-filter: blur(8px);
+}
+
+body.print-preview-active .screen-print-preview-toolbar__inner {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+body.print-preview-active main {
+  padding-top: 4.75rem !important;
+}
+
+body.print-preview-active .screen-print-preview-page {
+  display: block !important;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 2rem;
+  background: #ffffff;
+  color: #111827;
+  padding: 12mm;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+}
+
+body.print-preview-active .screen-print-preview-page,
+body.print-preview-active .screen-print-preview-page * {
+  color: #111827 !important;
+}
+
+body.print-preview-active .screen-print-preview-page .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+body.print-preview-active .screen-print-preview-page .border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  header,
+  nav,
+  canvas,
+  .no-print {
+    display: none !important;
+  }
+
+  .only-print {
+    display: block !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+
+  .print-report {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-report,
+  .print-report * {
+    color: #000 !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .print-table th,
+  .print-table td {
+    border: 1px solid #d1d5db !important;
+    vertical-align: top;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-keep-with-next {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+}

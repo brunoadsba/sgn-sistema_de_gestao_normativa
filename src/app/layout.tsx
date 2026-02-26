@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
@@ -7,9 +7,19 @@ import { CanvasBackgroundShell } from "@/components/ui/CanvasBackgroundShell";
 import { SessionSplashGate } from "@/components/loading/SessionSplashGate";
 import { GlobalNav } from "@/components/navigation/GlobalNav";
 
-const inter = Inter({
-  subsets: ["latin"],
+const sgnSans = localFont({
+  src: [
+    {
+      path: "./fonts/geist-latin.woff2",
+      style: "normal",
+    },
+    {
+      path: "./fonts/geist-latin-ext.woff2",
+      style: "normal",
+    },
+  ],
   display: 'swap',
+  fallback: ['system-ui', 'Arial', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -33,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen font-sans antialiased relative`}>
+      <body className={`${sgnSans.className} min-h-screen font-sans antialiased relative`}>
         <NuqsAdapter>
           <CanvasBackgroundShell />
           <SessionSplashGate>

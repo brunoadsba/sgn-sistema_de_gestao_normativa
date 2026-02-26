@@ -1,56 +1,85 @@
 # Governanca de Documentacao
 
-## Objetivo
+> Atualizado em: 2026-02-26
 
-Definir padrao minimo de qualidade e manutencao para a documentacao do SGN.
+## 1. Objetivo
 
-## Principios
+Padronizar a documentacao do SGN para manter consistencia tecnica, rastreabilidade de decisoes e operacao previsivel.
 
-1. Fonte unica da verdade por assunto.
-2. Clareza operacional acima de volume de texto.
-3. Documento executavel: deve orientar acao real, nao apenas descrever.
-4. Atualizacao junto com a mudanca de codigo/infra.
-5. Contexto operacional vigente: SGN local-only (sem deploy remoto).
+## 2. Principios
 
-## Tipos de documento
+1. Fonte unica de verdade por assunto.
+2. Documento deve orientar acao executavel.
+3. Mudanca de codigo relevante exige mudanca de doc no mesmo PR.
+4. Clareza e precisao acima de volume de texto.
+5. Conteudo legado deve ser arquivado, nao misturado com o estado atual.
 
-| Tipo | Conteudo esperado | Exemplo |
+## 3. Classificacao de Documentos
+
+| Tipo | Conteudo esperado | Caminho |
 |---|---|---|
-| Arquitetura | Componentes, fluxos, limites, decisoes tecnicas | `docs/architecture/arquitetura-tecnica.md` |
-| Operacao | Procedimentos, checklists, runbooks, troubleshooting | `docs/operations/operacao-local.md` |
-| Referencia | Especificacoes, mapeamentos e contratos | `docs/reference/prompt-extracao-estruturada-sgn.md` |
-| Historico | Evolucao cronologica e contexto de sessao | `docs/memory.md` |
-| Arquivo | Conteudo descontinuado ou legado | `docs/archive/` |
+| Arquitetura | Componentes, fluxos, limites, debitos | `docs/architecture/` |
+| Operacao | Procedimentos, runbooks, checklists | `docs/operations/` |
+| Referencia | Contratos e mapeamentos tecnicos | `docs/reference/` |
+| Governanca | Regras, templates, auditoria documental | `docs/governance/` |
+| Memoria | Estado consolidado e historico resumido | `docs/memory.md` |
+| Arquivo | Legado e historico descontinuado | `docs/archive/` |
 
-## Padrao de escrita
+## 4. Template Minimo por Tipo
 
-1. Titulo direto e escopo explicito.
-2. Data de atualizacao quando relevante.
-3. Secoes obrigatorias para runbook:
-   - objetivo
-   - pre-requisitos
-   - passo a passo
-   - validacao
-   - rollback (quando aplicavel)
-   - troubleshooting
-4. Evitar termos ambiguos como "talvez", "aproximado" sem faixa numerica.
-5. Referenciar caminhos reais do repositorio.
+### Runbook/POP
 
-## Gatilhos obrigatorios de atualizacao
+1. Objetivo
+2. Escopo
+3. Pre-requisitos
+4. Passo a passo
+5. Validacao/Gate
+6. Troubleshooting
+7. Responsabilidades
 
-Atualize documentacao quando houver alteracao em:
+### Arquitetura
 
-1. Fluxo principal de analise
-2. APIs publicas internas (`src/app/api/*`)
-3. Modelo de dados (Drizzle schema/migration)
-4. Variaveis de ambiente
-5. Processo operacional local, backup ou restore
-6. Controles de seguranca
+1. Resumo do sistema
+2. Componentes e fluxo
+3. Contratos de API/dados
+4. Limites operacionais
+5. Debito tecnico priorizado
 
-## Checklist de PR (documentacao)
+### Seguranca
 
-1. Links internos validos.
-2. Comandos presentes e coerentes com `package.json`.
-3. Limites operacionais atualizados (upload, timeout, tamanho de documento).
-4. Sem duplicacao de regra em arquivos concorrentes.
-5. Conteudo descontinuado movido para `docs/archive/`.
+1. Modelo de ameaca
+2. Controles implementados
+3. Riscos aceitos
+4. Hardening pendente
+5. Procedimentos operacionais
+
+## 5. Gatilhos Obrigatorios de Atualizacao
+
+Atualizar docs quando houver alteracao em:
+
+1. `src/app/api/**`
+2. `src/lib/db/**` e migrations
+3. `src/lib/env.ts` e `.env.example`
+4. Fluxo principal de uso (`/`, `/normas`, `/nr6`)
+5. Seguranca, logs e observabilidade
+6. Scripts operacionais (`scripts/**`, Docker, CI)
+
+## 6. Qualidade de Documentacao (DoD)
+
+1. Sem conflito de versao entre README, memory e changelog.
+2. Comandos documentados existem em `package.json`.
+3. Endpoint citado existe no codigo.
+4. Datas e status sao objetivos (com data absoluta).
+5. Links internos resolvem para caminhos reais.
+
+## 7. Ciclo de Revisao
+
+1. Revisao obrigatoria em todo PR com impacto tecnico/operacional.
+2. Revisao mensal de consistencia (auditoria 5S).
+3. Registro de ajustes em `CHANGELOG.md` e `docs/memory.md`.
+
+## 8. 5S Documental
+
+A execucao detalhada do 5S fica em:
+
+- `docs/governance/5s-documentacao.md`

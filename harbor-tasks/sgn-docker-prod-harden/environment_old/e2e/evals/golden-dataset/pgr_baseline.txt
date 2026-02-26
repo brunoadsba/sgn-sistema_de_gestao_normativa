@@ -1,7 +1,0 @@
-Diagnóstico de Segurança e Saúde no Trabalho
-
-Introdução:
-Este documento apresenta o levantamento preliminar de riscos da planta.
-
-Análise de Documentação:
-A empresa apresentou um documento intitulado 'Manual de Segurança', porém este não contempla a estrutura exigida para um Programa de Gerenciamento de Riscos (PGR). Foi identificada a ausência completa de um Inventário de Riscos Ocupacionais que relacione perigos e riscos por setor, bem como a inexistência de um Plano de Ação com cronograma e metas para mitigação. Tais itens são requisitos fundamentais da NR-1 no capítulo de Gerenciamento de Riscos Ocupacionais (GRO). Sem o inventário e o plano de ação, o PGR é considerado inexistente para fins de fiscalização.

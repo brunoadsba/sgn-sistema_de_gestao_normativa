@@ -27,6 +27,7 @@ export interface AnaliseConformidadeResponse {
   timestamp: string
   modeloUsado: string
   tempoProcessamento: number
+  planoAcao?: AcaoPlano5W2H[]
   metadadosProcessamento?: MetadadosProcessamento
   jobId?: string | undefined
   nomeArquivo?: string | undefined
@@ -39,6 +40,10 @@ export interface GapConformidade {
   categoria: string
   recomendacao: string
   prazo: string
+  probabilidade?: number
+  pontuacaoGut?: number
+  classificacao?: string
+  prazoDias?: number
   impacto?: string
   custoEstimado?: number
   responsavelSugerido?: string
@@ -51,6 +56,15 @@ export interface GapConformidade {
   citacaoDocumento?: string | null
   paginaDocumento?: number | null
   linhaDocumento?: string | null
+}
+
+export interface AcaoPlano5W2H {
+  id: string
+  what: string
+  who: string
+  prazoDias: number
+  evidenciaConclusao?: string | null
+  kpi?: string | null
 }
 
 export interface EvidenciaNormativa {
@@ -78,6 +92,8 @@ export interface MetadadosProcessamento {
   ordemProcessamento: string[]
   temposPorChunkMs?: Record<string, number>
   truncamentoEvitado?: boolean
+  scoreDeterministico?: unknown
+  fingerprintAnalise?: unknown
 }
 
 export interface ConfiguracaoIA {

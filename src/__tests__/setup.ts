@@ -20,7 +20,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Configurar variáveis de ambiente para testes
-process.env.NODE_ENV = 'test';
+Object.defineProperty(process.env, 'NODE_ENV', { value: 'test' });
 process.env.LOG_LEVEL = 'error';
 
 // Teste básico para evitar erro de "suite must contain at least one test"

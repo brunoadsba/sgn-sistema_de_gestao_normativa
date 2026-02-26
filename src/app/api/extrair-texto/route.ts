@@ -3,6 +3,7 @@ import mammoth from 'mammoth'
 import { PDFParse } from 'pdf-parse'
 import { pathToFileURL } from 'url'
 import { resolve } from 'path'
+import { rateLimit } from '@/lib/security/rate-limit'
 
 // Node runtime obrigatório para lidar com Buffer, mammoth e pdf-parse
 export const runtime = 'nodejs'
@@ -30,6 +31,19 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = rateLimit(request, {
+      windowMs: 60 * 1000,
+      max: 30,
+      keyPrefix: 'rl:extrair-texto',
+    })
+
+    if (rl.limitExceeded) {
+      return NextResponse.json(
+        { success: false, error: 'Muitas requisições. Tente novamente em breve.' },
+        { status: 429 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 

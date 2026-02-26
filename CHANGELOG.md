@@ -1,5 +1,56 @@
 # Changelog
 
+## [2.2.15] - 2026-02-26
+### Alterado
+- **Idempotência persistente em banco**: `src/lib/idempotency.ts` passou a usar tabela `idempotency_cache` para armazenar `Idempotency-Key -> payload hash -> resposta`, com conflito `409` para reaproveito com payload divergente.
+- **Compatibilidade de rollout**: fallback automático para cache em memória quando a tabela ainda não existe no ambiente, evitando regressão durante janela de sincronização de schema.
+- **Contrato assíncrono consolidado**: arquitetura canônica mantida no runtime da rota (`waitUntil`/fallback), com remoção do diretório ativo de worker legado.
+- **Schema alinhado ao banco real**: `conformidade_gaps` voltou a mapear colunas GUT (`probabilidade`, `pontuacao_gut`, `classificacao`, `prazo_dias`) e a tabela histórica `idempotency_keys` foi tipada como legado para eliminar prompts interativos de rename/data-loss no `drizzle-kit push`.
+
+### Qualidade
+- Nova suíte unitária para idempotência mantida em verde após migração assíncrona para DB.
+- Gate validado em `2026-02-26`:
+  - `npx tsc --noEmit` ✅
+  - `npm run lint` ✅
+  - `npm run build` ✅
+  - `npm run test:ci` ✅
+  - `npm run test:e2e` ✅ (`33/33`)
+
+## [2.2.14] - 2026-02-26
+### Corrigido
+- **Gate de unit tests estabilizado**: `test:ci` voltou a executar apenas suites canônicas de `src/**`, isolando artefatos legados (`harbor-tasks/**`) e eliminando colisões do Jest/Haste.
+- **Idempotência da análise concluída no fluxo assíncrono**: `POST /api/ia/analisar-conformidade` agora persiste resposta idempotente de criação de job, retorna conflito `409` para payload divergente e reaproveita `jobId` com a mesma chave.
+
+### Segurança
+- **Rate limiting aplicado em rotas de alto custo**: proteção in-memory ativada para `/api/ia/analisar-conformidade`, `/api/extrair-texto` e `/api/chat-documento` (além do polling em `/api/ia/jobs/[id]`).
+
+### Qualidade
+- Validação local concluída com sucesso em `2026-02-26`:
+  - `npx tsc --noEmit` ✅
+  - `npm run lint` ✅
+  - `npm run build` ✅
+  - `npm run test:ci` ✅
+  - `npm run test:e2e` ✅ (`33/33`)
+
+## [2.2.13] - 2026-02-26
+### Corrigido
+- **Build offline para fontes**: substituido `next/font/google` por `next/font/local` em `src/app/layout.tsx`, com fontes self-hosted em `src/app/fonts/`, eliminando dependencia de `fonts.googleapis.com` no build.
+
+## [2.2.12] - 2026-02-26
+### Corrigido
+- **Baseline de qualidade recuperado**: `npx tsc --noEmit` voltou a passar após alinhamento de contratos de tipo em IA/UI.
+- **Lint estabilizado**: `npm run lint` voltou a passar com ajuste de escopo (ignores para artefatos gerados/ambientes legados) e tipagem nas rotas críticas.
+- **Higiene de código**: módulo órfão `src/lib/ia/worker/processamento-analise.ts` removido por não estar integrado ao fluxo real da aplicação.
+
+### Alterado
+- **Build padronizado**: script atualizado para `next build --webpack` visando maior previsibilidade local.
+
+## [2.2.11] - 2026-02-26
+### Alterado
+- **5S documental aplicado**: padronizacao dos documentos canonicos (`README`, arquitetura, operacao, seguranca, contribuicao, memory e governanca) com alinhamento ao estado real do repositorio.
+- **Governanca fortalecida**: criado `docs/governance/5s-documentacao.md` com matriz 5S, checklist operacional e cadencia de revisao.
+- **Memoria operacional consolidada**: `docs/memory.md` reduzido para snapshot executivo; historico expandido preservado em `docs/archive/memory-legacy-2026-02-25.md`.
+
 ## [2.2.10] - 2026-02-25
 ### Alterado
 - **Normalização segura de respostas da IA**: camada de pós-processamento corrige erros textuais recorrentes (ex.: “ouuições” -> “atribuições”), higieniza espaços/linhas e aplica antes de calcular hash/persistir, garantindo relatório e fingerprint consistentes.

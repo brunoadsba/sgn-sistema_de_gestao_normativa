@@ -7,7 +7,7 @@ import { env } from '@/lib/env'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 import { CreateAnaliseSchema } from '@/schemas'
 import { createSuccessResponse, createErrorResponse, validateRequestBody } from '@/middlewares/validation'
-import { createRequestLogger } from '@/lib/logger'
+import { createLogger, createRequestLogger } from '@/lib/logger'
 import {
   listarAnalisesConformidade,
   iniciarJobAnalise,
@@ -15,17 +15,30 @@ import {
   finalizarJobAnalise,
   buscarAnalisePorId,
 } from '@/lib/ia/persistencia-analise'
-import { getIdempotentResponse } from '@/lib/idempotency'
+import {
+  getIdempotentResponse,
+  saveIdempotentResponse,
+  IdempotencyConflictError,
+} from '@/lib/idempotency'
 import { randomUUID } from 'crypto'
 import { recuperarEvidenciasNormativas } from '@/lib/normas/kb'
 import { dividirDocumentoEmChunks } from '@/lib/ia/chunking'
 import { consolidarResultadosIncrementais } from '@/lib/ia/consolidacao-incremental'
+import { rateLimit } from '@/lib/security/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // Aumentado para lidar com chunks pesados
 
 const MAX_CHUNKS_INCREMENTAL = 8
 const INCREMENTAL_CONCURRENCY = 3
+type RequestWithWaitUntil = NextRequest & {
+  waitUntil?: (promise: Promise<unknown>) => void
+}
+type AnaliseJobResponse = {
+  jobId: string
+  status: 'pending' | 'completed'
+  pollUrl: string
+}
 
 // Selecionar provider de IA com Fallback Híbrido
 async function analisarConformidadeProvider(request: AnaliseConformidadeRequest) {
@@ -68,7 +81,7 @@ async function executarProcessamentoSgn(
   requestId: string,
   startTime: number
 ) {
-  const log = createRequestLogger({ headers: new Headers({ 'x-request-id': requestId }) } as any, 'bg.analisar-conformidade')
+  const log = createLogger('bg.analisar-conformidade').child({ correlationId: requestId, jobId })
 
   try {
     const estrategia = body.estrategiaProcessamento ?? 'completo'
@@ -205,6 +218,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const rl = rateLimit(request, {
+      windowMs: 60 * 1000,
+      max: 20,
+      keyPrefix: 'rl:analisar-conformidade',
+    })
+
+    if (rl.limitExceeded) {
+      return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
+    }
+
     const bodyValidation = await validateRequestBody(CreateAnaliseSchema, request)
     if (!bodyValidation.success) return createErrorResponse(bodyValidation.error, 400)
 
@@ -212,8 +235,11 @@ export async function POST(request: NextRequest) {
 
     // Idempotência
     if (idempotencyKey) {
-      const cached = getIdempotentResponse(idempotencyKey, body)
-      if (cached) return createSuccessResponse(cached, 'Retornado via cache', 200)
+      const cached = await getIdempotentResponse(idempotencyKey, body) as AnaliseJobResponse | null
+      if (cached) {
+        const statusCode = cached.status === 'pending' ? 202 : 200
+        return createSuccessResponse(cached, 'Retornado via cache de idempotência', statusCode)
+      }
     }
 
     // Criar Job com status 'pending' para retorno imediato
@@ -225,15 +251,26 @@ export async function POST(request: NextRequest) {
 
     // Orquestração
     const promise = executarProcessamentoSgn(jobId, documentoId, body, requestId, startTime)
+    const pollUrl = `/api/ia/jobs/${jobId}`
+    const acceptedResponse: AnaliseJobResponse = { jobId, status: 'pending', pollUrl }
 
     if (syncMode) {
       await promise
-      return createSuccessResponse({ jobId, status: 'completed' }, 'Análise concluída (Sync)')
+      const completedResponse: AnaliseJobResponse = { jobId, status: 'completed', pollUrl }
+      if (idempotencyKey) {
+        await saveIdempotentResponse(idempotencyKey, body, completedResponse)
+      }
+      return createSuccessResponse(completedResponse, 'Análise concluída (Sync)')
+    }
+
+    if (idempotencyKey) {
+      await saveIdempotentResponse(idempotencyKey, body, acceptedResponse)
     }
 
     // Backgrounding
-    if ((request as any).waitUntil) {
-      (request as any).waitUntil(promise)
+    const requestWithWaitUntil = request as RequestWithWaitUntil
+    if (requestWithWaitUntil.waitUntil) {
+      requestWithWaitUntil.waitUntil(promise)
     } else {
       // Fallback para ambientes sem waitUntil nativo
       Promise.resolve(promise).catch(e => log.error({ e }, 'Erro unhandled no worker'))
@@ -241,7 +278,7 @@ export async function POST(request: NextRequest) {
 
     // Retorno Imediato conforme RFC 7231 (202 Accepted)
     const response = createSuccessResponse(
-      { jobId, status: 'pending', pollUrl: `/api/ia/jobs/${jobId}` },
+      acceptedResponse,
       'Análise iniciada com sucesso em background',
       202
     )
@@ -258,6 +295,9 @@ export async function POST(request: NextRequest) {
     return response
 
   } catch (error) {
+    if (error instanceof IdempotencyConflictError) {
+      return createErrorResponse('Conflito de idempotência', 409, error.message)
+    }
     log.error({ error }, 'Erro fatal no endpoint de análise')
     return createErrorResponse('Falha ao iniciar análise', 500)
   }
@@ -310,7 +350,7 @@ export async function GET(request: NextRequest) {
       Math.min(Math.max(parseInt(searchParams.get('limite') || '10'), 1), 100)
     )
     return createSuccessResponse(data)
-  } catch (error) {
+  } catch {
     return createErrorResponse('Erro ao listar análises', 500)
   }
 }

@@ -79,9 +79,10 @@ export async function GET() {
 async function isGroqReady(): Promise<boolean> {
   if (!env.GROQ_API_KEY) return false;
 
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    timeout = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch('https://api.groq.com/openai/v1/models', {
       method: 'GET',
@@ -92,9 +93,10 @@ async function isGroqReady(): Promise<boolean> {
       cache: 'no-store',
     });
 
-    clearTimeout(timeout);
     return response.ok;
   } catch {
     return false;
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
 }
