@@ -1,6 +1,12 @@
 import { and, asc, desc, eq, inArray, like, sql } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
-import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia';
+import {
+  AnaliseConformidadeRequest,
+  AnaliseConformidadeResponse,
+  ConfidenceSignals,
+  ReportStatus,
+  RevisaoHumana,
+} from '@/types/ia';
 import { log } from '@/lib/logger';
 import { extrairNormaId, normalizarGap, toStringArray, toStringValue } from '@/lib/ia/analise-mappers';
 
@@ -15,6 +21,8 @@ export type AnaliseListagem = {
     timestamp: string;
     tempoProcessamento: number;
     modeloUsado: string;
+    reportStatus: ReportStatus;
+    confidenceScore: number;
   }[];
   paginacao: {
     pagina: number;
@@ -28,6 +36,35 @@ export type AnaliseListagem = {
 
 export type PeriodoHistorico = 'today' | '7d' | '30d';
 export type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc';
+
+function getMetadata(item: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  return (item ?? {}) as Record<string, unknown>;
+}
+
+function toNumberValue(value: unknown, fallback = 0): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function toReportStatus(value: unknown): ReportStatus {
+  if (value === 'laudo_aprovado' || value === 'laudo_rejeitado' || value === 'pre_laudo_pendente') {
+    return value;
+  }
+  return 'pre_laudo_pendente';
+}
+
+function parseRevisaoHumana(value: unknown): RevisaoHumana | null {
+  if (!value || typeof value !== 'object') return null;
+  const revisao = value as Partial<RevisaoHumana>;
+  if (
+    (revisao.decisao !== 'aprovado' && revisao.decisao !== 'rejeitado') ||
+    typeof revisao.revisor !== 'string' ||
+    typeof revisao.justificativa !== 'string' ||
+    typeof revisao.createdAt !== 'string'
+  ) {
+    return null;
+  }
+  return revisao as RevisaoHumana;
+}
 
 export async function iniciarJobAnalise(
   entrada: { nomeArquivo: string; tipoDocumento: string; normasAplicaveis: string[] },
@@ -116,6 +153,13 @@ export async function finalizarJobAnalise(
           metadadosProcessamento: resultado.metadadosProcessamento ?? null,
           evidenciasUtilizadas: resultado.gaps.flatMap((gap) => gap.evidencias ?? []),
           contextoBaseConhecimento: entrada.contextoBaseConhecimento ?? null,
+          reportStatus: resultado.reportStatus ?? 'pre_laudo_pendente',
+          confidenceScore: resultado.confidenceScore ?? 0,
+          confidenceClass: resultado.confidenceClass ?? 'confianca_baixa',
+          confidenceSignals: resultado.confidenceSignals ?? null,
+          alertasConfiabilidade: resultado.alertasConfiabilidade ?? [],
+          documentHash: resultado.documentHash ?? null,
+          revisaoHumana: resultado.revisaoHumana ?? null,
         },
       })
       .returning({ id: schema.analiseResultados.id })
@@ -225,9 +269,10 @@ export async function listarAnalisesConformidade(
   }
 
   const analises = resultados.map((item) => {
-    const metadata = (item.metadata ?? {}) as Record<string, unknown>;
+    const metadata = getMetadata(item.metadata);
 
     return {
+      analiseId: item.id,
       score: item.scoreGeral ?? 0,
       nivelRisco: (item.nivelRisco as AnaliseConformidadeResponse['nivelRisco']) ?? 'medio',
       gaps: (gapsPorResultado.get(item.id) ?? []).map(normalizarGap),
@@ -239,11 +284,25 @@ export async function listarAnalisesConformidade(
       modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
       tempoProcessamento:
         typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
+      reportStatus: toReportStatus(metadata.reportStatus),
+      confidenceScore: toNumberValue(metadata.confidenceScore),
+      confidenceClass:
+        metadata.confidenceClass === 'confianca_alta' ||
+        metadata.confidenceClass === 'confianca_media' ||
+        metadata.confidenceClass === 'confianca_baixa'
+          ? metadata.confidenceClass
+          : 'confianca_baixa',
+      ...(metadata.confidenceSignals && typeof metadata.confidenceSignals === 'object'
+        ? { confidenceSignals: metadata.confidenceSignals as ConfidenceSignals }
+        : {}),
+      alertasConfiabilidade: toStringArray(metadata.alertasConfiabilidade),
+      ...(typeof metadata.documentHash === 'string' ? { documentHash: metadata.documentHash } : {}),
+      revisaoHumana: parseRevisaoHumana(metadata.revisaoHumana),
     } satisfies AnaliseConformidadeResponse;
   });
 
   const historico = resultados.map((item) => {
-    const metadata = (item.metadata ?? {}) as Record<string, unknown>;
+    const metadata = getMetadata(item.metadata);
     const nomeDocumento = toStringValue(
       item.nomeArquivo ?? toStringValue(metadata.nomeArquivo),
       `analise-${item.id.slice(0, 8)}.txt`
@@ -260,6 +319,8 @@ export async function listarAnalisesConformidade(
       tempoProcessamento:
         typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
       modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
+      reportStatus: toReportStatus(metadata.reportStatus),
+      confidenceScore: toNumberValue(metadata.confidenceScore),
     };
   });
 
@@ -301,9 +362,10 @@ export async function buscarAnalisePorId(id: string): Promise<AnaliseConformidad
     .from(schema.conformidadeGaps)
     .where(eq(schema.conformidadeGaps.analiseResultadoId, id));
 
-  const metadata = (item.metadata ?? {}) as Record<string, unknown>;
+  const metadata = getMetadata(item.metadata);
 
   return {
+    analiseId: item.id,
     score: item.scoreGeral ?? 0,
     nivelRisco: (item.nivelRisco as AnaliseConformidadeResponse['nivelRisco']) ?? 'medio',
     gaps: gaps.map(normalizarGap),
@@ -314,6 +376,20 @@ export async function buscarAnalisePorId(id: string): Promise<AnaliseConformidad
     timestamp: toStringValue(metadata.timestamp, item.createdAt),
     modeloUsado: toStringValue(metadata.modeloUsado, 'desconhecido'),
     tempoProcessamento: typeof metadata.tempoProcessamento === 'number' ? metadata.tempoProcessamento : 0,
+    reportStatus: toReportStatus(metadata.reportStatus),
+    confidenceScore: toNumberValue(metadata.confidenceScore),
+    confidenceClass:
+      metadata.confidenceClass === 'confianca_alta' ||
+      metadata.confidenceClass === 'confianca_media' ||
+      metadata.confidenceClass === 'confianca_baixa'
+        ? metadata.confidenceClass
+        : 'confianca_baixa',
+    ...(metadata.confidenceSignals && typeof metadata.confidenceSignals === 'object'
+      ? { confidenceSignals: metadata.confidenceSignals as ConfidenceSignals }
+      : {}),
+    alertasConfiabilidade: toStringArray(metadata.alertasConfiabilidade),
+    ...(typeof metadata.documentHash === 'string' ? { documentHash: metadata.documentHash } : {}),
+    revisaoHumana: parseRevisaoHumana(metadata.revisaoHumana),
     jobId: item.jobId ?? undefined,
     nomeArquivo: item.nomeArquivo ?? undefined,
   } as AnaliseConformidadeResponse;
@@ -381,6 +457,8 @@ export async function exportarHistoricoCsv(
     'nomeDocumento',
     'tipoDocumento',
     'score',
+    'confidenceScore',
+    'reportStatus',
     'nivelRisco',
     'tempoProcessamentoMs',
     'modeloUsado',
@@ -392,6 +470,8 @@ export async function exportarHistoricoCsv(
     escapeCsvCell(item.nomeDocumento),
     escapeCsvCell(item.tipoDocumento),
     String(item.score),
+    String(item.confidenceScore),
+    escapeCsvCell(item.reportStatus),
     escapeCsvCell(item.nivelRisco),
     String(item.tempoProcessamento),
     escapeCsvCell(item.modeloUsado),
@@ -406,15 +486,18 @@ export async function limparHistoricoAnalises(): Promise<{
   jobsRemovidos: number
   documentosRemovidos: number
   gapsRemovidos: number
+  revisoesRemovidas: number
 }> {
-  const [analisesCount, jobsCount, documentosCount, gapsCount] = await Promise.all([
+  const [analisesCount, jobsCount, documentosCount, gapsCount, revisoesCount] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(schema.analiseResultados),
     db.select({ count: sql<number>`count(*)` }).from(schema.analiseJobs),
     db.select({ count: sql<number>`count(*)` }).from(schema.documentos).where(like(schema.documentos.nomeArquivo, 'analise-ia-%')),
     db.select({ count: sql<number>`count(*)` }).from(schema.conformidadeGaps),
+    db.select({ count: sql<number>`count(*)` }).from(schema.analiseRevisoes),
   ])
 
   await db.transaction(async (tx) => {
+    await tx.delete(schema.analiseRevisoes)
     await tx.delete(schema.conformidadeGaps)
     await tx.delete(schema.analiseResultados)
     await tx.delete(schema.analiseJobs)
@@ -426,5 +509,82 @@ export async function limparHistoricoAnalises(): Promise<{
     jobsRemovidos: Number(jobsCount[0]?.count ?? 0),
     documentosRemovidos: Number(documentosCount[0]?.count ?? 0),
     gapsRemovidos: Number(gapsCount[0]?.count ?? 0),
+    revisoesRemovidas: Number(revisoesCount[0]?.count ?? 0),
   }
+}
+
+export async function registrarRevisaoAnalise(params: {
+  analiseId: string
+  decisao: 'aprovado' | 'rejeitado'
+  revisor: string
+  justificativa: string
+}): Promise<{ reportStatus: ReportStatus; revisao: RevisaoHumana }> {
+  const analise = await db
+    .select({
+      id: schema.analiseResultados.id,
+      metadata: schema.analiseResultados.metadata,
+    })
+    .from(schema.analiseResultados)
+    .where(eq(schema.analiseResultados.id, params.analiseId))
+    .get()
+
+  if (!analise) {
+    throw new Error('Análise não encontrada')
+  }
+
+  const reportStatus: ReportStatus =
+    params.decisao === 'aprovado' ? 'laudo_aprovado' : 'laudo_rejeitado'
+
+  const revisao: RevisaoHumana = {
+    decisao: params.decisao,
+    revisor: params.revisor.trim(),
+    justificativa: params.justificativa.trim(),
+    createdAt: new Date().toISOString(),
+  }
+
+  const metadataAtual = getMetadata(analise.metadata)
+  const statusAtual = toReportStatus(metadataAtual.reportStatus)
+  if (statusAtual !== 'pre_laudo_pendente') {
+    throw new Error(`Transição inválida de status. Estado atual: ${statusAtual}`)
+  }
+
+  const metadataNovo = {
+    ...metadataAtual,
+    reportStatus,
+    revisaoHumana: revisao,
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.analiseRevisoes).values({
+      analiseResultadoId: params.analiseId,
+      decisao: params.decisao,
+      revisor: revisao.revisor,
+      justificativa: revisao.justificativa,
+      createdAt: revisao.createdAt,
+    })
+
+    await tx
+      .update(schema.analiseResultados)
+      .set({
+        metadata: metadataNovo,
+      })
+      .where(eq(schema.analiseResultados.id, params.analiseId))
+  })
+
+  return { reportStatus, revisao }
+}
+
+export async function listarRevisoesAnalise(analiseId: string): Promise<RevisaoHumana[]> {
+  const revisoes = await db
+    .select()
+    .from(schema.analiseRevisoes)
+    .where(eq(schema.analiseRevisoes.analiseResultadoId, analiseId))
+    .orderBy(desc(schema.analiseRevisoes.createdAt))
+
+  return revisoes.map((item) => ({
+    decisao: item.decisao === 'aprovado' ? 'aprovado' : 'rejeitado',
+    revisor: item.revisor,
+    justificativa: item.justificativa,
+    createdAt: item.createdAt,
+  }))
 }

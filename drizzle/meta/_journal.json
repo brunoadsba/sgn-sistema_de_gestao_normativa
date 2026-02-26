@@ -15,6 +15,13 @@
       "when": 1771623500000,
       "tag": "0001_perf_historico_indices",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772135500000,
+      "tag": "0002_legal_review_gate",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { env } from '@/lib/env'
 import { iaLogger } from '@/lib/logger'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 import { z } from 'zod'
+import { montarSystemPromptEspecialista, selecionarPerfilPorRequest } from './specialist-agent'
 
 // Limite máximo de caracteres para documentos enviados à IA
 const MAX_DOCUMENT_LENGTH = 500000
@@ -65,7 +66,9 @@ export async function analisarConformidadeOllama(
 ): Promise<AnaliseConformidadeResponse> {
     try {
         const prompt = gerarPromptAnalise(request)
-        const response = await executarOllama(prompt)
+        const profile = selecionarPerfilPorRequest(request)
+        const systemPrompt = montarSystemPromptEspecialista('analise_conformidade', profile)
+        const response = await executarOllama(prompt, systemPrompt)
         return parsearRespostaAnalise(response)
     } catch (error) {
         iaLogger.error(
@@ -76,7 +79,7 @@ export async function analisarConformidadeOllama(
     }
 }
 
-async function executarOllama(prompt: string): Promise<string> {
+async function executarOllama(prompt: string, systemPrompt: string): Promise<string> {
     const url = `${env.OLLAMA_BASE_URL}/api/chat`
 
     const payload = {
@@ -84,7 +87,7 @@ async function executarOllama(prompt: string): Promise<string> {
         messages: [
             {
                 role: 'system',
-                content: 'Você é um especialista em SST (Segurança e Saúde no Trabalho) e análise de conformidade com normas regulamentadoras brasileiras. Responda estritamente em JSON.',
+                content: systemPrompt,
             },
             {
                 role: 'user',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Brain, Sparkles, CheckSquare, Upload } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { ChatFloatingBubble } from '@/features/chat-documento/components/ChatFlo
 import { HistoricoAnalisesCard } from './HistoricoAnalisesCard'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { useQueryState } from 'nuqs'
+import { ordenarCodigosNr } from '@/lib/normas/ordem'
 
 interface SeletorNorma {
     id: string
@@ -32,6 +33,8 @@ type HistoricoAnalise = {
     nomeDocumento: string
     tipoDocumento: string
     score: number
+    confidenceScore?: number
+    reportStatus?: 'pre_laudo_pendente' | 'laudo_aprovado' | 'laudo_rejeitado'
     nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico'
     timestamp: string
     tempoProcessamento: number
@@ -79,7 +82,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
 
     useEffect(() => {
         if (normaPreSelecionada) {
-            setNormasSelecionadas([normaPreSelecionada])
+            setNormasSelecionadas(ordenarCodigosNr([normaPreSelecionada]))
         }
     }, [normaPreSelecionada, setNormasSelecionadas])
 
@@ -99,6 +102,8 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
     const [buscaDebounced, setBuscaDebounced] = useState('')
     const [chatAberto, setChatAberto] = useState(false)
     const [textoExtraidoChat, setTextoExtraidoChat] = useState<string | null>(null)
+    const cacheExtracaoRef = useRef<Map<string, string>>(new Map())
+    const extracaoEmAndamentoRef = useRef<Map<string, Promise<string>>>(new Map())
     const [paginacao, setPaginacao] = useState<PaginacaoHistorico>({
         pagina: 1,
         totalPaginas: 0,
@@ -106,29 +111,95 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
         temAnterior: false,
     })
 
-    // Extração automática para o Chat em Background
-    useEffect(() => {
-        const extrairParaChat = async () => {
-            if (arquivo && !textoExtraidoChat && !analisando) {
-                try {
-                    const formData = new FormData()
-                    formData.append('file', arquivo)
-                    const res = await fetch('/api/extrair-texto', { method: 'POST', body: formData })
-                    if (res.ok) {
-                        const data = await res.json()
-                        if (data.success) setTextoExtraidoChat(data.data.texto)
-                    } else if (res.status === 413) {
-                        console.error('Documento muito grande para o limite de 4.5MB da Vercel (Extração Silenciosa).')
-                        // Não dispara erro visível para não degradar a UX de análise,
-                        // mas impede que ChatContext seja populado erroneamente.
-                    }
-                } catch (e) {
-                    console.error('Erro na extração silenciosa para chat:', e)
+    const gerarArquivoKey = useCallback((file: File) => {
+        return `${file.name}-${file.size}-${file.lastModified}`
+    }, [])
+
+    const extrairTextoDocumento = useCallback(async (
+        file: File,
+        options?: { silencioso?: boolean }
+    ): Promise<string> => {
+        const key = gerarArquivoKey(file)
+        const cacheAtual = cacheExtracaoRef.current.get(key)
+        if (cacheAtual) return cacheAtual
+
+        const requisicaoAtual = extracaoEmAndamentoRef.current.get(key)
+        if (requisicaoAtual) return requisicaoAtual
+
+        const silencioso = options?.silencioso ?? false
+        const requisicao = (async () => {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const response = await fetchWithRetry('/api/extrair-texto', {
+                method: 'POST',
+                body: formData,
+            }, { retries: silencioso ? 1 : 3, timeoutMs: silencioso ? 30_000 : 60_000 })
+
+            if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error('O arquivo excede o limite de 4.5MB permitido pelo ambiente em nuvem (Vercel). Para documentos maiores, utilize a plataforma via Docker Local ou divida o arquivo.')
                 }
+                const err = await response.json().catch(() => ({}))
+                throw new Error(err.error || `Erro ${response.status} ao extrair texto`)
+            }
+
+            const payload = await response.json()
+            const texto = payload?.data?.texto
+            if (typeof texto !== 'string' || texto.length === 0) {
+                throw new Error('Resposta inválida ao extrair texto do documento')
+            }
+
+            cacheExtracaoRef.current.set(key, texto)
+            return texto
+        })()
+
+        extracaoEmAndamentoRef.current.set(key, requisicao)
+
+        try {
+            return await requisicao
+        } finally {
+            extracaoEmAndamentoRef.current.delete(key)
+        }
+    }, [gerarArquivoKey])
+
+    useEffect(() => {
+        if (!arquivo) {
+            setTextoExtraidoChat(null)
+            return
+        }
+
+        const key = gerarArquivoKey(arquivo)
+        const textoCache = cacheExtracaoRef.current.get(key) ?? null
+        setTextoExtraidoChat(textoCache)
+    }, [arquivo, gerarArquivoKey])
+
+    // Extração automática para o Chat em Background (deduplicada com cache/in-flight)
+    useEffect(() => {
+        if (!arquivo || analisando) return
+        let cancelado = false
+
+        const extrairParaChat = async () => {
+            try {
+                const texto = await extrairTextoDocumento(arquivo, { silencioso: true })
+                if (!cancelado) setTextoExtraidoChat(texto)
+            } catch (e) {
+                if (cancelado) return
+                const mensagem = e instanceof Error ? e.message : 'Erro desconhecido'
+                if (mensagem.includes('4.5MB')) {
+                    console.error('Documento muito grande para extração silenciosa de chat.')
+                    return
+                }
+                console.error('Erro na extração silenciosa para chat:', e)
             }
         }
-        extrairParaChat()
-    }, [arquivo, textoExtraidoChat, analisando])
+
+        void extrairParaChat()
+
+        return () => {
+            cancelado = true
+        }
+    }, [arquivo, analisando, extrairTextoDocumento])
 
     const carregarHistorico = useCallback(async (
         pagina: number,
@@ -250,25 +321,8 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
 
         try {
             setEtapa('Iniciando extração...')
-
-            const formData = new FormData()
-            formData.append('file', arquivo)
-
-            const extractRes = await fetchWithRetry('/api/extrair-texto', {
-                method: 'POST',
-                body: formData,
-            }, { retries: 3, timeoutMs: 60_000 })
-
-            if (!extractRes.ok) {
-                if (extractRes.status === 413) {
-                    throw new Error('O arquivo excede o limite de 4.5MB permitido pelo ambiente em nuvem (Vercel). Para documentos maiores, utilize a plataforma via Docker Local ou divida o arquivo.')
-                }
-                const err = await extractRes.json().catch(() => ({}))
-                throw new Error(err.error || `Erro ${extractRes.status} ao extrair texto`)
-            }
-
-            const extractData = await extractRes.json()
-            const textoDocumento = extractData.data.texto
+            const textoDocumento = await extrairTextoDocumento(arquivo, { silencioso: false })
+            setTextoExtraidoChat((anterior) => anterior ?? textoDocumento)
 
             if (normasSelecionadas.length === 0) {
                 setSugerindoNrs(true)
@@ -278,15 +332,15 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                 const sugestaoRes = await fetchWithRetry('/api/ia/sugerir-nrs', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textoExtraido: textoDocumento }),
+                    body: JSON.stringify({ textoExtraido: textoDocumento, tipoDocumento: 'OUTRO' }),
                 }, { retries: 1, timeoutMs: 30_000 })
 
                 if (sugestaoRes.ok) {
                     const sugestaoData = await sugestaoRes.json()
                     if (sugestaoData.success && sugestaoData.sugeridas) {
-                        const sugeridas = sugestaoData.sugeridas as string[]
+                        const sugeridas = ordenarCodigosNr(sugestaoData.sugeridas as string[])
                         setNormasSelecionadas(sugeridas)
-                        const normasTexto = sugeridas.map(n => n.toUpperCase()).join(', ')
+                        const normasTexto = sugeridas.join(', ')
                         setErro(`Sugestão de Aplicabilidade: ${normasTexto}. Valide as normas selecionadas e inicie a análise.`)
                     }
                 } else {
@@ -337,7 +391,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             setErro(err instanceof Error ? err.message : 'Erro desconhecido na análise')
             setAnalisando(false)
         }
-    }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
+    }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced, extrairTextoDocumento])
 
     const novaAnalise = () => {
         window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
@@ -348,6 +402,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
         setProgresso(0)
         setEtapa('')
         setSugerindoNrs(false)
+        setTextoExtraidoChat(null)
+        cacheExtracaoRef.current.clear()
+        extracaoEmAndamentoRef.current.clear()
     }
 
     const formatarDataHoraBrasilia = (isoDate: string) =>
@@ -462,7 +519,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                     <SeletorNormas
                                                         normas={normasIniciais}
                                                         selecionadas={normasSelecionadas}
-                                                        onSelecaoChange={(s) => { setNormasSelecionadas(s); setErro(null) }}
+                                                        onSelecaoChange={(s) => { setNormasSelecionadas(ordenarCodigosNr(s)); setErro(null) }}
                                                         carregando={analisando && progresso < 30}
                                                         sugeridas={normasSelecionadas.length > 0 && !analisando ? normasSelecionadas : []}
                                                     />

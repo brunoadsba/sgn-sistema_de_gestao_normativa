@@ -8,14 +8,10 @@ import {
   ArrowRight, RotateCcw,
   Printer, MessageSquare
 } from 'lucide-react'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { AnaliseConformidadeResponse, GapConformidade } from '@/types/ia'
 import { motion } from 'framer-motion'
+import { toReportData } from '@/lib/ia/report-mapper'
+import { normalizarCodigoNr } from '@/lib/normas/ordem'
 
 interface ResultadoAnaliseProps {
   resultado: AnaliseConformidadeResponse
@@ -31,11 +27,11 @@ const CONFIG_RISCO = {
   critico: { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-600 dark:text-red-400', label: 'Risco Crítico' },
 } as const
 
-const CONFIG_SEVERIDADE: Record<string, { badge: string; border: string; icon: string }> = {
-  baixa: { badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', border: 'border-l-emerald-500', icon: 'text-emerald-500' },
-  media: { badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', border: 'border-l-amber-500', icon: 'text-amber-500' },
-  alta: { badge: 'bg-orange-500/10 text-orange-600 dark:text-orange-400', border: 'border-l-orange-500', icon: 'text-orange-500' },
-  critica: { badge: 'bg-red-500/10 text-red-600 dark:text-red-400', border: 'border-l-red-500', icon: 'text-red-500' },
+const CONFIG_SEVERIDADE_BADGE: Record<GapConformidade['severidade'], { label: string; classes: string }> = {
+  baixa: { label: 'Baixa', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  media: { label: 'Média', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  alta: { label: 'Alta', classes: 'bg-red-50 text-red-700 border-red-200' },
+  critica: { label: 'Crítica', classes: 'bg-red-100 text-red-800 border-red-300' },
 }
 
 const ORDEM_SEVERIDADE: Record<string, number> = {
@@ -93,6 +89,12 @@ function formatarNivelRisco(nivel: AnaliseConformidadeResponse['nivelRisco']): s
   return mapa[nivel] ?? 'Médio'
 }
 
+function formatarStatusLaudo(status?: AnaliseConformidadeResponse['reportStatus']): string {
+  if (status === 'laudo_aprovado') return 'Laudo Aprovado'
+  if (status === 'laudo_rejeitado') return 'Laudo Rejeitado'
+  return 'Pré-laudo pendente'
+}
+
 function formatarSeveridadeRelatorio(severidade: GapConformidade['severidade']): string {
   const mapa = {
     critica: 'CRÍTICA',
@@ -102,6 +104,37 @@ function formatarSeveridadeRelatorio(severidade: GapConformidade['severidade']):
   } as const
 
   return mapa[severidade] ?? String(severidade).toUpperCase()
+}
+
+function obterNormaPrincipalGap(gap: GapConformidade): string {
+  const normaRelacionada = gap.normasRelacionadas?.find((item) => item.trim().length > 0)
+  if (normaRelacionada) return normalizarCodigoNr(normaRelacionada)
+  const normaEvidencia = gap.evidencias?.find((item) => item.normaCodigo.trim().length > 0)?.normaCodigo
+  if (normaEvidencia) return normalizarCodigoNr(normaEvidencia)
+  return '-'
+}
+
+function normalizarCategoriaGap(categoria: string | undefined): string {
+  if (!categoria || categoria.trim().length === 0) return 'Geral'
+  const limpa = categoria.trim()
+
+  if (/gest[aã]o/i.test(limpa) && /(sst|seguran|sa[uú]de)/i.test(limpa)) return 'Gestão SST'
+  if (/vi[aá]ria/i.test(limpa)) return 'Segurança Viária'
+  if (/acesso/i.test(limpa)) return 'Segurança no Acesso'
+
+  return limpa
+}
+
+function statusGap(reportStatus?: AnaliseConformidadeResponse['reportStatus']): 'Aberto' | 'Em andamento' | 'Resolvido' {
+  if (reportStatus === 'laudo_aprovado') return 'Em andamento'
+  if (reportStatus === 'laudo_rejeitado') return 'Aberto'
+  return 'Aberto'
+}
+
+function statusGapClasses(status: 'Aberto' | 'Em andamento' | 'Resolvido'): string {
+  if (status === 'Resolvido') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  if (status === 'Em andamento') return 'bg-blue-50 text-blue-700 border-blue-200'
+  return 'bg-red-50 text-red-700 border-red-200'
 }
 
 function limparResumoRelatorio(texto: string): string {
@@ -170,67 +203,13 @@ function ScoreIndicador({ score }: { score: number }) {
   )
 }
 
-function GapItem({ gap }: { gap: GapConformidade }) {
-  const config = CONFIG_SEVERIDADE[gap.severidade] || CONFIG_SEVERIDADE.media
-
-  return (
-    <motion.div
-      className={`group p-6 rounded-2xl bg-white/50 dark:bg-gray-950/30 border border-gray-100 dark:border-white/5 hover:border-indigo-500/30 transition-all duration-300 flex flex-col gap-4`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1.5 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${config.badge}`}>
-              {gap.severidade}
-            </span>
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-2 py-0.5 border border-gray-100 dark:border-gray-800 rounded-lg">
-              {gap.categoria}
-            </span>
-            {gap.classificacao && (
-              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest px-2 py-0.5 border border-indigo-200 dark:border-indigo-800 rounded-lg">
-                GUT {gap.classificacao}
-              </span>
-            )}
-            {gap.prazoDias != null && (
-              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                Prazo: {gap.prazoDias}d
-              </span>
-            )}
-          </div>
-          <h4 className="text-[15px] font-bold text-gray-900 dark:text-gray-100 leading-tight">
-            {gap.descricao}
-          </h4>
-        </div>
-      </div>
-
-      <div className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
-        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
-          <ArrowRight className="w-3 h-3" /> Recomendação
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
-          {gap.recomendacao}
-        </p>
-      </div>
-    </motion.div>
-  )
-}
-
 export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: ResultadoAnaliseProps) {
-  const gapsPorTipo = useMemo(() => {
-    return {
-      critica: resultado.gaps.filter((g) => g.severidade === 'critica'),
-      alta: resultado.gaps.filter((g) => g.severidade === 'alta'),
-      media: resultado.gaps.filter((g) => g.severidade === 'media'),
-      baixa: resultado.gaps.filter((g) => g.severidade === 'baixa'),
-    }
-  }, [resultado.gaps])
-
-  const defaultAccordionValues = useMemo(() => {
-    const values = []
-    if (gapsPorTipo.critica.length > 0) values.push('item-critica')
-    if (gapsPorTipo.alta.length > 0) values.push('item-alta')
-    return values
-  }, [gapsPorTipo])
+  const pdfEngine = process.env.NEXT_PUBLIC_PDF_ENGINE === 'react-pdf' ? 'react-pdf' : 'dom'
+  const [reportStatusLocal, setReportStatusLocal] = useState(resultado.reportStatus)
+  const [registrandoRevisao, setRegistrandoRevisao] = useState(false)
+  const [mensagemRevisao, setMensagemRevisao] = useState<string | null>(null)
+  const [gerandoPdf, setGerandoPdf] = useState(false)
+  const [mensagemPdf, setMensagemPdf] = useState<string | null>(null)
 
   const dataGeracao = useMemo(() => new Date(), [])
 
@@ -262,7 +241,56 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
     return () => document.body.classList.remove('print-preview-active')
   }, [previewImpressao])
 
+  const gerarDadosRelatorio = () => {
+    return toReportData(resultado, {
+      documentTitle: resultado.nomeArquivo ?? 'Relatório Técnico SST',
+      documentType: 'OUTRO',
+    })
+  }
+
+  const baixarPdfViaApi = async () => {
+    setGerandoPdf(true)
+    setMensagemPdf(null)
+    try {
+      const payload = gerarDadosRelatorio()
+      const response = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const erroPayload = await response.json().catch(() => null)
+        throw new Error(erroPayload?.error || 'Falha ao gerar PDF no servidor')
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `Relatorio_SGN_${payload.meta.id}.pdf`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setMensagemPdf('Falha na geração via API. Aplicando fallback de impressão local.')
+      const tituloOriginal = document.title
+      document.title = gerarTituloRelatorioParaImpressao()
+      window.print()
+      window.setTimeout(() => {
+        document.title = tituloOriginal
+      }, 1500)
+      console.error('[PDF] Falha na exportação react-pdf', err)
+    } finally {
+      setGerandoPdf(false)
+    }
+  }
+
   const handlePrint = () => {
+    if (pdfEngine === 'react-pdf') {
+      void baixarPdfViaApi()
+      return
+    }
+
     const tituloOriginal = document.title
     const novoTitulo = gerarTituloRelatorioParaImpressao()
     document.title = novoTitulo
@@ -281,6 +309,45 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
   const abrirPreviewImpressao = () => setPreviewImpressao(true)
   const fecharPreviewImpressao = () => setPreviewImpressao(false)
 
+  const registrarRevisao = async (acao: 'aprovar' | 'rejeitar') => {
+    if (!resultado.analiseId) {
+      setMensagemRevisao('Não foi possível identificar o ID da análise para revisão.')
+      return
+    }
+
+    const revisor = window.prompt('Informe o nome do revisor responsável:')
+    if (!revisor || revisor.trim().length < 2) return
+
+    const justificativa = window.prompt('Descreva a justificativa da decisão (mínimo 10 caracteres):')
+    if (!justificativa || justificativa.trim().length < 10) return
+
+    setRegistrandoRevisao(true)
+    setMensagemRevisao(null)
+    try {
+      const res = await fetch(`/api/ia/analisar-conformidade/${resultado.analiseId}/revisao/${acao}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revisor, justificativa }),
+      })
+      const payload = await res.json().catch(() => null)
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || 'Falha ao registrar revisão humana')
+      }
+
+      const novoStatus = payload.data?.reportStatus as AnaliseConformidadeResponse['reportStatus']
+      setReportStatusLocal(novoStatus)
+      setMensagemRevisao(
+        novoStatus === 'laudo_aprovado'
+          ? 'Laudo aprovado com sucesso.'
+          : 'Laudo rejeitado e marcado para ajuste.'
+      )
+    } catch (err) {
+      setMensagemRevisao(err instanceof Error ? err.message : 'Erro ao registrar revisão')
+    } finally {
+      setRegistrandoRevisao(false)
+    }
+  }
+
   return (
     <>
       {previewImpressao && (
@@ -290,8 +357,15 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
               <Button size="sm" variant="outline" onClick={fecharPreviewImpressao} className="whitespace-nowrap">
                 Fechar visualização
               </Button>
-              <Button size="sm" onClick={handlePrint} className="bg-gray-900 text-white hover:bg-gray-800 whitespace-nowrap">
-                Imprimir / Salvar PDF
+              <Button
+                size="sm"
+                onClick={handlePrint}
+                disabled={gerandoPdf}
+                className="bg-gray-900 text-white hover:bg-gray-800 whitespace-nowrap"
+              >
+                {pdfEngine === 'react-pdf'
+                  ? (gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF')
+                  : 'Imprimir / Salvar PDF'}
               </Button>
             </div>
           </div>
@@ -366,24 +440,30 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           <table className="print-table w-full border-collapse text-[9.5pt]">
             <thead>
               <tr className="bg-gray-100">
-                <th className="text-left border border-gray-300 p-2">Severidade</th>
-                <th className="text-left border border-gray-300 p-2">Categoria</th>
-                <th className="text-left border border-gray-300 p-2">Descrição</th>
-                <th className="text-left border border-gray-300 p-2">Recomendação</th>
+                <th className="border border-gray-300 p-2">Severidade</th>
+                <th className="border border-gray-300 p-2">Categoria</th>
+                <th className="border border-gray-300 p-2">Descrição</th>
+                <th className="border border-gray-300 p-2">Recomendação</th>
               </tr>
             </thead>
             <tbody>
-              {gapsOrdenadosPrint.map((gap, i) => (
-                <tr key={gap.id || i} className="align-top">
-                  <td className="border border-gray-300 p-2 font-semibold uppercase">{formatarSeveridadeRelatorio(gap.severidade)}</td>
-                  <td className="border border-gray-300 p-2">{gap.categoria || '-'}</td>
-                  <td className="border border-gray-300 p-2">{gap.descricao}</td>
-                  <td className="border border-gray-300 p-2">
-                    {gap.recomendacao}
-                    {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
-                  </td>
+              {gapsOrdenadosPrint.length === 0 ? (
+                <tr className="empty-state-row">
+                  <td colSpan={4}>Nenhum gap identificado.</td>
                 </tr>
-              ))}
+              ) : (
+                gapsOrdenadosPrint.map((gap, i) => (
+                  <tr key={gap.id || i} className="align-top">
+                    <td className="border border-gray-300 p-2 font-semibold uppercase">{formatarSeveridadeRelatorio(gap.severidade)}</td>
+                    <td className="border border-gray-300 p-2">{gap.categoria || '-'}</td>
+                    <td className="border border-gray-300 p-2">{gap.descricao}</td>
+                    <td className="border border-gray-300 p-2">
+                      {gap.recomendacao}
+                      {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </section>
@@ -394,10 +474,10 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
             <table className="print-table w-full border-collapse text-[9.5pt]">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="text-left border border-gray-300 p-2">Ação</th>
-                  <th className="text-left border border-gray-300 p-2">Responsável</th>
-                  <th className="text-left border border-gray-300 p-2">Prazo</th>
-                  <th className="text-left border border-gray-300 p-2">Evidência/KPI</th>
+                  <th className="border border-gray-300 p-2">Ação</th>
+                  <th className="border border-gray-300 p-2">Responsável</th>
+                  <th className="border border-gray-300 p-2">Prazo</th>
+                  <th className="border border-gray-300 p-2">Evidência/KPI</th>
                 </tr>
               </thead>
               <tbody>
@@ -459,6 +539,16 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                   <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Data</p>
                   <p className="text-sm font-bold text-gray-600 dark:text-gray-300">{new Date().toLocaleDateString('pt-BR')}</p>
                 </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Status legal</p>
+                  <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{formatarStatusLaudo(reportStatusLocal)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Confiabilidade</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                    {typeof resultado.confidenceScore === 'number' ? `${resultado.confidenceScore}/100` : 'N/A'}
+                  </p>
+                </div>
                 <div className="flex flex-wrap gap-2 pt-2 sm:pt-0 sm:justify-end">
                   <Button
                     variant="outline"
@@ -471,11 +561,43 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                   <Button variant="outline" size="sm" onClick={abrirPreviewImpressao} className="rounded-xl font-bold text-[10px] uppercase h-9">
                     <Printer className="w-3.5 h-3.5 mr-2" /> Visualizar impressão
                   </Button>
+                  {reportStatusLocal === 'pre_laudo_pendente' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={registrandoRevisao}
+                        onClick={() => void registrarRevisao('aprovar')}
+                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                      >
+                        Aprovar laudo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={registrandoRevisao}
+                        onClick={() => void registrarRevisao('rejeitar')}
+                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        Rejeitar laudo
+                      </Button>
+                    </>
+                  )}
                   <Button variant="ghost" size="sm" onClick={onNovaAnalise} className="rounded-xl font-bold text-[10px] uppercase h-9 text-gray-400">
                     <RotateCcw className="w-3.5 h-3.5 mr-2" /> Novo
                   </Button>
                 </div>
               </div>
+              {mensagemRevisao && (
+                <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-xs font-semibold text-indigo-700">
+                  {mensagemRevisao}
+                </div>
+              )}
+              {mensagemPdf && (
+                <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs font-semibold text-amber-700">
+                  {mensagemPdf}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -547,39 +669,76 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
         </div>
 
         <div className="space-y-6">
-          <Accordion type="multiple" defaultValue={defaultAccordionValues} className="space-y-6 border-none">
-            {resultado.gaps.length === 0 ? (
-              <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-gray-900/50 bg-gray-50/50 dark:bg-gray-950/20">
-                <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto opacity-50" />
-                <p className="text-gray-500 font-black uppercase tracking-[0.3em] text-lg">Nenhum Gap Detectado</p>
+          {resultado.gaps.length === 0 ? (
+            <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-gray-900/50 bg-gray-50/50 dark:bg-gray-950/20">
+              <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto opacity-50" />
+              <p className="no-gaps-message font-black uppercase tracking-[0.3em]">Nenhum Gap Detectado</p>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-slate-200 bg-white/80 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="gaps-table w-full min-w-[1080px] table-fixed border-collapse">
+                  <colgroup>
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '27%' }} />
+                    <col style={{ width: '30%' }} />
+                  </colgroup>
+                  <thead>
+                    <tr className="bg-[#0F4C81] text-white">
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Severidade</th>
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Categoria</th>
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Norma</th>
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Status</th>
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Descrição</th>
+                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Recomendação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gapsOrdenadosPrint.map((gap, i) => {
+                      const severidadeConfig = CONFIG_SEVERIDADE_BADGE[gap.severidade]
+                      const status = statusGap(reportStatusLocal)
+                      const categoriaNormalizada = normalizarCategoriaGap(gap.categoria)
+                      const normaPrincipal = obterNormaPrincipalGap(gap)
+
+                      return (
+                        <tr
+                          key={gap.id || i}
+                          className="align-top border-b border-slate-200 odd:bg-white even:bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
+                        >
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-black uppercase tracking-wide ${severidadeConfig.classes}`}>
+                              {severidadeConfig.label}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700">
+                              {categoriaNormalizada}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-bold ${statusGapClasses(status)}`}>
+                              {status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                            {gap.descricao}
+                          </td>
+                          <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                            {gap.recomendacao}
+                            {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              (['critica', 'alta', 'media', 'baixa'] as const)
-                .filter(sev => gapsPorTipo[sev]?.length > 0)
-                .map((sev) => (
-                  <AccordionItem key={sev} value={`item-${sev}`} className="border-none">
-                    <AccordionTrigger className={`flex w-full items-center justify-between p-8 rounded-[2rem] border-2 hover:no-underline group transition-all duration-500 ${CONFIG_SEVERIDADE[sev].badge} bg-opacity-20 border-opacity-30 hover:bg-opacity-40 hover:scale-[1.01] shadow-xl hover:shadow-2xl`}>
-                      <div className="flex items-center gap-6">
-                        <div className={`p-4 rounded-3xl ${CONFIG_SEVERIDADE[sev].badge} bg-opacity-30 shadow-inner group-hover:rotate-12 transition-transform`}>
-                          <AlertTriangle className="h-8 w-8" />
-                        </div>
-                        <div className="text-left">
-                          <span className="text-2xl font-black uppercase tracking-tighter">Severidade {sev}</span>
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 leading-none mt-1">{gapsPorTipo[sev].length} Itens Identificados</p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-8 pb-4 space-y-6 px-4">
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        {gapsPorTipo[sev].map((gap, i) => (
-                          <GapItem key={gap.id || i} gap={gap} />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))
-            )}
-          </Accordion>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -641,10 +800,13 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           onClick={handlePrint}
           size="lg"
           variant="outline"
+          disabled={gerandoPdf}
           className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
         >
           <Printer className="h-5 w-5 mr-2" />
-          Imprimir / Salvar PDF
+          {pdfEngine === 'react-pdf'
+            ? (gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF')
+            : 'Imprimir / Salvar PDF'}
         </Button>
 
         <Button

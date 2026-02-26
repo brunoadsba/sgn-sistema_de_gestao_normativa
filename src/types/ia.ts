@@ -11,12 +11,14 @@ export interface AnaliseConformidadeRequest {
     versaoBase: string
     totalChunks: number
     fonte: 'local'
+    missingNormas?: string[]
   }
   prioridade?: 'baixa' | 'media' | 'alta' | 'critica'
   metadata?: Record<string, unknown>
 }
 
 export interface AnaliseConformidadeResponse {
+  analiseId?: string
   score: number
   nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico'
   gaps: GapConformidade[]
@@ -29,6 +31,13 @@ export interface AnaliseConformidadeResponse {
   tempoProcessamento: number
   planoAcao?: AcaoPlano5W2H[]
   metadadosProcessamento?: MetadadosProcessamento
+  reportStatus?: ReportStatus
+  confidenceScore?: number
+  confidenceClass?: ConfidenceClass
+  confidenceSignals?: ConfidenceSignals
+  alertasConfiabilidade?: string[]
+  documentHash?: string
+  revisaoHumana?: RevisaoHumana | null
   jobId?: string | undefined
   nomeArquivo?: string | undefined
 }
@@ -94,6 +103,25 @@ export interface MetadadosProcessamento {
   truncamentoEvitado?: boolean
   scoreDeterministico?: unknown
   fingerprintAnalise?: unknown
+}
+
+export type ReportStatus = 'pre_laudo_pendente' | 'laudo_aprovado' | 'laudo_rejeitado'
+
+export type ConfidenceClass = 'confianca_alta' | 'confianca_media' | 'confianca_baixa'
+
+export interface ConfidenceSignals {
+  parseOk: boolean
+  nrConcordancia: number
+  evidenceCoverage: number
+  kbCoverage: number
+  providerStability: number
+}
+
+export interface RevisaoHumana {
+  decisao: 'aprovado' | 'rejeitado'
+  revisor: string
+  justificativa: string
+  createdAt: string
 }
 
 export interface ConfiguracaoIA {

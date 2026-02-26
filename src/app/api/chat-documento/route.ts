@@ -3,6 +3,8 @@ import { groq } from '@/lib/ia/groq'
 import { iaLogger } from '@/lib/logger'
 import { env } from '@/lib/env'
 import { rateLimit } from '@/lib/security/rate-limit'
+import { getZaiThinkingOptions } from '@/lib/ia/zai-options'
+import { montarSystemPromptEspecialista, selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
 
 export const maxDuration = 60
 export const runtime = 'nodejs'
@@ -15,10 +17,16 @@ type ChatMessage = {
 
 type ZaiCompletionResponse = {
   choices?: Array<{
+    finish_reason?: string
     message?: {
       content?: string
     }
   }>
+  usage?: {
+    completion_tokens_details?: {
+      reasoning_tokens?: number
+    }
+  }
 }
 
 type OllamaChatResponse = {
@@ -73,8 +81,9 @@ async function callZai(messages: ChatMessage[]): Promise<string> {
       messages,
       temperature: 0.2,
       max_tokens: 1500,
+      ...getZaiThinkingOptions(),
     }),
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(env.ZAI_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -82,6 +91,15 @@ async function callZai(messages: ChatMessage[]): Promise<string> {
   }
 
   const data = (await response.json()) as ZaiCompletionResponse
+  iaLogger.debug(
+    {
+      provider: 'zai',
+      model: env.ZAI_MODEL || 'glm-4.7',
+      finish_reason: data.choices?.[0]?.finish_reason,
+      reasoning_tokens: data.usage?.completion_tokens_details?.reasoning_tokens,
+    },
+    '[NEX-CHAT] Chamada Z.AI concluída'
+  )
   return data.choices?.[0]?.message?.content || 'Nao consegui processar a resposta neural via fallback.'
 }
 
@@ -200,7 +218,9 @@ export async function POST(req: NextRequest) {
 
     const safeContext = body.documentContext.slice(0, 80000)
 
-    const systemPrompt = `Voce e NEX, o especialista neural de SST da plataforma SGN.
+    const profile = selecionarPerfilEspecialista({ documento: safeContext })
+    const systemPromptBase = montarSystemPromptEspecialista('chat_documento', profile)
+    const systemPrompt = `${systemPromptBase}
 Voce auxilia um engenheiro/auditor somente com base no contexto abaixo.
 
 ===== CONTEXTO DO DOCUMENTO =====

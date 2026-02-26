@@ -27,17 +27,22 @@ Aplica-se a documentos SST (`PGR`, `PCMSO`, `LTCAT` e correlatos) em ambiente lo
 
 1. Acessar a pagina principal de analise.
 2. Carregar documento na etapa `Documento Fonte`.
-3. Selecionar NRs na etapa `Configuracao de Auditoria`.
+3. Selecionar NRs na etapa `Configuracao de Auditoria` (ou usar sugestao da IA e validar tecnicamente).
 4. Opcional: abrir `CONSULTAR NEX` para exploracao contextual.
 5. Executar `Analisar com IA`.
 6. Aguardar retorno do processamento.
 7. Validar resultado:
+   - status legal (`pre_laudo_pendente`)
+   - confidence score e alertas de confiabilidade
    - score
-   - gaps por severidade
+   - matriz de gaps estruturada (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`)
    - recomendacoes
    - proximos passos
-8. Registrar evidencias e abrir plano de acao.
-9. Reprocessar apos correcao para medir evolucao.
+8. Realizar revisao humana obrigatoria:
+   - aprovar laudo, ou
+   - rejeitar laudo com justificativa e devolver para ajuste.
+9. Registrar evidencias e abrir plano de acao.
+10. Reprocessar apos correcao para medir evolucao.
 
 ## 6. Criterios de Decisao
 
@@ -54,6 +59,8 @@ Aplica-se a documentos SST (`PGR`, `PCMSO`, `LTCAT` e correlatos) em ambiente lo
 4. Resultado (score e gaps).
 5. Exportacao em CSV/JSON quando aplicavel.
 6. Responsavel e prazo da acao corretiva.
+7. Decisao de revisao humana (aprovado/rejeitado), revisor e justificativa.
+8. Evidência de validação visual da matriz (legibilidade, sem hifenização automática indevida, badges corretos).
 
 ## 8. Gate GO/NO-GO
 

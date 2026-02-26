@@ -5,7 +5,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 ## Snapshot Atual
 
 - Atualizado em: `2026-02-26`
-- Versao documental: `2.2.15`
+- Versao documental: `2.2.17`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
@@ -18,13 +18,18 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Fluxo de analise: assíncrono no endpoint (`202 Accepted`) com processamento em background no runtime da API.
 - Idempotencia: persistencia em banco (`idempotency_cache`) com fallback seguro para memoria quando schema estiver defasado.
 - Observabilidade: Pino + Sentry.
+- Governança legal do laudo: emissão automática como `pre_laudo_pendente` + revisão humana obrigatória para `laudo_aprovado`/`laudo_rejeitado`.
+- Agente especialista: perfis SST (`sst-generalista`, `sst-portuario`) com seleção automática por contexto e integração em análise/sugestão/chat.
+- Relatório técnico: engine híbrida de PDF (`dom print` + `react-pdf` opcional via `NEXT_PUBLIC_PDF_ENGINE=react-pdf`), com endpoint server-side dedicado.
+- Matriz de gaps (UI): tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos e melhorias de legibilidade.
+- Ordenação normativa: sugestão e seleção de NRs em ordem crescente numérica de forma determinística.
 
  Qualidade observada em `2026-02-26`:
 
 - `npx tsc --noEmit`: passou.
 - `npm run lint`: passou.
 - `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
-- `npm run test:ci`: passou.
+- `npm run test:ci`: passou (`54/54`).
 - `npm run test:e2e`: passou (`33/33`).
 - Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (33 cenarios).
 
@@ -42,6 +47,10 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - `POST /api/extrair-texto`
 - `POST /api/ia/analisar-conformidade`
 - `POST /api/ia/sugerir-nrs`
+- `POST /api/ia/agente/especialista`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/aprovar`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/rejeitar`
+- `GET /api/ia/analisar-conformidade/[id]/revisao`
 - `POST /api/nr6/analisar`
 - `GET /api/health`
 - `GET /api/normas`
@@ -49,6 +58,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - `GET /api/normas/stats`
 - `GET /api/search`
 - `POST /api/chat-documento`
+- `POST /api/reports/generate`
 - `GET /api/export`
 
 ## Quick Start
@@ -71,6 +81,12 @@ Aplicacao: `http://localhost:3001`
 
 ```bash
 npm run docker:start
+```
+
+### Sincronizacao de schema (obrigatorio apos mudancas de banco)
+
+```bash
+npm run db:push
 ```
 
 ## Comandos Essenciais
@@ -98,6 +114,15 @@ npm run docker:start
 npm run docker:status
 npm run docker:logs
 npm run docker:stop
+```
+
+Variáveis relevantes para PDF:
+
+```bash
+# padrão atual
+NEXT_PUBLIC_PDF_ENGINE=dom
+# opcional para engine programática
+# NEXT_PUBLIC_PDF_ENGINE=react-pdf
 ```
 
 ## Documentacao

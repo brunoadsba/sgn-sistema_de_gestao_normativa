@@ -17,6 +17,7 @@ type ResultadoRecuperacao = {
     versaoBase: string
     totalChunks: number
     fonte: 'local'
+    missingNormas?: string[]
   }
 }
 
@@ -198,6 +199,7 @@ export async function recuperarEvidenciasNormativas(
       versaoBase: buildKnowledgeVersion(allChunks.length),
       totalChunks: allChunks.length,
       fonte: 'local',
+      ...(missingNormas.length > 0 ? { missingNormas } : {}),
     },
   }
 }

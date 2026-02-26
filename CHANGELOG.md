@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.2.17] - 2026-02-26
+### Adicionado
+- **Pipeline PDF híbrido**: endpoint `POST /api/reports/generate` com `@react-pdf/renderer`, contrato `ReportData` e mapper `toReportData`.
+- **Engine configurável no front**: `NEXT_PUBLIC_PDF_ENGINE` (`dom` default, `react-pdf` opcional) com fallback automático para impressão local quando a API de PDF falha.
+- **Ordenação normativa determinística**: utilitário central para normalização e ordenação crescente de NRs aplicado na sugestão (`/api/ia/sugerir-nrs`) e na seleção da UI.
+
+### Alterado
+- **Matriz de Gaps (UI web)**: refatorada para tabela técnica estruturada com colunas `Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`, incluindo:
+  - badges semânticos de severidade/status;
+  - normalização visual de categoria;
+  - zebra striping + hover de linha;
+  - bloqueio de hifenização automática de termos técnicos.
+- **PDF técnico (react-pdf)**: ajustes de layout para evitar vazamento entre colunas da matriz de gaps e reforço de campos `legalStatus`/`confidence` no summary.
+- **Documentação canônica**: atualização completa de `README`, arquitetura, runbook, POP, checklist de impressão, plano UX/UI PDF e memória operacional para refletir o estado real.
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run lint` ✅
+- `npm run test:ci` ✅ (`54/54`)
+
+## [2.2.16] - 2026-02-26
+### Adicionado
+- **Gate legal de laudo**: resultado de análise passa a nascer como `pre_laudo_pendente`, com revisão humana explícita para decisão final (`laudo_aprovado` ou `laudo_rejeitado`).
+- **Trilha auditável de revisão humana**: nova tabela `analise_revisoes` + endpoints de revisão por análise:
+  - `POST /api/ia/analisar-conformidade/[id]/revisao/aprovar`
+  - `POST /api/ia/analisar-conformidade/[id]/revisao/rejeitar`
+  - `GET /api/ia/analisar-conformidade/[id]/revisao`
+- **Agente especialista formal**: perfis `sst-generalista` e `sst-portuario` com seleção automática por contexto e integração em análise, sugestão de NRs e chat NEX.
+- **Endpoint de apoio ao agente**: `POST /api/ia/agente/especialista`.
+
+### Alterado
+- **Confiabilidade da análise**: inclusão de `confidenceScore`, `confidenceClass`, `confidenceSignals`, `alertasConfiabilidade` e `documentHash` na persistência e resposta de análises.
+- **Sugestão de NRs mais colaborativa**: saída de `/api/ia/sugerir-nrs` agora combina IA + heurística e retorna `confiancaSugestao`, `concordanciaNormativa`, `divergencias` e `alertas`.
+- **Heurística normativa reforçada para cenário portuário**: foco adicional em sinais de `NR-29` e `NR-30`.
+- **UI de resultado/histórico**: exposição de status legal e confiança no relatório e no histórico.
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run lint` ✅
+- `npm run test:ci` ✅ (`43/43`)
+
 ## [2.2.15] - 2026-02-26
 ### Alterado
 - **Idempotência persistente em banco**: `src/lib/idempotency.ts` passou a usar tabela `idempotency_cache` para armazenar `Idempotency-Key -> payload hash -> resposta`, com conflito `409` para reaproveito com payload divergente.

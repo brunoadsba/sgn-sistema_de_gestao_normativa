@@ -48,6 +48,7 @@
     "build",
     "coverage",
     "obsoleto",
-    "harbor-tasks"
+    "harbor-tasks",
+    "docs/claude"
   ]
 }

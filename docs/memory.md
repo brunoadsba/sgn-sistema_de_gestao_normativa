@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.2.15`
+- Versao atual (documental): `2.2.17`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -28,6 +28,10 @@ Plataforma para analise de conformidade SST usando IA sobre documentos tecnicos 
 - `POST /api/extrair-texto`
 - `POST /api/ia/analisar-conformidade`
 - `POST /api/ia/sugerir-nrs`
+- `POST /api/ia/agente/especialista`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/aprovar`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/rejeitar`
+- `GET /api/ia/analisar-conformidade/[id]/revisao`
 - `POST /api/nr6/analisar`
 - `POST /api/chat-documento`
 - `GET /api/health`
@@ -45,6 +49,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. `analise_jobs`
 3. `analise_resultados`
 4. `conformidade_gaps`
+5. `analise_revisoes`
 
 ## 4. Capacidades em uso
 
@@ -54,6 +59,8 @@ Tabelas principais em `src/lib/db/schema.ts`:
 4. Fluxo dedicado NR-6.
 5. Assistente NEX contextual.
 6. Exportacao em `CSV/JSON`.
+7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
+8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
 
 ## 5. Divergencias Tecnicas Relevantes
 
@@ -72,8 +79,8 @@ Tabelas principais em `src/lib/db/schema.ts`:
 
 ## 7. Prioridades Imediatas
 
-1. Executar validacao manual de impressao no Microsoft Edge e registrar evidencias.
-2. Executar limpeza de legado documental historico que ainda referencia arquitetura de worker externo.
+1. Concluir validação manual em Edge do fluxo de impressão/PDF.
+2. Expandir testes de integração para revisão humana de laudo e geração de PDF.
 3. Continuar 5S documental para evitar novo drift.
 
 ## 8. Historico de Marco (resumo)
@@ -92,6 +99,12 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 64 | 2026-02-26 | Idempotencia migrada para persistencia DB (`idempotency_cache`) com fallback em memoria para compatibilidade; contrato assíncrono da análise consolidado no runtime da rota e diretório legado de worker removido do código ativo. |
 | 65 | 2026-02-26 | Drift de schema corrigido: colunas GUT de `conformidade_gaps` reintegradas ao schema/mapeadores, tabela legada `idempotency_keys` tipada para compatibilidade e `drizzle-kit push` normalizado sem prompt de rename/data-loss nesse fluxo. |
 | 66 | 2026-02-26 | Pendencias finais reduzidas: warning de teardown do Jest eliminado via cleanup seguro de timeout em `/api/health`, limpeza de legado `harbor-tasks/**` concluida e validacao de impressao no Chrome registrada com evidencias (Edge permanece pendente por indisponibilidade no ambiente). |
+| 67 | 2026-02-26 | Resiliencia de providers IA reforcada: classificacao de erro unificada (`error_class`), fallback Groq->Z.AI ampliado para timeout/network/5xx, timeout+retry configuraveis no Z.AI e deduplicacao de extracao de texto no cliente para reduzir chamadas repetidas em `/api/extrair-texto`. |
+| 68 | 2026-02-26 | GLM/Z.AI ajustado para custo/latencia: chamadas passaram a enviar `thinking` desabilitado (`ZAI_DISABLE_THINKING=true` por default), reduzindo `reasoning_tokens` e mitigando respostas truncadas por `finish_reason=length` em fluxos de sugestao/chat/fallback. |
+| 69 | 2026-02-26 | Fluxo legal endurecido sem bloquear operação: análise agora persiste `reportStatus=pre_laudo_pendente`, calcula confiança composta (`confidenceScore/class/signals`), adiciona heurística normativa na sugestão de NRs e expõe endpoints de revisão humana com trilha auditável (`analise_revisoes`). |
+| 70 | 2026-02-26 | Agente especialista formalizado no SGN: perfis `sst-generalista` e `sst-portuario` com seleção automática por contexto, prompts unificados para análise/sugestão/chat, heurística portuária reforçada (NR-29/NR-30) e endpoint de apoio (`POST /api/ia/agente/especialista`). |
+| 71 | 2026-02-26 | PDF híbrido implementado: contrato `ReportData`, mapeador técnico (`toReportData`), endpoint `POST /api/reports/generate` e engine opcional `NEXT_PUBLIC_PDF_ENGINE=react-pdf` com fallback seguro para `window.print`. |
+| 72 | 2026-02-26 | Matriz de gaps da UI refatorada para tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos, zebra/hover e bloqueio de hifenização automática; sugestão/seleção de NRs normalizada em ordem crescente. |
 
 ## 9. Arquivo Historico Completo
 

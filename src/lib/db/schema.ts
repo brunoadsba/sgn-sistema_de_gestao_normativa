@@ -66,6 +66,7 @@ export const analiseResultadosRelations = relations(analiseResultados, ({ one, m
     references: [documentos.id],
   }),
   gaps: many(conformidadeGaps),
+  revisoes: many(analiseRevisoes),
 }));
 
 // ====== CONFORMIDADE GAPS ======
@@ -96,6 +97,25 @@ export const conformidadeGapsRelations = relations(conformidadeGaps, ({ one }) =
     references: [analiseResultados.id],
   }),
 }));
+
+// ====== REVISAO HUMANA DE LAUDO ======
+export const analiseRevisoes = sqliteTable('analise_revisoes', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  analiseResultadoId: text('analise_resultado_id')
+    .notNull()
+    .references(() => analiseResultados.id, { onDelete: 'cascade' }),
+  decisao: text('decisao').notNull(), // aprovado | rejeitado
+  revisor: text('revisor').notNull(),
+  justificativa: text('justificativa').notNull(),
+  createdAt: text('created_at').notNull().default(nowDefault),
+})
+
+export const analiseRevisoesRelations = relations(analiseRevisoes, ({ one }) => ({
+  resultado: one(analiseResultados, {
+    fields: [analiseRevisoes.analiseResultadoId],
+    references: [analiseResultados.id],
+  }),
+}))
 
 // ====== IDEMPOTENCY LEGACY (compatibilidade histórica) ======
 export const idempotencyKeysLegacy = sqliteTable('idempotency_keys', {

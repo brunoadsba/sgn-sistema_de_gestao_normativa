@@ -1,116 +1,303 @@
-import { NextRequest, NextResponse } from "next/server";
-import { groq } from "@/lib/ia/groq";
-import { env } from "@/lib/env";
-import { iaLogger as logger } from "@/lib/logger";
+import { NextRequest, NextResponse } from 'next/server'
+import { groq } from '@/lib/ia/groq'
+import { env } from '@/lib/env'
+import { iaLogger as logger } from '@/lib/logger'
+import {
+  classifyProviderError,
+  shouldFallbackToZaiFromGroq,
+  shouldRetryProviderError,
+} from '@/lib/ia/provider-errors'
+import { getZaiThinkingOptions } from '@/lib/ia/zai-options'
+import { inferirNormasHeuristicas, jaccardNormas } from '@/lib/ia/nr-heuristics'
+import { montarSystemPromptEspecialista, selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
+import { ordenarCodigosNr } from '@/lib/normas/ordem'
+
+const DEFAULT_NRS = ['nr-1']
+const DEFAULT_RESPONSE = '{"nrs":["nr-1"]}'
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Erro desconhecido'
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function calculateBackoffDelay(attempt: number): number {
+  const rawDelay = Math.min(env.ZAI_RETRY_BASE_MS * (2 ** attempt), env.ZAI_RETRY_MAX_MS)
+  const jitter = Math.floor(Math.random() * 250)
+  return rawDelay + jitter
+}
+
+function normalizarNrs(candidatas: unknown[]): string[] {
+  const unicas = new Set(
+    candidatas
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim().toLowerCase())
+      .filter((item) => /^nr-\d+$/.test(item))
+  )
+  return unicas.size > 0 ? Array.from(unicas) : DEFAULT_NRS
+}
+
+function normalizarPayloadJson(raw: string): string {
+  const semFences = raw
+    .replace(/^\s*```(?:json)?/i, '')
+    .replace(/```\s*$/i, '')
+    .trim()
+
+  const matchObjeto = semFences.match(/\{[\s\S]*\}/)
+  if (matchObjeto) return matchObjeto[0]
+
+  const matchArray = semFences.match(/\[[\s\S]*\]/)
+  if (matchArray) return matchArray[0]
+
+  return semFences
+}
+
+function extrairSugestoesNrs(respostaRaw: string): { nrs: string[]; parseOk: boolean } {
+  try {
+    const parsed = JSON.parse(normalizarPayloadJson(respostaRaw))
+    if (Array.isArray(parsed)) {
+      return { nrs: normalizarNrs(parsed), parseOk: true }
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      const asRecord = parsed as Record<string, unknown>
+      if (Array.isArray(asRecord.nrs)) {
+        return { nrs: normalizarNrs(asRecord.nrs), parseOk: true }
+      }
+
+      const primeiraChaveArray = Object.values(asRecord).find((value) => Array.isArray(value))
+      if (Array.isArray(primeiraChaveArray)) {
+        return { nrs: normalizarNrs(primeiraChaveArray), parseOk: true }
+      }
+    }
+  } catch (parseError) {
+    logger.error(
+      { error_class: classifyProviderError(parseError), error: toErrorMessage(parseError) },
+      '[SUGERIR-NRS] Falha ao fazer parse das NRs sugeridas'
+    )
+  }
+
+  return { nrs: DEFAULT_NRS, parseOk: false }
+}
+
+function consolidarNormasSugestao(normasIa: string[], normasHeuristica: string[]): string[] {
+  return ordenarCodigosNr([...normasIa, ...normasHeuristica]).slice(0, 10)
+}
+
+function calcularConfiancaSugestao(parseOk: boolean, normasIa: string[], normasHeuristica: string[]) {
+  const concordancia = jaccardNormas(normasIa, normasHeuristica)
+  const parseScore = parseOk ? 40 : 10
+  const concordanciaScore = concordancia >= 0.7 ? 40 : concordancia >= 0.4 ? 25 : 10
+  const sourceScore = parseOk ? 20 : 10
+  const confiancaSugestao = parseScore + concordanciaScore + sourceScore
+
+  const setIa = new Set(normasIa)
+  const setHeuristica = new Set(normasHeuristica)
+  const divergencias = Array.from(
+    new Set(
+      [...normasIa.filter((item) => !setHeuristica.has(item)), ...normasHeuristica.filter((item) => !setIa.has(item))]
+    )
+  )
+
+  const alertas: string[] = []
+  if (!parseOk) {
+    alertas.push('Resposta da IA veio em formato inesperado e exigiu fallback para parsing seguro.')
+  }
+  if (concordancia < 0.4) {
+    alertas.push('Baixa concordância entre inferência por IA e heurística normativa.')
+  }
+
+  return {
+    confiancaSugestao,
+    concordancia,
+    divergencias,
+    alertas,
+  }
+}
+
+async function chamarGroqSugestao(systemPrompt: string, texto: string): Promise<string> {
+  const model = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : 'llama-3.3-70b-versatile'
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: texto },
+    ],
+    model,
+    temperature: 0.1,
+    max_completion_tokens: 150,
+    response_format: { type: 'json_object' },
+  })
+
+  return chatCompletion.choices[0]?.message?.content || DEFAULT_RESPONSE
+}
+
+async function chamarZaiSugestao(systemPrompt: string, texto: string): Promise<string> {
+  const apiKey = env.ZAI_API_KEY || process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    throw new Error('ZAI_API_KEY ou OPENAI_API_KEY não encontrada para fallback Z.AI')
+  }
+
+  for (let attempt = 0; attempt < env.ZAI_RETRY_ATTEMPTS; attempt++) {
+    const attemptStart = Date.now()
+    const model = env.ZAI_MODEL || 'glm-4.7'
+
+    try {
+      const zaiRes = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: texto },
+          ],
+          temperature: 0.1,
+          max_tokens: 150,
+          ...getZaiThinkingOptions(),
+        }),
+        signal: AbortSignal.timeout(env.ZAI_TIMEOUT_MS),
+      })
+
+      if (!zaiRes.ok) {
+        const errorText = await zaiRes.text()
+        throw new Error(`Erro na API Z.AI (${zaiRes.status}): ${errorText.slice(0, 400)}`)
+      }
+
+      const zaiData = await zaiRes.json()
+      logger.debug(
+        {
+          provider: 'zai',
+          model,
+          attempt: attempt + 1,
+          finish_reason: zaiData?.choices?.[0]?.finish_reason,
+          reasoning_tokens: zaiData?.usage?.completion_tokens_details?.reasoning_tokens,
+        },
+        '[SUGERIR-NRS] Chamada Z.AI concluída'
+      )
+      return zaiData.choices?.[0]?.message?.content || DEFAULT_RESPONSE
+    } catch (error) {
+      const errorClass = classifyProviderError(error)
+      const canRetry = shouldRetryProviderError(errorClass) && attempt < env.ZAI_RETRY_ATTEMPTS - 1
+
+      logger.warn(
+        {
+          provider: 'zai',
+          model,
+          attempt: attempt + 1,
+          maxAttempts: env.ZAI_RETRY_ATTEMPTS,
+          duration_ms: Date.now() - attemptStart,
+          error_class: errorClass,
+          canRetry,
+          error: toErrorMessage(error),
+        },
+        '[SUGERIR-NRS] Falha na chamada Z.AI'
+      )
+
+      if (!canRetry) throw error
+      await sleep(calculateBackoffDelay(attempt))
+    }
+  }
+
+  return DEFAULT_RESPONSE
+}
 
 export async function POST(request: NextRequest) {
-    try {
-        const { textoExtraido } = await request.json();
+  try {
+    const { textoExtraido, tipoDocumento } = await request.json()
 
-        if (!textoExtraido || typeof textoExtraido !== "string") {
-            return NextResponse.json(
-                { success: false, error: "Parâmetro 'textoExtraido' inválido ou ausente." },
-                { status: 400 }
-            );
-        }
+    if (!textoExtraido || typeof textoExtraido !== 'string') {
+      return NextResponse.json(
+        { success: false, error: "Parâmetro 'textoExtraido' inválido ou ausente." },
+        { status: 400 }
+      )
+    }
 
-        const systemPrompt = `Atue como um Engenheiro Sênior de Saúde e Segurança do Trabalho (SST) especialista em legislação brasileira.
+    const trechoInicial = textoExtraido.substring(0, 5000)
+    const trechoSanitizado = trechoInicial.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+    const profile = selecionarPerfilEspecialista({
+      tipoDocumento: typeof tipoDocumento === 'string' ? tipoDocumento : 'OUTRO',
+      documento: trechoSanitizado,
+    })
+    const systemPrompt = `${montarSystemPromptEspecialista('sugerir_nrs', profile)}
 Sua tarefa é ler o trecho inicial de um documento e inferir quais Normas Regulamentadoras (NRs) se aplicam a ele.
 Priorize sempre compliance normativo e proteção.
 Responda APENAS com um objeto JSON contendo o array na chave "nrs".
 Exemplo: {"nrs": ["nr-1", "nr-6", "nr-35"]}
-APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`;
+APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`
 
-        // Pega apenas o comecinho do documento para ser muito rápido e barato
-        const trechoInicial = textoExtraido.substring(0, 5000);
-        const trechoSanitizado = trechoInicial.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
+    let resposta = DEFAULT_RESPONSE
 
-        let resposta = '{"nrs": ["nr-1"]}';
+    if (env.AI_PROVIDER === 'zai') {
+      logger.info(
+        { provider: 'zai', specialist_profile: profile.id },
+        '[SUGERIR-NRS] Usando Z.AI como provider primário'
+      )
+      resposta = await chamarZaiSugestao(systemPrompt, trechoSanitizado)
+    } else {
+      try {
+        resposta = await chamarGroqSugestao(systemPrompt, trechoSanitizado)
+      } catch (error) {
+        const errorClass = classifyProviderError(error)
+        const shouldFallback = shouldFallbackToZaiFromGroq(error)
+        const hasZaiKey = Boolean(env.ZAI_API_KEY || process.env.OPENAI_API_KEY)
 
-        // Estratégia de Fallback para Sugestão
-        try {
-            if (env.AI_PROVIDER === "zai") {
-                throw new Error("force_zai"); // Atalho se provedor for zai
-            }
+        logger.warn(
+          {
+            provider: 'groq',
+            fallbackProvider: 'zai',
+            error_class: errorClass,
+            shouldFallback,
+            hasZaiKey,
+            error: toErrorMessage(error),
+          },
+          '[SUGERIR-NRS] Falha no provider primário'
+        )
 
-            const model = env.AI_PROVIDER === "ollama" ? env.OLLAMA_MODEL : "llama-3.3-70b-versatile";
-
-            const chatCompletion = await groq.chat.completions.create({
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: trechoSanitizado },
-                ],
-                model,
-                temperature: 0.1,
-                max_completion_tokens: 150,
-                response_format: { type: "json_object" }
-            });
-            resposta = chatCompletion.choices[0]?.message?.content || resposta;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "";
-            const isRateLimit = errorMessage.includes("413") ||
-                errorMessage.includes("rate_limit") ||
-                errorMessage.includes("tokens") ||
-                errorMessage.includes("TPM") ||
-                errorMessage === "force_zai";
-
-            if (isRateLimit && env.ZAI_API_KEY) {
-                logger.warn({ errorMessage }, "[SUGERIR-NRS] Groq limitado. Tentando Fallback Z.AI...");
-                const zaiRes = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${env.ZAI_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: env.ZAI_MODEL,
-                        messages: [
-                            { role: 'system', content: systemPrompt },
-                            { role: 'user', content: trechoSanitizado }
-                        ],
-                        temperature: 0.1,
-                        max_tokens: 150,
-                    })
-                });
-
-                if (zaiRes.ok) {
-                    const zaiData = await zaiRes.json();
-                    resposta = zaiData.choices[0]?.message?.content || resposta;
-                }
-            } else {
-                throw error;
-            }
+        if (shouldFallback && hasZaiKey) {
+          logger.info(
+            { provider: 'groq', fallbackProvider: 'zai', error_class: errorClass },
+            '[SUGERIR-NRS] Executando fallback Groq -> Z.AI'
+          )
+          resposta = await chamarZaiSugestao(systemPrompt, trechoSanitizado)
+        } else {
+          throw error
         }
-
-        try {
-            // Groq em json_object exige retornar um objeto. Então vamos ler o array de dentro.
-            // Adaptando o prompt acima que pediu um array: se o Groq forçar objeto, ele pode vir {"nrs": [...]}.
-            // Vamos tentar parsear a string.
-            const parsed = JSON.parse(resposta);
-
-            // Se vier como array direto (fallback se json_object não forçou object)
-            if (Array.isArray(parsed)) {
-                return NextResponse.json({ success: true, sugeridas: parsed });
-            }
-
-            // Se a IA embalou num objeto
-            const chaves = Object.keys(parsed);
-            if (chaves.length > 0 && Array.isArray(parsed[chaves[0]])) {
-                return NextResponse.json({ success: true, sugeridas: parsed[chaves[0]] });
-            }
-
-            return NextResponse.json({ success: true, sugeridas: ["nr-1"] });
-
-        } catch (parseError) {
-            logger.error({ parseError, resposta }, "Falha ao fazer parse das NRs sugeridas");
-            return NextResponse.json({ success: true, sugeridas: ["nr-1"] }); // fallback seguro
-        }
-
-    } catch (error) {
-        logger.error({ error }, "Erro interno em /api/ia/sugerir-nrs");
-        return NextResponse.json(
-            { success: false, error: "Falha interna ao sugerir NRs" },
-            { status: 500 }
-        );
+      }
     }
+
+    const { nrs: normasIa, parseOk } = extrairSugestoesNrs(resposta)
+    const normasHeuristica = inferirNormasHeuristicas(
+      textoExtraido,
+      typeof tipoDocumento === 'string' ? tipoDocumento : 'OUTRO'
+    )
+    const sugeridas = consolidarNormasSugestao(normasIa, normasHeuristica)
+    const confianca = calcularConfiancaSugestao(parseOk, normasIa, normasHeuristica)
+
+    return NextResponse.json({
+      success: true,
+      sugeridas,
+      confiancaSugestao: confianca.confiancaSugestao,
+      concordanciaNormativa: confianca.concordancia,
+      fontesSugestao: ['ia', 'heuristica'],
+      divergencias: confianca.divergencias,
+      alertas: confianca.alertas,
+      detalhes: {
+        normasIa,
+        normasHeuristica,
+        parseOk,
+        specialistProfile: profile.id,
+      },
+    })
+  } catch (error) {
+    logger.error({ error: toErrorMessage(error) }, 'Erro interno em /api/ia/sugerir-nrs')
+    return NextResponse.json(
+      { success: false, error: 'Falha interna ao sugerir NRs' },
+      { status: 500 }
+    )
+  }
 }

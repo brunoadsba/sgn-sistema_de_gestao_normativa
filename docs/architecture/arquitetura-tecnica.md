@@ -28,14 +28,22 @@ O modelo operacional previsto e local-only/single-user.
 - `src/features/analise/components/AnaliseCliente.tsx`: upload, configuracao e fluxo de analise.
 - `src/features/normas/components/ListaNormasDinamica.tsx`: catalogo de normas com busca.
 - `src/features/chat-documento/components/ChatInterface.tsx`: NEX contextual.
+- `src/features/analise/components/ResultadoAnalise.tsx`: dashboard final + matriz de gaps tabular (UI).
+- `src/components/report/ReportDocument.tsx`: template técnico PDF programático.
+- `src/components/report/ReportPreview.tsx`: preview/toolbar de exportação PDF.
 
 ### Backend API
 
 - `POST /api/extrair-texto`
 - `POST /api/ia/analisar-conformidade`
 - `POST /api/ia/sugerir-nrs`
+- `POST /api/ia/agente/especialista`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/aprovar`
+- `POST /api/ia/analisar-conformidade/[id]/revisao/rejeitar`
+- `GET /api/ia/analisar-conformidade/[id]/revisao`
 - `POST /api/nr6/analisar`
 - `POST /api/chat-documento`
+- `POST /api/reports/generate`
 - `GET /api/health`
 - `GET /api/normas`
 - `GET /api/normas/[id]`
@@ -51,14 +59,20 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 2. `analise_jobs`
 3. `analise_resultados`
 4. `conformidade_gaps`
+5. `analise_revisoes`
 
 ## 4. Fluxo de Analise (estado atual)
 
-1. Cliente envia documento + NRs.
+1. Cliente envia documento + NRs (ou usa sugestão automática).
 2. API valida payload com Zod.
 3. `POST /api/ia/analisar-conformidade` cria `job` e retorna `202 Accepted`.
 4. Processamento roda em background no proprio runtime da rota (promise/waitUntil fallback).
-5. Resultado e gaps sao persistidos no banco.
+5. Agente especialista SST é selecionado por contexto (`sst-generalista` ou `sst-portuario`) e aplicado aos prompts.
+6. Resultado é persistido com confiança composta (`confidenceScore`) e status legal inicial `pre_laudo_pendente`.
+7. Revisão humana aprova/rejeita laudo e gera trilha de auditoria em `analise_revisoes`.
+8. Exportação PDF pode seguir:
+   - `dom print` (browser), ou
+   - `react-pdf` server-side (`POST /api/reports/generate`) quando `NEXT_PUBLIC_PDF_ENGINE=react-pdf`.
 
 ## 5. Limites Operacionais Relevantes
 
@@ -89,13 +103,13 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou com `next build --webpack` apos migracao de fonte para self-host.
-4. `npm run test:ci`: passou.
+4. `npm run test:ci`: passou (`54/54`).
 5. `npm run test:e2e`: passou (`33/33`).
 
 ## 9. Debito Tecnico Priorizado
 
-1. Executar validacao manual de impressao no Microsoft Edge e registrar evidencias operacionais.
-2. Expandir cobertura de testes para rotas críticas ainda sem suíte dedicada.
+1. Concluir validação manual da impressão em Edge para fechamento do checklist operacional.
+2. Expandir suíte dedicada para endpoints de revisão humana (`aprovar/rejeitar/histórico`) e exportação PDF.
 3. Manter revisão periódica de segurança para limites/rate-limit em cenários de carga real.
 
 ## 10. Documentos Relacionados

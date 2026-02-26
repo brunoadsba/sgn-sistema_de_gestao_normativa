@@ -20,17 +20,21 @@ import {
   saveIdempotentResponse,
   IdempotencyConflictError,
 } from '@/lib/idempotency'
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { recuperarEvidenciasNormativas } from '@/lib/normas/kb'
 import { dividirDocumentoEmChunks } from '@/lib/ia/chunking'
 import { consolidarResultadosIncrementais } from '@/lib/ia/consolidacao-incremental'
 import { rateLimit } from '@/lib/security/rate-limit'
+import { classifyProviderError, shouldFallbackToZaiFromGroq } from '@/lib/ia/provider-errors'
+import { inferirNormasHeuristicas, jaccardNormas } from '@/lib/ia/nr-heuristics'
+import { calcularConfiancaAnalise } from '@/lib/ia/confidence'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // Aumentado para lidar com chunks pesados
 
 const MAX_CHUNKS_INCREMENTAL = 8
 const INCREMENTAL_CONCURRENCY = 3
+const providerLogger = createLogger('ia.provider')
 type RequestWithWaitUntil = NextRequest & {
   waitUntil?: (promise: Promise<unknown>) => void
 }
@@ -40,31 +44,76 @@ type AnaliseJobResponse = {
   pollUrl: string
 }
 
+type ProviderExecMeta = {
+  providerUsed: 'groq' | 'zai' | 'ollama'
+  fallbackTriggered: boolean
+  fallbackFrom?: 'groq'
+}
+
 // Selecionar provider de IA com Fallback Híbrido
 async function analisarConformidadeProvider(request: AnaliseConformidadeRequest) {
   if (env.AI_PROVIDER === 'ollama') {
-    return analisarConformidadeOllama(request)
+    const resultado = await analisarConformidadeOllama(request)
+    return {
+      resultado,
+      providerMeta: { providerUsed: 'ollama', fallbackTriggered: false } satisfies ProviderExecMeta,
+    }
   }
 
   if (env.AI_PROVIDER === 'zai') {
-    return analisarConformidadeZai(request)
+    const resultado = await analisarConformidadeZai(request)
+    return {
+      resultado,
+      providerMeta: { providerUsed: 'zai', fallbackTriggered: false } satisfies ProviderExecMeta,
+    }
   }
 
   try {
     // Tenta Groq primeiro (Default Cloud)
-    return await analisarConformidade(request)
+    const resultado = await analisarConformidade(request)
+    return {
+      resultado,
+      providerMeta: { providerUsed: 'groq', fallbackTriggered: false } satisfies ProviderExecMeta,
+    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : ''
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorClass = classifyProviderError(error)
+    const shouldFallback = shouldFallbackToZaiFromGroq(error)
+    const hasZaiKey = Boolean(env.ZAI_API_KEY || process.env.OPENAI_API_KEY)
 
-    // Fallback automático para Z.AI (GLM) em erros de rate limit ou tokens excedidos
-    const isRateLimit = errorMessage.includes('413') ||
-      errorMessage.includes('rate_limit') ||
-      errorMessage.includes('tokens') ||
-      errorMessage.includes('TPM')
+    providerLogger.warn(
+      {
+        provider: 'groq',
+        fallbackProvider: 'zai',
+        error_class: errorClass,
+        error: errorMessage,
+        shouldFallback,
+        hasZaiKey,
+      },
+      'Falha no provider primário (Groq)'
+    )
 
-    if (isRateLimit) {
-      console.warn(`[IA-FALLBACK] Groq atingiu limite (${errorMessage}). Migrando para Z.AI GLM...`)
-      return analisarConformidadeZai(request)
+    if (shouldFallback && hasZaiKey) {
+      providerLogger.info(
+        { provider: 'groq', fallbackProvider: 'zai', error_class: errorClass },
+        'Executando fallback Groq -> Z.AI'
+      )
+      const resultado = await analisarConformidadeZai(request)
+      return {
+        resultado,
+        providerMeta: {
+          providerUsed: 'zai',
+          fallbackTriggered: true,
+          fallbackFrom: 'groq',
+        } satisfies ProviderExecMeta,
+      }
+    }
+
+    if (shouldFallback && !hasZaiKey) {
+      providerLogger.error(
+        { provider: 'groq', error_class: errorClass },
+        'Fallback para Z.AI solicitado, mas nenhuma chave (ZAI_API_KEY/OPENAI_API_KEY) está configurada'
+      )
     }
 
     throw error
@@ -95,6 +144,7 @@ async function executarProcessamentoSgn(
       totalChunks: 0,
       fonte: 'local',
     }
+    let providerMetaFinal: ProviderExecMeta = { providerUsed: 'groq', fallbackTriggered: false }
 
     // Step 1: Extração/Preparo
     await atualizarProgressoJob(jobId, 'extracting', 10)
@@ -113,7 +163,7 @@ async function executarProcessamentoSgn(
           const evidenciasChunk = await recuperarEvidenciasNormativas(body.normasAplicaveis ?? [], chunk.conteudo)
           const chunkIdsLocais = evidenciasChunk.evidencias.map((e) => e.chunkId)
 
-          const resultadoChunk = await analisarConformidadeProvider({
+          const providerChunk = await analisarConformidadeProvider({
             ...body,
             documento: chunk.conteudo,
             estrategiaProcessamento: 'completo',
@@ -126,6 +176,7 @@ async function executarProcessamentoSgn(
             },
           })
 
+          const resultadoChunk = providerChunk.resultado
           validarEvidenciasDaResposta(resultadoChunk, chunkIdsLocais)
 
           return {
@@ -135,6 +186,8 @@ async function executarProcessamentoSgn(
             versaoBase: evidenciasChunk.contexto.versaoBase,
             evidencias: evidenciasChunk.evidencias,
             chunkIdsLocais,
+            providerMeta: providerChunk.providerMeta,
+            missingNormas: evidenciasChunk.contexto.missingNormas ?? [],
           }
         }
       )
@@ -144,6 +197,9 @@ async function executarProcessamentoSgn(
       const versoesBase = new Set(resultadosPorChunk.map((item) => item.versaoBase))
       const chunkIdsValidos = resultadosPorChunk.flatMap((item) => item.chunkIdsLocais)
       evidenciasPersistencia = resultadosPorChunk.flatMap((item) => item.evidencias)
+      providerMetaFinal = resultadosPorChunk.some((item) => item.providerMeta.fallbackTriggered)
+        ? { providerUsed: 'zai', fallbackTriggered: true, fallbackFrom: 'groq' }
+        : resultadosPorChunk[0]?.providerMeta ?? providerMetaFinal
 
       respostaCompleta = consolidarResultadosIncrementais(
         resultadosPorChunk.map(({ chunk, resultado, tempoMs }) => ({ chunk, resultado, tempoMs })),
@@ -155,6 +211,7 @@ async function executarProcessamentoSgn(
         versaoBase: Array.from(versoesBase).join('|'),
         totalChunks: evidenciasPersistencia.length,
         fonte: 'local',
+        missingNormas: Array.from(new Set(resultadosPorChunk.flatMap((item) => item.missingNormas))),
       }
     } else {
       // Estratégia Completa
@@ -167,13 +224,15 @@ async function executarProcessamentoSgn(
       evidenciasPersistencia = evidenciasNormativas.evidencias
       contextoPersistencia = evidenciasNormativas.contexto
 
-      const resultado = await analisarConformidadeProvider({
+      const providerResult = await analisarConformidadeProvider({
         ...body,
         estrategiaProcessamento: 'completo',
         evidenciasNormativas: evidenciasNormativas.evidencias,
         contextoBaseConhecimento: evidenciasNormativas.contexto,
       })
 
+      const resultado = providerResult.resultado
+      providerMetaFinal = providerResult.providerMeta
       validarEvidenciasDaResposta(resultado, evidenciasNormativas.evidencias.map((e) => e.chunkId))
 
       respostaCompleta = {
@@ -188,6 +247,30 @@ async function executarProcessamentoSgn(
       ...body,
       evidenciasNormativas: evidenciasPersistencia,
       contextoBaseConhecimento: contextoPersistencia,
+    }
+
+    const heuristicas = inferirNormasHeuristicas(body.documento, body.tipoDocumento)
+    const normasAplicadas = (body.normasAplicaveis ?? ['NR-1']).map((item) => item.toLowerCase())
+    const gapsComEvidencia = respostaCompleta.gaps.filter((gap) => (gap.evidencias?.length ?? 0) > 0).length
+    const confianca = calcularConfiancaAnalise({
+      parseOk: true,
+      nrConcordancia: jaccardNormas(normasAplicadas, heuristicas),
+      totalGaps: respostaCompleta.gaps.length,
+      gapsComEvidencia,
+      totalNormas: normasAplicadas.length,
+      kbMissingNormas: contextoPersistencia.missingNormas ?? [],
+      fallbackTriggered: providerMetaFinal.fallbackTriggered,
+    })
+
+    const documentHash = createHash('sha256').update(body.documento).digest('hex')
+    respostaCompleta = {
+      ...respostaCompleta,
+      reportStatus: 'pre_laudo_pendente',
+      confidenceScore: confianca.confidenceScore,
+      confidenceClass: confianca.confidenceClass,
+      confidenceSignals: confianca.confidenceSignals,
+      alertasConfiabilidade: confianca.alertasConfiabilidade,
+      documentHash,
     }
 
     // Finalizar e Persistir
@@ -347,7 +430,10 @@ export async function GET(request: NextRequest) {
 
     const data = await listarAnalisesConformidade(
       Math.max(parseInt(searchParams.get('pagina') || '1'), 1),
-      Math.min(Math.max(parseInt(searchParams.get('limite') || '10'), 1), 100)
+      Math.min(Math.max(parseInt(searchParams.get('limite') || '10'), 1), 100),
+      (searchParams.get('periodo') as 'today' | '7d' | '30d' | null) ?? '30d',
+      (searchParams.get('ordenacao') as 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc' | null) ?? 'data_desc',
+      searchParams.get('busca') ?? ''
     )
     return createSuccessResponse(data)
   } catch {

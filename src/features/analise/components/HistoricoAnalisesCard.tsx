@@ -13,6 +13,8 @@ type HistoricoAnalise = {
   nomeDocumento: string
   tipoDocumento: string
   score: number
+  confidenceScore?: number
+  reportStatus?: 'pre_laudo_pendente' | 'laudo_aprovado' | 'laudo_rejeitado'
   nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico'
   timestamp: string
   tempoProcessamento: number
@@ -169,7 +171,14 @@ export function HistoricoAnalisesCard({
                     <span>{formatarDataHoraBrasilia(item.timestamp)}</span>
                   </div>
                   <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500 break-all sm:break-normal">
-                    {item.modeloUsado} · {item.tempoProcessamento}ms
+                    {item.modeloUsado} · {item.tempoProcessamento}ms · confiança {item.confidenceScore ?? 0}/100
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                    {item.reportStatus === 'laudo_aprovado'
+                      ? 'Laudo aprovado'
+                      : item.reportStatus === 'laudo_rejeitado'
+                        ? 'Laudo rejeitado'
+                        : 'Pré-laudo pendente'}
                   </div>
                 </div>
               ))}

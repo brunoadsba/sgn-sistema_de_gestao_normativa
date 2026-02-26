@@ -5,9 +5,12 @@ Este diretorio concentra a documentacao oficial do projeto.
 ## Snapshot
 
 - Atualizado em: `2026-02-26`
+- Versao documental: `2.2.17`
 - Modelo operacional: `local-only`, single-user
 - Pipeline oficial: `ci` em `.github/workflows/ci.yml`
 - Politica atual: sem deploy remoto oficial
+- Gate legal ativo: relatorio em `pre_laudo_pendente` com revisão humana obrigatória.
+- PDF técnico em modo híbrido (`dom` + `react-pdf` via `NEXT_PUBLIC_PDF_ENGINE`).
 
 ## Estrutura Oficial
 

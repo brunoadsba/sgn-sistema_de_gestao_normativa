@@ -1,6 +1,6 @@
 # Plano de Melhoria UX/UI do Relatorio PDF (Impressao Padrao Industria)
 
-> Atualizado em: 2026-02-25  
+> Atualizado em: 2026-02-26  
 > Contexto: operacao local-only e single-user
 > Status: historico de implementacao (consultar `docs/operations/checklist-validacao-impressao-relatorio-pdf.md` para operacao atual)
 
@@ -17,13 +17,13 @@ Elevar a qualidade visual e a confiabilidade de impressao do relatorio tecnico (
 4. Header global sticky e elementos de UI interativa podem vazar para impressao sem controle fino.
 5. Nao existem testes automatizados focados no layout de impressao/PDF.
 
-## 3. Diretriz arquitetural (decisao para este projeto)
+## 3. Diretriz arquitetural (decisao atual)
 
-Manter abordagem **browser print-first** (sem servico remoto de renderizacao PDF), pois:
+Adotar abordagem **híbrida** para relatório:
 
-1. O projeto e local-only/single-user.
-2. Evita complexidade operacional desnecessaria (Puppeteer/headless service).
-3. Mantem baixo custo de manutencao e alta previsibilidade local.
+1. `dom print-first` como baseline local.
+2. `react-pdf` server-side opcional para layout técnico programático (`POST /api/reports/generate`).
+3. Seleção por `NEXT_PUBLIC_PDF_ENGINE` com fallback automático para `window.print`.
 
 ## 4. Escopo de implementacao
 
@@ -170,3 +170,7 @@ Arquivos alvo:
    - `npm run test:e2e` ✅
 6. Pendente para fechamento integral da Sprint 3:
    - executar checklist manual no Microsoft Edge e registrar evidencias na tabela de execucao.
+7. Incrementos pós-sprint aplicados:
+   - engine híbrida de PDF implementada (`dom` + `react-pdf`) com endpoint `/api/reports/generate`;
+   - contrato de relatório tipado (`ReportData`) + mapper backend (`toReportData`);
+   - matriz de gaps da UI refatorada para tabela técnica com `Norma` e `Status`, badges semânticos, zebra/hover e bloqueio de hifenização automática.

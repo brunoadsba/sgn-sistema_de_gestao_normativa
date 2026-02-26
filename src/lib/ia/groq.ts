@@ -3,6 +3,12 @@ import { env } from '@/lib/env'
 import { z } from 'zod'
 import { iaLogger } from '@/lib/logger'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
+import { classifyProviderError, shouldRetryProviderError } from './provider-errors'
+import {
+  montarSystemPromptEspecialista,
+  selecionarPerfilPorRequest,
+  type SpecialistProfileId,
+} from './specialist-agent'
 
 // Configuração do cliente GROQ
 export const groq = new Groq({
@@ -100,20 +106,8 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function isRetryableError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false
-  const message = error.message.toLowerCase()
-  return (
-    message.includes('timeout') ||
-    message.includes('timed out') ||
-    message.includes('429') ||
-    message.includes('rate limit') ||
-    message.includes('500') ||
-    message.includes('502') ||
-    message.includes('503') ||
-    message.includes('504') ||
-    message.includes('network')
-  )
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Erro desconhecido'
 }
 
 function calculateBackoffDelay(attempt: number): number {
@@ -137,26 +131,22 @@ async function runWithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promis
   }
 }
 
-async function executarComRetry(prompt: string): Promise<string> {
+async function executarComRetry(
+  prompt: string,
+  systemPrompt: string,
+  specialistProfile: SpecialistProfileId
+): Promise<string> {
   let lastError: unknown
 
   for (let attempt = 0; attempt < GROQ_RETRY_ATTEMPTS; attempt++) {
+    const attemptStart = Date.now()
     try {
       const completion = await runWithTimeout(
         groq.chat.completions.create({
           messages: [
             {
               role: 'system',
-              content:
-                'Você é um Engenheiro Sênior de Saúde e Segurança do Trabalho (SST) com vasta experiência e rigor técnico absoluto. \n' +
-                'Sua missão é gerar um RELATÓRIO TÉCNICO DE CONFORMIDADE padronizado e objetivo.\n' +
-                'DIRETRIZES DE CONSISTÊNCIA:\n' +
-                '1. RACIOCÍNIO DETERMINÍSTICO: Use critérios objetivos para avaliação. A mesma evidência DEVE gerar o mesmo veredito em todas as rodadas.\n' +
-                '2. CÁLCULO DE SCORE: O score deve ser matemático. Comece em 100 e subtraia: Gap Crítico (-40), Alto (-20), Médio (-10), Baixo (-5). Gaps repetidos não somam penalidade.\n' +
-                '3. COMPLIANCE ESTRITO: Baseie-se apenas nas NRs e evidências fornecidas. Não use "impressões" subjetivas.\n' +
-                '4. TERMINOLOGIA CONSTRUTIVA: Refira-se a pontos positivos como "Pontos Fortes" e a riscos mitigáveis como "Oportunidades de Melhoria".\n' +
-                '5. HIERARQUIA DE CONTROLE: Aplique rigorosamente EPC > EPI.\n' +
-                'Responda estritamente via JSON.',
+              content: systemPrompt,
             },
             {
               role: 'user',
@@ -178,15 +168,20 @@ async function executarComRetry(prompt: string): Promise<string> {
       return response
     } catch (error) {
       lastError = error
-      const retryable = isRetryableError(error)
-      const canRetry = retryable && attempt < GROQ_RETRY_ATTEMPTS - 1
+      const errorClass = classifyProviderError(error)
+      const canRetry = shouldRetryProviderError(errorClass) && attempt < GROQ_RETRY_ATTEMPTS - 1
 
       iaLogger.warn(
         {
+          provider: 'groq',
+          specialist_profile: specialistProfile,
+          model: 'llama-3.3-70b-versatile',
           attempt: attempt + 1,
           maxAttempts: GROQ_RETRY_ATTEMPTS,
-          retryable,
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          duration_ms: Date.now() - attemptStart,
+          error_class: errorClass,
+          canRetry,
+          error: toErrorMessage(error),
         },
         'Falha ao chamar GROQ'
       )
@@ -199,8 +194,7 @@ async function executarComRetry(prompt: string): Promise<string> {
   }
 
   throw new Error(
-    `Falha na chamada GROQ após ${GROQ_RETRY_ATTEMPTS} tentativas: ${lastError instanceof Error ? lastError.message : 'Erro desconhecido'
-    }`
+    `Falha na chamada GROQ após ${GROQ_RETRY_ATTEMPTS} tentativas: ${toErrorMessage(lastError)}`
   )
 }
 
@@ -210,7 +204,9 @@ export async function analisarConformidade(
 ): Promise<AnaliseConformidadeResponse> {
   try {
     const prompt = gerarPromptAnalise(request)
-    const response = await executarComRetry(prompt)
+    const profile = selecionarPerfilPorRequest(request)
+    const systemPrompt = montarSystemPromptEspecialista('analise_conformidade', profile)
+    const response = await executarComRetry(prompt, systemPrompt, profile.id)
     return parsearRespostaAnalise(response)
   } catch (error) {
     iaLogger.error(
@@ -301,12 +297,9 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem markdown, fences ou texto ad
 // Parsear resposta do GROQ
 function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
   try {
-    // Limpar resposta e extrair JSON
-    // Limpar resposta e extrair JSON
-    console.log(`[DEBUG] Resposta Bruta da IA: ${response.substring(0, 500)}...`)
+    iaLogger.debug({ provider: 'groq', preview: response.substring(0, 500) }, 'Preview de resposta IA')
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      console.log(`[DEBUG] Falha no match de JSON. Resposta completa: ${response}`)
       throw new Error('JSON não encontrado na resposta')
     }
 
@@ -316,10 +309,13 @@ function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
     return validado as AnaliseConformidadeResponse
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error(`[DEBUG] Erro de Validação Zod:`, JSON.stringify(error.issues, null, 2))
+      iaLogger.debug(
+        { provider: 'groq', error_class: 'schema_validation', issues: error.issues },
+        'Falha de validação de schema na resposta IA'
+      )
     }
     iaLogger.error(
-      { error: error instanceof Error ? error.message : 'Erro desconhecido' },
+      { provider: 'groq', error_class: classifyProviderError(error), error: toErrorMessage(error) },
       'Erro ao parsear resposta da IA'
     )
     throw new Error('Falha ao processar resposta da IA')

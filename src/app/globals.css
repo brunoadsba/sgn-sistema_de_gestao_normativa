@@ -262,6 +262,20 @@ body.print-preview-active .screen-print-preview-page .border-gray-300 {
   border-color: #d1d5db !important;
 }
 
+.gaps-table thead th,
+.print-table thead th {
+  text-align: center;
+}
+
+.gaps-table .empty-state-row td,
+.print-table .empty-state-row td,
+.empty-state-row td,
+.no-gaps-message {
+  padding: 16px 12px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 @media print {
   @page {
     size: A4;
