@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.19] - 2026-02-27
+### Segurança e Correções
+- **Chat NEX Forense**: endurecimento da resposta do chat para evitar alucinações e proteger a integridade da análise documental:
+  - Aplicado determinismo absoluto nos parâmetros: `temperature: 0` (Groq/Z.AI/Ollama), `top_p: 1` e `seed: 42`.
+  - Prompt atualizado para agir estritamente como "AUDITOR FORENSE", proibindo invenções ou deduções e limitando o robô à informação explícitamente escrita no contexto do documento avaliado.
+
 ## [2.2.18] - 2026-02-27
 ### Corrigido
 - **Determinismo de providers IA**: parâmetros de amostragem corrigidos em todos os providers para garantir respostas idênticas ao analisar o mesmo documento:

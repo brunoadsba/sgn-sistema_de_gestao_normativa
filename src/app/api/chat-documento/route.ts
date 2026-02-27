@@ -59,7 +59,9 @@ async function callGroq(messages: ChatMessage[]): Promise<string> {
   const response = await groq.chat.completions.create({
     messages,
     model: 'llama-3.3-70b-versatile',
-    temperature: 0.2,
+    temperature: 0,
+    top_p: 1,
+    seed: 42,
     max_tokens: 1500,
   })
 
@@ -79,7 +81,8 @@ async function callZai(messages: ChatMessage[]): Promise<string> {
     body: JSON.stringify({
       model: env.ZAI_MODEL || 'glm-4.7',
       messages,
-      temperature: 0.2,
+      temperature: 0,
+      top_p: 1,
       max_tokens: 1500,
       ...getZaiThinkingOptions(),
     }),
@@ -113,7 +116,9 @@ async function callOllama(messages: ChatMessage[]): Promise<string> {
       messages,
       stream: false,
       options: {
-        temperature: 0.2,
+        temperature: 0,
+        top_p: 1,
+        seed: 42,
         num_predict: 1500,
         num_ctx: 32768,
       },
@@ -227,11 +232,11 @@ Voce auxilia um engenheiro/auditor somente com base no contexto abaixo.
 ${safeContext}
 =================================
 
-REGRAS:
-1. Responda estritamente com base no documento.
-2. Se faltar dado no contexto, diga explicitamente que nao ha dados precisos no escopo atual.
-3. Nao invente informacoes.
-4. Responda em Portugues Brasileiro objetivo.`
+REGRAS ABSOLUTAS (AJA COMO AUDITOR FORENSE):
+1. Sua ÚNICA fonte de verdade é o contexto do documento acima.
+2. NUNCA invente, presuma ou deduza informações que não estejam EXPLICITAMENTE escritas.
+3. Se a informação solicitada não estiver no documento, declare: "Não há dados sobre isso no documento avaliado."
+4. Responda em Português Brasileiro, de forma direta, técnica e estritamente baseada no Lastro Documental.`
 
     const contextualizedMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },

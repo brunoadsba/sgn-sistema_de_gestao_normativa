@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.2.18`
+- Versao atual (documental): `2.2.19`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -105,6 +105,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 71 | 2026-02-26 | PDF híbrido implementado: contrato `ReportData`, mapeador técnico (`toReportData`), endpoint `POST /api/reports/generate` e engine opcional `NEXT_PUBLIC_PDF_ENGINE=react-pdf` com fallback seguro para `window.print`. |
 | 72 | 2026-02-26 | Matriz de gaps da UI refatorada para tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos, zebra/hover e bloqueio de hifenização automática; sugestão/seleção de NRs normalizada em ordem crescente. |
 | 73 | 2026-02-27 | Estabilização de scores: determinismo absoluto em 3 providers (Groq/Z.AI/Ollama), recálculo de score pós-filtro de gaps, prompts reforçados com aderência estrita à KB normativa, fórmula determinística de score, sugestão de NRs determinística, fix do círculo SVG 100% e centralização do header do PDF. |
+| 74 | 2026-02-27 | Endurecimento pericial do Chat NEX: parâmetros de sampling determinísticos (`temperature: 0`, `top_p: 1`, `seed: 42`) aplicados na rota de chat interativo. System prompt reenquadrado para perfil de "auditor forense", vetando respostas por inferência externa ou ausência de lastro. |
 
 ## 9. Arquivo Historico Completo
 
