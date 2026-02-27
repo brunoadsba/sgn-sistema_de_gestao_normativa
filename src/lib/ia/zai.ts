@@ -65,9 +65,9 @@ export async function analisarConformidadeZai(
                             content: prompt
                         }
                     ],
-                    temperature: 0.1,
+                    temperature: 0,
                     max_tokens: 4096,
-                    top_p: 0.8,
+                    top_p: 1,
                     ...getZaiThinkingOptions(),
                 }),
                 signal: AbortSignal.timeout(ZAI_TIMEOUT_MS)

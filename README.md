@@ -4,8 +4,8 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 
 ## Snapshot Atual
 
-- Atualizado em: `2026-02-26`
-- Versao documental: `2.2.17`
+- Atualizado em: `2026-02-27`
+- Versao documental: `2.2.18`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
@@ -23,14 +23,14 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Relatório técnico: engine híbrida de PDF (`dom print` + `react-pdf` opcional via `NEXT_PUBLIC_PDF_ENGINE=react-pdf`), com endpoint server-side dedicado.
 - Matriz de gaps (UI): tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos e melhorias de legibilidade.
 - Ordenação normativa: sugestão e seleção de NRs em ordem crescente numérica de forma determinística.
+- Determinismo de IA: providers configurados com `temperature=0`, `top_p=1` e `seed=42` para scores reprodutíveis.
 
- Qualidade observada em `2026-02-26`:
+ Qualidade observada em `2026-02-27`:
 
 - `npx tsc --noEmit`: passou.
 - `npm run lint`: passou.
 - `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
 - `npm run test:ci`: passou (`54/54`).
-- `npm run test:e2e`: passou (`33/33`).
 - Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (33 cenarios).
 
 ## Capacidades Principais

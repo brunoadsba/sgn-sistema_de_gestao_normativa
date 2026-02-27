@@ -168,8 +168,10 @@ function ScoreIndicador({ score }: { score: number }) {
           : 'bg-red-500/5 border-red-500/20'
 
   const porcentagem = Math.min(100, Math.max(0, score))
-  const circunferencia = 2 * Math.PI * 40
-  const offset = circunferencia - (porcentagem / 100) * circunferencia
+  const raio = 42
+  const circunferencia = 2 * Math.PI * raio
+  const isFull = porcentagem >= 100
+  const offset = isFull ? 0 : circunferencia - (porcentagem / 100) * circunferencia
   const corTraco = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : score >= 40 ? '#f97316' : '#ef4444'
 
   return (
@@ -179,16 +181,16 @@ function ScoreIndicador({ score }: { score: number }) {
     >
       <div className="relative w-28 h-28">
         <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="4" className="text-gray-100 dark:text-gray-800" />
+          <circle cx="50" cy="50" r={raio} fill="none" stroke="currentColor" strokeWidth="4" className="text-gray-100 dark:text-gray-800" />
           <motion.circle
-            initial={{ strokeDashoffset: circunferencia }}
+            initial={{ strokeDashoffset: isFull ? 0 : circunferencia }}
             animate={{ strokeDashoffset: offset }}
             transition={{ duration: 2, ease: "easeOut" }}
-            cx="50" cy="50" r="42"
+            cx="50" cy="50" r={raio}
             fill="none"
             stroke={corTraco}
             strokeWidth="6"
-            strokeLinecap="round"
+            strokeLinecap={isFull ? "butt" : "round"}
             strokeDasharray={circunferencia}
           />
         </svg>
@@ -512,313 +514,313 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           className="space-y-12 pb-20 no-print"
         >
 
-      {/* DASHBOARD SST */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        <div className="lg:col-span-3">
-          <ScoreIndicador score={resultado.score} />
-        </div>
+          {/* DASHBOARD SST */}
+          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div className="lg:col-span-3">
+              <ScoreIndicador score={resultado.score} />
+            </div>
 
-        <div className="lg:col-span-9">
-          <Card className="h-full border border-gray-100 dark:border-white/5 bg-white/@50 dark:bg-gray-950/30 backdrop-blur-2xl rounded-[2rem] shadow-sm overflow-hidden relative">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-400">Resumo da Auditoria</CardTitle>
-                <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border font-black text-[10px] uppercase shadow-sm ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].bg} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].border} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].text}`}>
-                  <Shield className="w-3.5 h-3.5" />
-                  {CONFIG_RISCO[resultado.nivelRisco || 'medio'].label}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Documento</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{resultado.nomeArquivo || 'Relatório de SST'}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Data</p>
-                  <p className="text-sm font-bold text-gray-600 dark:text-gray-300">{new Date().toLocaleDateString('pt-BR')}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Status legal</p>
-                  <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{formatarStatusLaudo(reportStatusLocal)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Confiabilidade</p>
-                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                    {typeof resultado.confidenceScore === 'number' ? `${resultado.confidenceScore}/100` : 'N/A'}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2 sm:pt-0 sm:justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onChatOpen}
-                    className="rounded-xl font-bold text-[10px] uppercase h-9 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 mr-2" /> Chat
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={abrirPreviewImpressao} className="rounded-xl font-bold text-[10px] uppercase h-9">
-                    <Printer className="w-3.5 h-3.5 mr-2" /> Visualizar impressão
-                  </Button>
-                  {reportStatusLocal === 'pre_laudo_pendente' && (
-                    <>
+            <div className="lg:col-span-9">
+              <Card className="h-full border border-gray-100 dark:border-white/5 bg-white/@50 dark:bg-gray-950/30 backdrop-blur-2xl rounded-[2rem] shadow-sm overflow-hidden relative">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-400">Resumo da Auditoria</CardTitle>
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border font-black text-[10px] uppercase shadow-sm ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].bg} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].border} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].text}`}>
+                      <Shield className="w-3.5 h-3.5" />
+                      {CONFIG_RISCO[resultado.nivelRisco || 'medio'].label}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Documento</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{resultado.nomeArquivo || 'Relatório de SST'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Data</p>
+                      <p className="text-sm font-bold text-gray-600 dark:text-gray-300">{new Date().toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Status legal</p>
+                      <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{formatarStatusLaudo(reportStatusLocal)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Confiabilidade</p>
+                      <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                        {typeof resultado.confidenceScore === 'number' ? `${resultado.confidenceScore}/100` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2 sm:pt-0 sm:justify-end">
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={registrandoRevisao}
-                        onClick={() => void registrarRevisao('aprovar')}
-                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        onClick={onChatOpen}
+                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
                       >
-                        Aprovar laudo
+                        <MessageSquare className="w-3.5 h-3.5 mr-2" /> Chat
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={registrandoRevisao}
-                        onClick={() => void registrarRevisao('rejeitar')}
-                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-red-200 text-red-700 hover:bg-red-50"
-                      >
-                        Rejeitar laudo
+                      <Button variant="outline" size="sm" onClick={abrirPreviewImpressao} className="rounded-xl font-bold text-[10px] uppercase h-9">
+                        <Printer className="w-3.5 h-3.5 mr-2" /> Visualizar impressão
                       </Button>
-                    </>
+                      {reportStatusLocal === 'pre_laudo_pendente' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={registrandoRevisao}
+                            onClick={() => void registrarRevisao('aprovar')}
+                            className="rounded-xl font-bold text-[10px] uppercase h-9 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            Aprovar laudo
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={registrandoRevisao}
+                            onClick={() => void registrarRevisao('rejeitar')}
+                            className="rounded-xl font-bold text-[10px] uppercase h-9 border-red-200 text-red-700 hover:bg-red-50"
+                          >
+                            Rejeitar laudo
+                          </Button>
+                        </>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={onNovaAnalise} className="rounded-xl font-bold text-[10px] uppercase h-9 text-gray-400">
+                        <RotateCcw className="w-3.5 h-3.5 mr-2" /> Novo
+                      </Button>
+                    </div>
+                  </div>
+                  {mensagemRevisao && (
+                    <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-xs font-semibold text-indigo-700">
+                      {mensagemRevisao}
+                    </div>
                   )}
-                  <Button variant="ghost" size="sm" onClick={onNovaAnalise} className="rounded-xl font-bold text-[10px] uppercase h-9 text-gray-400">
-                    <RotateCcw className="w-3.5 h-3.5 mr-2" /> Novo
-                  </Button>
+                  {mensagemPdf && (
+                    <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs font-semibold text-amber-700">
+                      {mensagemPdf}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+
+          {/* SUMÁRIO EXECUTIVO */}
+          <motion.div variants={itemVariants}>
+            <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-[2rem] p-8 border border-gray-100 dark:border-white/5">
+              <h3 className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Veredito da IA</h3>
+              <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-relaxed font-bold tracking-tight italic">
+                &ldquo;{resumoExibicao}&rdquo;
+              </p>
+            </div>
+          </motion.div>
+
+          {/* PONTOS POSITIVOS E ATENÇÃO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div variants={itemVariants}>
+              <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <CheckCircle className="w-6 h-6 text-emerald-500" />
+                  <span className="text-base font-black uppercase tracking-tight">Pontos Fortes</span>
+                </div>
+                <ul className="space-y-3">
+                  {resultado.pontosPositivos?.map((ponto, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                      {ponto}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                  <span className="text-base font-black uppercase tracking-tight">Oportunidades de Melhoria</span>
+                </div>
+                <ul className="space-y-3">
+                  {resultado.pontosAtencao?.map((ponto, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                      {ponto}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ANÁLISE DE GAPS */}
+          <motion.div variants={itemVariants} className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="p-4 bg-red-500/10 rounded-3xl rotate-3 shadow-xl shadow-red-500/10">
+                  <Shield className="w-10 h-10 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tighter leading-none">Matriz de Gaps</h2>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mt-2">Mapeamento de Riscos e Exposição</p>
                 </div>
               </div>
-              {mensagemRevisao && (
-                <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-xs font-semibold text-indigo-700">
-                  {mensagemRevisao}
+              <div className="hidden sm:block text-right">
+                <span className="text-5xl font-black text-gray-100 dark:text-gray-800 tabular-nums leading-none">{resultado.gaps.length}</span>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest -mt-1">Inconformidades</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {resultado.gaps.length === 0 ? (
+                <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-gray-900/50 bg-gray-50/50 dark:bg-gray-950/20">
+                  <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto opacity-50" />
+                  <p className="no-gaps-message font-black uppercase tracking-[0.3em]">Nenhum Gap Detectado</p>
                 </div>
-              )}
-              {mensagemPdf && (
-                <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs font-semibold text-amber-700">
-                  {mensagemPdf}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </motion.div>
-
-      {/* SUMÁRIO EXECUTIVO */}
-      <motion.div variants={itemVariants}>
-        <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-[2rem] p-8 border border-gray-100 dark:border-white/5">
-          <h3 className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Veredito da IA</h3>
-          <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-relaxed font-bold tracking-tight italic">
-            &ldquo;{resumoExibicao}&rdquo;
-          </p>
-        </div>
-      </motion.div>
-
-      {/* PONTOS POSITIVOS E ATENÇÃO */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div variants={itemVariants}>
-          <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
-            <div className="flex items-center gap-3 mb-6">
-              <CheckCircle className="w-6 h-6 text-emerald-500" />
-              <span className="text-base font-black uppercase tracking-tight">Pontos Fortes</span>
-            </div>
-            <ul className="space-y-3">
-              {resultado.pontosPositivos?.map((ponto, i) => (
-                <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                  {ponto}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
-            <div className="flex items-center gap-3 mb-6">
-              <AlertTriangle className="w-6 h-6 text-amber-500" />
-              <span className="text-base font-black uppercase tracking-tight">Oportunidades de Melhoria</span>
-            </div>
-            <ul className="space-y-3">
-              {resultado.pontosAtencao?.map((ponto, i) => (
-                <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                  {ponto}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ANÁLISE DE GAPS */}
-      <motion.div variants={itemVariants} className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-red-500/10 rounded-3xl rotate-3 shadow-xl shadow-red-500/10">
-              <Shield className="w-10 h-10 text-red-500" />
-            </div>
-            <div>
-              <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tighter leading-none">Matriz de Gaps</h2>
-              <p className="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mt-2">Mapeamento de Riscos e Exposição</p>
-            </div>
-          </div>
-          <div className="hidden sm:block text-right">
-            <span className="text-5xl font-black text-gray-100 dark:text-gray-800 tabular-nums leading-none">{resultado.gaps.length}</span>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest -mt-1">Inconformidades</p>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          {resultado.gaps.length === 0 ? (
-            <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-gray-900/50 bg-gray-50/50 dark:bg-gray-950/20">
-              <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto opacity-50" />
-              <p className="no-gaps-message font-black uppercase tracking-[0.3em]">Nenhum Gap Detectado</p>
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-slate-200 bg-white/80 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="gaps-table w-full min-w-[1080px] table-fixed border-collapse">
-                  <colgroup>
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '13%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '10%' }} />
-                    <col style={{ width: '27%' }} />
-                    <col style={{ width: '30%' }} />
-                  </colgroup>
-                  <thead>
-                    <tr className="bg-[#0F4C81] text-white">
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Severidade</th>
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Categoria</th>
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Norma</th>
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Status</th>
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Descrição</th>
-                      <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Recomendação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gapsOrdenadosPrint.map((gap, i) => {
-                      const severidadeConfig = CONFIG_SEVERIDADE_BADGE[gap.severidade]
-                      const status = statusGap(reportStatusLocal)
-                      const categoriaNormalizada = normalizarCategoriaGap(gap.categoria)
-                      const normaPrincipal = obterNormaPrincipalGap(gap)
-
-                      return (
-                        <tr
-                          key={gap.id || i}
-                          className="align-top border-b border-slate-200 odd:bg-white even:bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
-                        >
-                          <td className="px-3 py-3">
-                            <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-black uppercase tracking-wide ${severidadeConfig.classes}`}>
-                              {severidadeConfig.label}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700">
-                              {categoriaNormalizada}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
-                          <td className="px-3 py-3">
-                            <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-bold ${statusGapClasses(status)}`}>
-                              {status}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
-                            {gap.descricao}
-                          </td>
-                          <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
-                            {gap.recomendacao}
-                            {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
-                          </td>
+              ) : (
+                <div className="rounded-3xl border border-slate-200 bg-white/80 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="gaps-table w-full min-w-[1080px] table-fixed border-collapse">
+                      <colgroup>
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '13%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '27%' }} />
+                        <col style={{ width: '30%' }} />
+                      </colgroup>
+                      <thead>
+                        <tr className="bg-[#0F4C81] text-white">
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Severidade</th>
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Categoria</th>
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Norma</th>
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Status</th>
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Descrição</th>
+                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Recomendação</th>
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody>
+                        {gapsOrdenadosPrint.map((gap, i) => {
+                          const severidadeConfig = CONFIG_SEVERIDADE_BADGE[gap.severidade]
+                          const status = statusGap(reportStatusLocal)
+                          const categoriaNormalizada = normalizarCategoriaGap(gap.categoria)
+                          const normaPrincipal = obterNormaPrincipalGap(gap)
+
+                          return (
+                            <tr
+                              key={gap.id || i}
+                              className="align-top border-b border-slate-200 odd:bg-white even:bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
+                            >
+                              <td className="px-3 py-3">
+                                <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-black uppercase tracking-wide ${severidadeConfig.classes}`}>
+                                  {severidadeConfig.label}
+                                </span>
+                              </td>
+                              <td className="px-3 py-3">
+                                <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700">
+                                  {categoriaNormalizada}
+                                </span>
+                              </td>
+                              <td className="px-3 py-3 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
+                              <td className="px-3 py-3">
+                                <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-bold ${statusGapClasses(status)}`}>
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                                {gap.descricao}
+                              </td>
+                              <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                                {gap.recomendacao}
+                                {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* PRÓXIMOS PASSOS / PLANO 5W2H */}
-      <motion.div variants={itemVariants} className="space-y-6">
-        <div className="flex items-center gap-3">
-          <ArrowRight className="w-6 h-6 text-indigo-500" />
-          <span className="text-lg font-black uppercase tracking-tighter">Plano de Ação Remediadora</span>
-        </div>
-        {resultado.planoAcao && resultado.planoAcao.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resultado.planoAcao.map((acao) => (
-              <div key={acao.id} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
-                <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">{acao.id}</div>
-                <p className="text-sm text-gray-900 dark:text-gray-100 font-bold leading-relaxed mb-2">{acao.what}</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                  <span className="font-semibold">Responsável:</span> {acao.who}
-                </p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                  <span className="font-semibold">Prazo:</span> {acao.prazoDias} dias
-                </p>
-                {acao.evidenciaConclusao && (
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                    <span className="font-semibold">Evidência:</span> {acao.evidenciaConclusao}
-                  </p>
-                )}
-                {acao.kpi && (
-                  <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
-                    KPI: {acao.kpi}
-                  </p>
-                )}
+          {/* PRÓXIMOS PASSOS / PLANO 5W2H */}
+          <motion.div variants={itemVariants} className="space-y-6">
+            <div className="flex items-center gap-3">
+              <ArrowRight className="w-6 h-6 text-indigo-500" />
+              <span className="text-lg font-black uppercase tracking-tighter">Plano de Ação Remediadora</span>
+            </div>
+            {resultado.planoAcao && resultado.planoAcao.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {resultado.planoAcao.map((acao) => (
+                  <div key={acao.id} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
+                    <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">{acao.id}</div>
+                    <p className="text-sm text-gray-900 dark:text-gray-100 font-bold leading-relaxed mb-2">{acao.what}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                      <span className="font-semibold">Responsável:</span> {acao.who}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                      <span className="font-semibold">Prazo:</span> {acao.prazoDias} dias
+                    </p>
+                    {acao.evidenciaConclusao && (
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                        <span className="font-semibold">Evidência:</span> {acao.evidenciaConclusao}
+                      </p>
+                    )}
+                    {acao.kpi && (
+                      <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+                        KPI: {acao.kpi}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resultado.proximosPassos?.map((passo, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
-                <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">Etapa {i + 1}</div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-bold leading-relaxed">{passo}</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {resultado.proximosPassos?.map((passo, i) => (
+                  <div key={i} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
+                    <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">Etapa {i + 1}</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-bold leading-relaxed">{passo}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+          </motion.div>
+
+          {/* Ações Mobile/Desktop (no-print) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 pb-8 no-print">
+            <Button
+              onClick={abrirPreviewImpressao}
+              size="lg"
+              className="h-14 px-10 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] transition-all font-black text-base shadow-lg flex items-center gap-3 active:scale-95"
+            >
+              <Printer className="h-5 w-5" />
+              Visualizar para Impressão
+            </Button>
+
+            <Button
+              onClick={handlePrint}
+              size="lg"
+              variant="outline"
+              disabled={gerandoPdf}
+              className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
+            >
+              <Printer className="h-5 w-5 mr-2" />
+              {pdfEngine === 'react-pdf'
+                ? (gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF')
+                : 'Imprimir / Salvar PDF'}
+            </Button>
+
+            <Button
+              onClick={onNovaAnalise}
+              size="lg"
+              variant="outline"
+              className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
+            >
+              <RotateCcw className="h-5 w-5 mr-2" />
+              Novo Diagnóstico
+            </Button>
           </div>
-        )}
-      </motion.div>
-
-      {/* Ações Mobile/Desktop (no-print) */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 pb-8 no-print">
-        <Button
-          onClick={abrirPreviewImpressao}
-          size="lg"
-          className="h-14 px-10 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] transition-all font-black text-base shadow-lg flex items-center gap-3 active:scale-95"
-        >
-          <Printer className="h-5 w-5" />
-          Visualizar para Impressão
-        </Button>
-
-        <Button
-          onClick={handlePrint}
-          size="lg"
-          variant="outline"
-          disabled={gerandoPdf}
-          className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
-        >
-          <Printer className="h-5 w-5 mr-2" />
-          {pdfEngine === 'react-pdf'
-            ? (gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF')
-            : 'Imprimir / Salvar PDF'}
-        </Button>
-
-        <Button
-          onClick={onNovaAnalise}
-          size="lg"
-          variant="outline"
-          className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
-        >
-          <RotateCcw className="h-5 w-5 mr-2" />
-          Novo Diagnóstico
-        </Button>
-      </div>
         </motion.div>
       )}
     </>

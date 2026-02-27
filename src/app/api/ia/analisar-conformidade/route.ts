@@ -407,13 +407,29 @@ async function mapComConcorrencia<T, R>(
   return results
 }
 
-function validarEvidenciasDaResposta(resultado: AnaliseConformidadeResponse, chunkIdsValidos: string[]) {
+function validarEvidenciasDaResposta(resultado: AnaliseConformidadeResponse, chunkIdsValidos: string[]): {
+  gapsRemovidos: number
+  gapsOriginais: number
+} {
   const validSet = new Set(chunkIdsValidos.map(id => id.toLowerCase()))
+  const gapsOriginais = resultado.gaps.length
   resultado.gaps = resultado.gaps.filter((gap) => {
     if (!gap.evidencias || gap.evidencias.length === 0) return false
     gap.evidencias = gap.evidencias.filter((evidencia) => validSet.has(evidencia.chunkId.toLowerCase()))
     return gap.evidencias.length > 0
   })
+  const gapsRemovidos = gapsOriginais - resultado.gaps.length
+
+  // Recalcular score com base nos gaps remanescentes
+  // Se todos os gaps foram removidos (sem lastro), score = 100
+  // Se alguns gaps permanecem: escala proporcional
+  if (gapsOriginais > 0 && gapsRemovidos > 0) {
+    const proporcaoRemanescente = resultado.gaps.length / gapsOriginais
+    // Score ajustado: interpola entre 100 (zero gaps) e score original (todos gaps)
+    resultado.score = Math.round(resultado.score + (100 - resultado.score) * (1 - proporcaoRemanescente))
+  }
+
+  return { gapsRemovidos, gapsOriginais }
 }
 
 // GET para listagem/histórico

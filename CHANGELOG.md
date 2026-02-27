@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.2.18] - 2026-02-27
+### Corrigido
+- **Determinismo de providers IA**: parâmetros de amostragem corrigidos em todos os providers para garantir respostas idênticas ao analisar o mesmo documento:
+  - **Groq**: `top_p` corrigido de `0.9` para `1`, adicionado `seed: 42` (causa primária da oscilação de scores).
+  - **Z.AI**: `temperature` corrigido de `0.1` para `0`, `top_p` corrigido de `0.8` para `1`.
+  - **Ollama**: `temperature` corrigido de `0.1` para `0`, adicionados `top_p: 1` e `seed: 42`.
+- **Recálculo de score pós-filtro**: `validarEvidenciasDaResposta` agora recalcula o score proporcionalmente quando gaps com evidências inválidas são removidos, eliminando inconsistência entre score e gaps visíveis.
+- **Sugestão de NRs determinística**: `/api/ia/sugerir-nrs` corrigido para `temperature: 0`, `top_p: 1` e `seed: 42` em Groq e Z.AI, garantindo mesmas NRs sugeridas para o mesmo documento.
+- **Círculo de score 100%**: corrigido mismatch de raio no SVG (circunferência calculada com `r=40` mas elemento usava `r=42`), e aplicado `strokeLinecap: butt` para fechar o traço sem gap visual.
+- **Cabeçalho do PDF centralizado**: títulos "Severidade", "Categoria", "Descrição" e "Recomendação" na Matriz de Gaps do PDF agora centralizados via `textAlign: center`.
+
+### Alterado
+- **Prompts reforçados para aderência estrita à KB**: instruções nos prompts do Groq e Ollama agora proíbem explicitamente a criação de gaps sem lastro na base de conhecimento normativa local, com fórmula determinística de score (100 base, dedução fixa por severidade: crítica=-20, alta=-15, média=-10, baixa=-5).
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run test:ci` ✅ (`54/54`)
+
 ## [2.2.17] - 2026-02-26
 ### Adicionado
 - **Pipeline PDF híbrido**: endpoint `POST /api/reports/generate` com `@react-pdf/renderer`, contrato `ReportData` e mapper `toReportData`.

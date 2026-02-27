@@ -1,10 +1,10 @@
 # SGN - Memoria Operacional
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-27
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.2.17`
+- Versao atual (documental): `2.2.18`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -74,12 +74,11 @@ Tabelas principais em `src/lib/db/schema.ts`:
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou (`next build --webpack`) apos migracao para fonte local/self-host.
-4. `npm run test:ci`: passou.
-5. `npm run test:e2e`: passou (`33/33`).
+4. `npm run test:ci`: passou (`54/54`).
 
 ## 7. Prioridades Imediatas
 
-1. Concluir validação manual em Edge do fluxo de impressão/PDF.
+1. Testar determinismo: enviar o mesmo documento 3x e confirmar scores identicos.
 2. Expandir testes de integração para revisão humana de laudo e geração de PDF.
 3. Continuar 5S documental para evitar novo drift.
 
@@ -105,6 +104,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 70 | 2026-02-26 | Agente especialista formalizado no SGN: perfis `sst-generalista` e `sst-portuario` com seleção automática por contexto, prompts unificados para análise/sugestão/chat, heurística portuária reforçada (NR-29/NR-30) e endpoint de apoio (`POST /api/ia/agente/especialista`). |
 | 71 | 2026-02-26 | PDF híbrido implementado: contrato `ReportData`, mapeador técnico (`toReportData`), endpoint `POST /api/reports/generate` e engine opcional `NEXT_PUBLIC_PDF_ENGINE=react-pdf` com fallback seguro para `window.print`. |
 | 72 | 2026-02-26 | Matriz de gaps da UI refatorada para tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos, zebra/hover e bloqueio de hifenização automática; sugestão/seleção de NRs normalizada em ordem crescente. |
+| 73 | 2026-02-27 | Estabilização de scores: determinismo absoluto em 3 providers (Groq/Z.AI/Ollama), recálculo de score pós-filtro de gaps, prompts reforçados com aderência estrita à KB normativa, fórmula determinística de score, sugestão de NRs determinística, fix do círculo SVG 100% e centralização do header do PDF. |
 
 ## 9. Arquivo Historico Completo
 

@@ -146,6 +146,7 @@ const s = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     fontSize: 7,
     lineHeight: 1.35,
+    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',

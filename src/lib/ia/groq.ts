@@ -156,7 +156,8 @@ async function executarComRetry(
           model: 'llama-3.3-70b-versatile',
           temperature: 0,
           max_tokens: 4000,
-          top_p: 0.9,
+          top_p: 1,
+          seed: 42,
         }),
         GROQ_TIMEOUT_MS
       )
@@ -243,18 +244,18 @@ VERSÃO BASE DE CONHECIMENTO: ${request.contextoBaseConhecimento?.versaoBase || 
 EVIDÊNCIAS NORMATIVAS LOCAIS (USE SOMENTE ESSAS COMO FONTE):
 ${JSON.stringify(evidenciasSanitizadas)}
 
-INSTRUÇÕES CRÍTICAS (DEVE SEGUIR ESTRITAMENTE):
-1. Analise o documento APENAS com base nas evidências normativas locais fornecidas.
-2. NÃO invente requisitos ou gaps de SST que não figurem no documento. Se o documento for sobre receita de bolo, ou um assunto aleatório que não trata de SST, não liste gaps. Ao invés disso, deixe o array "gaps" VAZIO e avise no "resumo" que o texto é inconclusivo ou fora de escopo.
-3. Se o array de EVIDÊNCIAS NORMATIVAS LOCAIS estiver vazio, VOCÊ DEVE retornar o array "gaps" VAZIO, pois você não tem licença para opinar sem lastro.
-4. Identifique gaps de conformidade (quando houver).
+INSTRUÇÕES CRÍTICAS (DEVE SEGUIR ESTRITAMENTE — TRATA-SE DE LEGISLAÇÃO):
+1. ADERÊNCIA ESTRITA À BASE DE CONHECIMENTO: Você NÃO tem autonomia para criar, inferir ou supor requisitos normativos. Sua ÚNICA fonte de verdade são as evidências normativas locais fornecidas no JSON acima. Se um requisito não estiver presente nas evidências, ele NÃO EXISTE para esta análise.
+2. NÃO invente gaps. Um gap só pode ser listado se: (a) o documento do usuário demonstra descumprimento de um requisito E (b) esse requisito está EXPLICITAMENTE presente nas evidências normativas JSON fornecidas com um chunkId válido.
+3. Se o array de EVIDÊNCIAS NORMATIVAS LOCAIS estiver vazio, retorne o array "gaps" VAZIO e score 100. Sem evidências = sem lastro = sem gaps.
+4. Se o documento não for de SST (receita, texto aleatório, etc.), retorne gaps vazio, score 100, e avise no "resumo" que o texto é fora de escopo.
 5. Classifique severidade (baixa, média, alta, crítica).
-6. Forneça recomendações práticas e objetivas.
-7. Calcule score de 0-100 refletindo a aderência geral (Zero gaps = 100).
-8. MANDATÓRIO: Para CADA gap listado, você DEVE OBRIGATORIAMENTE preencher o array "evidencias" referenciando QUAL "chunkId" embasou aquela crítica. Copie os dados (chunkId, normaCodigo, secao, conteudo, score, fonte) EXATAMENTE como estão no JSON de Evidencias enviado a você. Não deixe campos vazios. Se você não encontrar um chunkId compatível, não liste o gap. Um gap SEM EVIDÊNCIA ou com chunkId vazio será rejeitado pelo sistema.
-9. RASTREABILIDADE (PADRÃO INDÚSTRIA): Para cada gap identificado, preencha também:
+6. Forneça recomendações práticas e objetivas. Você pode usar palavras diferentes para tornar o texto técnico-legislativo mais acessível, mas NÃO altere o sentido do requisito normativo.
+7. CÁLCULO DO SCORE (REGRA DETERMINÍSTICA): Parta de 100. Para cada gap identificado, deduza pontos conforme severidade: crítica = -20, alta = -15, média = -10, baixa = -5. O score mínimo é 0. Exemplo: 2 gaps alta + 1 gap média = 100 - 15 - 15 - 10 = 60.
+8. MANDATÓRIO: Para CADA gap, preencha o array "evidencias" copiando EXATAMENTE o chunkId, normaCodigo, secao, conteudo, score e fonte do JSON de evidências fornecido. Se não encontrar um chunkId compatível, NÃO liste o gap. Gaps sem evidência ou com chunkId inventado serão REJEITADOS pelo sistema.
+9. RASTREABILIDADE: Para cada gap, preencha também:
    - "citacaoDocumento": O trecho exato do documento do usuário que motivou o gap.
-   - "paginaDocumento": O número da página (tente inferir de cabeçalhos/rodapés ou assuma 1 como base).
+   - "paginaDocumento": O número da página (infira de cabeçalhos/rodapés ou assuma 1).
    - "linhaDocumento": O marcador de linha [LX] onde o trecho se inicia (ex: "L45").
 
 FORMATO DE RESPOSTA (JSON):

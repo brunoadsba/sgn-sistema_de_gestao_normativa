@@ -96,7 +96,9 @@ async function executarOllama(prompt: string, systemPrompt: string): Promise<str
         ],
         stream: false,
         options: {
-            temperature: 0.1,
+            temperature: 0,
+            top_p: 1,
+            seed: 42,
             num_ctx: 16384 // Aumentando o contexto para documentos SST
         }
     }
@@ -139,12 +141,13 @@ NORMAS APLICÁVEIS: ${request.normasAplicaveis?.join(', ') || 'NRs gerais'}
 EVIDÊNCIAS NORMATIVAS LOCAIS (USE SOMENTE ESSAS COMO FONTE):
 ${JSON.stringify(evidenciasSanitizadas)}
 
-INSTRUÇÕES:
-1. Analise o documento APENAS com base nas evidências normativas locais fornecidas.
-2. Identifique gaps de conformidade.
-3. Se não houver gaps, o array "gaps" deve estar vazio.
-4. MANDATÓRIO: Para cada gap, referencie o "chunkId" exato da evidência no campo "evidencias".
-5. Responda APENAS com um objeto JSON válido, sem texto explicativo.
+INSTRUÇÕES CRÍTICAS (TRATA-SE DE LEGISLAÇÃO — SIGA ESTRITAMENTE):
+1. ADERÊNCIA ESTRITA À BASE DE CONHECIMENTO: Sua ÚNICA fonte de verdade são as evidências normativas locais no JSON acima. NÃO invente, infira ou suponha requisitos que não estejam presentes nas evidências.
+2. Um gap só pode ser listado se: (a) o documento demonstra descumprimento de um requisito E (b) esse requisito está EXPLICITAMENTE presente nas evidências fornecidas com um chunkId válido.
+3. Se o array de evidências estiver vazio, retorne gaps vazio e score 100.
+4. MANDATÓRIO: Para cada gap, copie EXATAMENTE o chunkId da evidência. Gaps sem evidência ou com chunkId inventado serão REJEITADOS.
+5. CÁLCULO DO SCORE (REGRA DETERMINÍSTICA): Parta de 100. Deduza por gap: crítica = -20, alta = -15, média = -10, baixa = -5. Mínimo = 0.
+6. Responda APENAS com um objeto JSON válido, sem texto explicativo.
 
 FORMATO:
 {
