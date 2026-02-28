@@ -22,7 +22,7 @@ export default async function NormaDetalhes({
   const isRevogada = norma.status === 'revogada'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-transparent overflow-x-hidden">
+    <div className="min-h-screen bg-transparent overflow-x-hidden">
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-3xl">
 
         {/* Navegação */}
@@ -41,7 +41,7 @@ export default async function NormaDetalhes({
             {/* Cabeçalho da norma */}
             <div className={`p-4 sm:p-8 md:p-12 border-b border-gray-100 dark:border-gray-700/50 ${isRevogada ? 'bg-gradient-to-br from-red-50 to-white dark:from-red-950/30 dark:to-gray-900/50' : 'bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20'}`}>
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-4">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gray-900 dark:text-gray-100 drop-shadow-sm">{norma.codigo}</h1>
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{norma.codigo}</h1>
                 {isRevogada ? (
                   <Badge variant="destructive" className="flex items-center gap-2 shrink-0 px-4 py-1.5 text-sm font-bold shadow-sm">
                     <AlertTriangle className="h-4 w-4" />
@@ -58,8 +58,8 @@ export default async function NormaDetalhes({
 
               {!isRevogada && (
                 <Link href={`/?norma=${norma.codigo}`} className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto h-auto min-h-[3.5rem] py-3 px-6 sm:px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-lg shadow-indigo-500/25 transition-all hover:-translate-y-1 hover:shadow-indigo-500/40 gap-3 group text-center whitespace-normal">
-                    <Brain className="h-5 w-5 shrink-0 animate-pulse group-hover:animate-none" />
+                  <Button size="lg" className="w-full sm:w-auto h-auto min-h-[3.5rem] py-3 px-6 sm:px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 gap-3 group text-center whitespace-normal">
+                    <Brain className="h-5 w-5 shrink-0" />
                     <span>Analisar documento com esta NR</span>
                   </Button>
                 </Link>
@@ -139,7 +139,7 @@ export default async function NormaDetalhes({
                   href={norma.urlOficial}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-3 p-4 w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base leading-tight shadow-lg shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40 text-center whitespace-normal"
+                  className="inline-flex items-center justify-center gap-3 p-4 w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base leading-tight shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40 text-center whitespace-normal"
                 >
                   <ExternalLink className="h-5 w-5 shrink-0" />
                   <span>Acessar texto oficial no site do MTE</span>

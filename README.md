@@ -4,8 +4,8 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 
 ## Snapshot Atual
 
-- Atualizado em: `2026-02-27`
-- Versao documental: `2.2.19`
+- Atualizado em: `2026-02-28`
+- Versao documental: `2.3.0`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
@@ -25,22 +25,23 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Ordenação normativa: sugestão e seleção de NRs em ordem crescente numérica de forma determinística.
 - Determinismo de IA: providers configurados com `temperature=0`, `top_p=1` e `seed=42` para scores reprodutíveis.
 
- Qualidade observada em `2026-02-27`:
+ Qualidade observada em `2026-02-28`:
 
 - `npx tsc --noEmit`: passou.
 - `npm run lint`: passou.
 - `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
 - `npm run test:ci`: passou (`54/54`).
-- Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (33 cenarios).
+- Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (27 cenarios).
 
 ## Capacidades Principais
 
 1. Analise de conformidade com upload de `PDF`, `DOCX`, `TXT`.
 2. Catalogo de NRs com busca e pagina de detalhe.
 3. Analise dedicada para NR-6.
-4. Assistente NEX contextual ao documento.
+4. Assistente NEX com modo livre (SST geral) e grounded (restrito ao documento).
 5. Exportacao de dados em `CSV/JSON`.
 6. Health check em `GET /api/health`.
+7. Testes E2E com Playwright (27 cenarios).
 
 ## Endpoints API Ativos
 
@@ -57,6 +58,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - `GET /api/normas/[id]`
 - `GET /api/normas/stats`
 - `GET /api/search`
+- `GET /api/ia/jobs/[id]`
 - `POST /api/chat-documento`
 - `POST /api/reports/generate`
 - `GET /api/export`

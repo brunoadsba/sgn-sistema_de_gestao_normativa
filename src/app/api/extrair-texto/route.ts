@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import mammoth from 'mammoth'
 import { PDFParse } from 'pdf-parse'
 import { pathToFileURL } from 'url'
 import { resolve } from 'path'
 import { rateLimit } from '@/lib/security/rate-limit'
+import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
+import { createRequestLogger } from '@/lib/logger'
 
-// Node runtime obrigatório para lidar com Buffer, mammoth e pdf-parse
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 120
 
 // Configura o worker com file:// URL para funcionar em Node.js server-side.
 // PDFParse.setWorker() sem argumento é no-op nesta versão — o path explícito é obrigatório.
@@ -30,6 +31,8 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createRequestLogger(request, 'api.extrair-texto')
+
   try {
     const rl = rateLimit(request, {
       windowMs: 60 * 1000,
@@ -38,27 +41,17 @@ export async function POST(request: NextRequest) {
     })
 
     if (rl.limitExceeded) {
-      return NextResponse.json(
-        { success: false, error: 'Muitas requisições. Tente novamente em breve.' },
-        { status: 429 }
-      )
+      return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
 
     if (!file) {
-      return NextResponse.json(
-        { success: false, error: 'Nenhum arquivo fornecido' },
-        { status: 400 }
-      )
+      return createErrorResponse('Nenhum arquivo fornecido', 400)
     }
 
-    console.log('📁 Extraindo texto do arquivo:', {
-      nome: file.name,
-      tipo: file.type,
-      tamanho: file.size,
-    })
+    logger.info({ nome: file.name, tipo: file.type, tamanho: file.size }, 'Extraindo texto do arquivo')
 
     const fileName = file.name.toLowerCase()
     const isPDF =
@@ -71,89 +64,66 @@ export async function POST(request: NextRequest) {
       fileName.endsWith('.doc')
     const isTXT = file.type === 'text/plain' || fileName.endsWith('.txt')
 
-    console.log('🔍 Detectando formato:', {
-      fileName: file.name,
-      mimeType: file.type,
-      isPDF,
-      isDOCX,
-      isTXT,
-    })
+    logger.info({ fileName: file.name, mimeType: file.type, isPDF, isDOCX, isTXT }, 'Detectando formato')
 
     let textoExtraido = ''
 
     try {
       if (isPDF) {
-        console.log('📄 Processando PDF...')
+        logger.info('Processando PDF')
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         const parser = new PDFParse({ data: buffer })
         const result = await parser.getText()
         textoExtraido = result.text
-        console.log('✅ PDF processado:', textoExtraido.length, 'caracteres')
+        logger.info({ caracteres: textoExtraido.length }, 'PDF processado')
 
       } else if (isDOCX) {
-        console.log('📄 Processando DOCX...')
+        logger.info('Processando DOCX')
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         const result = await mammoth.extractRawText({ buffer })
         textoExtraido = result.value
-        console.log('✅ DOCX processado:', textoExtraido.length, 'caracteres')
+        logger.info({ caracteres: textoExtraido.length }, 'DOCX processado')
 
       } else if (isTXT) {
-        console.log('📄 Processando TXT...')
+        logger.info('Processando TXT')
         textoExtraido = await file.text()
-        console.log('✅ TXT processado:', textoExtraido.length, 'caracteres')
+        logger.info({ caracteres: textoExtraido.length }, 'TXT processado')
 
       } else {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Formato não suportado: ${file.type} (${file.name})`,
-          },
-          { status: 400 }
+        return createErrorResponse(
+          `Formato não suportado: ${file.type} (${file.name})`,
+          400
         )
       }
 
       textoExtraido = textoExtraido.replace(/\n{3,}/g, '\n\n').trim()
 
-      console.log('📝 Texto final:', {
-        tamanho: textoExtraido.length,
-        preview: textoExtraido.substring(0, 200) + '...',
-      })
+      logger.info({ tamanho: textoExtraido.length, preview: textoExtraido.substring(0, 200) + '...' }, 'Texto final extraido')
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          texto: textoExtraido,
-          tamanho: textoExtraido.length,
-          nomeArquivo: file.name,
-          tipoArquivo: file.type,
-        },
+      return createSuccessResponse({
+        texto: textoExtraido,
+        tamanho: textoExtraido.length,
+        nomeArquivo: file.name,
+        tipoArquivo: file.type,
       })
     } catch (extractionError) {
-      console.error('❌ Erro na extração:', extractionError)
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Erro ao extrair texto do arquivo',
-          details:
-            extractionError instanceof Error
-              ? extractionError.message
-              : 'Erro desconhecido',
-        },
-        { status: 500 }
+      logger.error({ error: extractionError }, 'Erro na extracao de texto')
+      return createErrorResponse(
+        'Erro ao extrair texto do arquivo',
+        500,
+        extractionError instanceof Error
+          ? extractionError.message
+          : 'Erro desconhecido'
       )
     }
   } catch (error) {
-    console.error('❌ Erro geral:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Erro interno do servidor',
-        details:
-          error instanceof Error ? error.message : 'Erro desconhecido',
-      },
-      { status: 500 }
+    logger.error({ error }, 'Erro geral na rota extrair-texto')
+    return createErrorResponse(
+      'Erro interno do servidor',
+      500,
+      error instanceof Error ? error.message : 'Erro desconhecido'
     )
   }
 }

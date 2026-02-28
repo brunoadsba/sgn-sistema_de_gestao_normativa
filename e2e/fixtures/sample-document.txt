@@ -1,0 +1,40 @@
+PROGRAMA DE GERENCIAMENTO DE RISCOS (PGR) - EMPRESA MODELO LTDA
+
+1. IDENTIFICAÇÃO DA EMPRESA
+Razão Social: Empresa Modelo LTDA
+CNPJ: 12.345.678/0001-99
+Endereço: Rua Exemplo, 100 - São Paulo/SP
+CNAE: 4120-4/00 - Construção de edifícios
+Grau de Risco: 3
+
+2. OBJETIVO
+Este documento estabelece o Programa de Gerenciamento de Riscos conforme NR-1 e NR-9.
+
+3. INVENTÁRIO DE RISCOS
+3.1 Riscos Físicos
+- Ruído ocupacional acima de 85 dB(A) no setor de produção
+- Vibração de corpo inteiro em operadores de empilhadeira
+
+3.2 Riscos Químicos
+- Exposição a poeira de sílica no setor de corte
+- Manuseio de solventes orgânicos na pintura
+
+3.3 Riscos de Acidentes
+- Trabalho em altura acima de 2 metros sem proteção coletiva
+- Máquinas sem proteções adequadas conforme NR-12
+
+4. PLANO DE AÇÃO
+4.1 Medidas de Controle
+- Instalação de enclausuramento acústico (prazo: 90 dias)
+- Fornecimento de EPIs conforme NR-6 (protetor auricular, luvas, óculos)
+- Treinamento de NR-35 para trabalho em altura (prazo: 30 dias)
+
+4.2 Monitoramento
+- Avaliação quantitativa de ruído semestral
+- Exames médicos conforme PCMSO (NR-7)
+
+5. RESPONSÁVEIS
+Engenheiro de Segurança: Dr. João Silva - CREA 123456
+Médico do Trabalho: Dra. Maria Santos - CRM 654321
+
+Data: 15/01/2025

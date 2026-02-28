@@ -1,13 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { groq } from '@/lib/ia/groq'
 import { iaLogger } from '@/lib/logger'
 import { env } from '@/lib/env'
 import { rateLimit } from '@/lib/security/rate-limit'
 import { getZaiThinkingOptions } from '@/lib/ia/zai-options'
 import { montarSystemPromptEspecialista, selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
+import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation'
 
 export const maxDuration = 60
 export const runtime = 'nodejs'
+
+const ChatDocumentoSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().min(1).max(50_000),
+  })).min(1).max(100),
+  documentContext: z.string().max(500_000).optional(),
+})
 
 type ChatRole = 'system' | 'user' | 'assistant'
 type ChatMessage = {
@@ -58,7 +68,7 @@ function normalizarMensagem(valor: unknown): ChatMessage | null {
 async function callGroq(messages: ChatMessage[]): Promise<string> {
   const response = await groq.chat.completions.create({
     messages,
-    model: 'llama-3.3-70b-versatile',
+    model: env.GROQ_MODEL,
     temperature: 0,
     top_p: 1,
     seed: 42,
@@ -184,48 +194,37 @@ export async function POST(req: NextRequest) {
     })
 
     if (rl.limitExceeded) {
-      return NextResponse.json(
-        { success: false, error: 'Muitas requisições. Tente novamente em breve.' },
-        { status: 429 }
-      )
+      return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
     }
 
-    const body = (await req.json()) as {
-      messages?: unknown
-      documentContext?: unknown
+    const rawBody = await req.json()
+
+    const parseResult = ChatDocumentoSchema.safeParse(rawBody)
+    if (!parseResult.success) {
+      const errorMessages = parseResult.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ')
+      return createErrorResponse(`Dados inválidos: ${errorMessages}`, 400)
     }
 
-    if (!Array.isArray(body.messages)) {
-      return NextResponse.json({ success: false, error: 'O array de mensagens e obrigatorio' }, { status: 400 })
-    }
+    const { messages, documentContext } = parseResult.data
 
-    if (typeof body.documentContext !== 'string' || body.documentContext.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'O assistente NEX exige contexto do documento em escopo.' },
-        { status: 400 }
-      )
-    }
-
-    const mensagensCliente = body.messages
+    const mensagensCliente = messages
       .map(normalizarMensagem)
       .filter((m): m is ChatMessage => Boolean(m && m.content.length > 0))
 
     if (mensagensCliente.length === 0) {
-      return NextResponse.json({ success: false, error: 'Nenhuma mensagem valida foi enviada.' }, { status: 400 })
+      return createErrorResponse('Nenhuma mensagem valida foi enviada.', 400)
     }
 
-    if (mensagensCliente.some((m) => m.role === 'system')) {
-      return NextResponse.json(
-        { success: false, error: 'Mensagens com role=system nao sao permitidas na entrada do cliente.' },
-        { status: 400 }
-      )
-    }
+    const hasDocument = Boolean(documentContext && documentContext.trim().length > 0)
+    let systemPrompt: string
 
-    const safeContext = body.documentContext.slice(0, 80000)
-
-    const profile = selecionarPerfilEspecialista({ documento: safeContext })
-    const systemPromptBase = montarSystemPromptEspecialista('chat_documento', profile)
-    const systemPrompt = `${systemPromptBase}
+    if (hasDocument) {
+      const safeContext = documentContext!.slice(0, 80000)
+      const profile = selecionarPerfilEspecialista({ documento: safeContext })
+      const systemPromptBase = montarSystemPromptEspecialista('chat_documento', profile)
+      systemPrompt = `${systemPromptBase}
 Voce auxilia um engenheiro/auditor somente com base no contexto abaixo.
 
 ===== CONTEXTO DO DOCUMENTO =====
@@ -237,6 +236,16 @@ REGRAS ABSOLUTAS (AJA COMO AUDITOR FORENSE):
 2. NUNCA invente, presuma ou deduza informações que não estejam EXPLICITAMENTE escritas.
 3. Se a informação solicitada não estiver no documento, declare: "Não há dados sobre isso no documento avaliado."
 4. Responda em Português Brasileiro, de forma direta, técnica e estritamente baseada no Lastro Documental.`
+    } else {
+      systemPrompt = `Você é o NEX, assistente especialista em Segurança e Saúde do Trabalho (SST) e Normas Regulamentadoras (NRs) brasileiras do SGN - Sistema de Gestão Normativa.
+
+MODO LIVRE (sem documento carregado):
+1. Responda perguntas gerais sobre NRs, SST, compliance, EPIs, CIPA, PCMSO, PGR e temas correlatos.
+2. Use seu conhecimento técnico para orientar, mas deixe claro que são orientações gerais e não substituem análise documental.
+3. Se o usuário perguntar algo que exige análise de um documento específico, oriente-o a fazer upload do documento para uma análise precisa.
+4. Responda em Português Brasileiro, de forma direta, técnica e acessível.
+5. Seja útil e proativo em sugerir próximos passos quando pertinente.`
+    }
 
     const contextualizedMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
@@ -244,17 +253,12 @@ REGRAS ABSOLUTAS (AJA COMO AUDITOR FORENSE):
     ]
 
     const reply = await executarChatComFallback(contextualizedMessages)
+    const mode = hasDocument ? 'grounded' : 'free'
 
-    return NextResponse.json({ success: true, reply })
+    return createSuccessResponse({ reply, mode })
   } catch (error) {
     const err = toError(error)
     iaLogger.error({ error: err.message }, '[NEX-CHAT] Falha estrutural')
-    return NextResponse.json(
-      {
-        success: false,
-        error: `Erro interno ao consultar o assistente: ${err.message}`,
-      },
-      { status: 500 }
-    )
+    return createErrorResponse(`Erro interno ao consultar o assistente: ${err.message}`, 500)
   }
 }

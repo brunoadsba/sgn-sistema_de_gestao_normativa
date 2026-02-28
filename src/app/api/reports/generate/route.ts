@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { generateReportPdf } from '@/services/reportService'
+import { rateLimit } from '@/lib/security/rate-limit'
+import { createErrorResponse } from '@/middlewares/validation'
+import { createRequestLogger } from '@/lib/logger'
 import type { ReportData } from '@/types/report'
 
 export const runtime = 'nodejs'
@@ -67,14 +70,16 @@ const ReportPayloadSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = rateLimit(request, { windowMs: 60_000, max: 10, keyPrefix: 'rl:reports' });
+    if (rl.limitExceeded) {
+      return createErrorResponse("Limite de requisições excedido", 429);
+    }
+
     const rawPayload = await request.json()
     const parsed = ReportPayloadSchema.safeParse(rawPayload)
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Payload inválido para geração de PDF', issues: parsed.error.issues },
-        { status: 400 }
-      )
+      return createErrorResponse('Payload inválido para geração de PDF', 400, parsed.error.issues)
     }
 
     const { buffer, filename, contentType } = await generateReportPdf(parsed.data as ReportData)
@@ -89,7 +94,8 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[/api/reports/generate] Falha ao gerar PDF', error)
-    return NextResponse.json({ error: 'Falha ao gerar PDF' }, { status: 500 })
+    const logger = createRequestLogger(request, 'api.reports')
+    logger.error({ error }, 'Falha ao gerar PDF')
+    return createErrorResponse('Falha ao gerar PDF', 500)
   }
 }

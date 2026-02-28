@@ -1,5 +1,5 @@
 import { getNormas } from "@/lib/data/normas";
-import { NextResponse } from "next/server";
+import { createSuccessResponse, createErrorResponse } from "@/middlewares/validation";
 
 export const revalidate = 300;
 
@@ -7,15 +7,11 @@ export async function GET() {
   try {
     const normas = getNormas();
 
-    return NextResponse.json({
-      success: true,
-      data: normas.map(n => ({ id: n.id, codigo: n.codigo, titulo: n.titulo })),
+    return createSuccessResponse({
+      items: normas.map(n => ({ id: n.id, codigo: n.codigo, titulo: n.titulo })),
       total: normas.length,
     });
   } catch {
-    return NextResponse.json(
-      { success: false, error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    return createErrorResponse("Erro interno do servidor", 500);
   }
 }

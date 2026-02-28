@@ -10,8 +10,8 @@ export default function NormasPage() {
       <div className="space-y-10">
         {/* Header */}
         <div className="text-center relative py-6 sm:py-8">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[18rem] sm:w-[30rem] h-[8rem] sm:h-[10rem] bg-indigo-500/10 blur-[100px] -z-10 rounded-full"></div>
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-4 pb-4 leading-normal">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[18rem] sm:w-[30rem] h-[8rem] sm:h-[10rem] bg-sgn-primary-500/10 blur-[80px] -z-10 rounded-full"></div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-4 pb-4 leading-normal">
             Normas Regulamentadoras
           </h1>
           <p className="text-base sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-medium mb-6 sm:mb-8">

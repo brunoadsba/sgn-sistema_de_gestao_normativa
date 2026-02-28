@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { rateLimit } from '@/lib/security/rate-limit'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
 import { inferirNormasHeuristicas } from '@/lib/ia/nr-heuristics'
 import { selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
@@ -11,6 +12,16 @@ const BodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = rateLimit(request, {
+      windowMs: 60_000,
+      max: 20,
+      keyPrefix: 'rl:especialista',
+    })
+
+    if (rl.limitExceeded) {
+      return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
+    }
+
     const rawBody = await request.json().catch(() => null)
     const parsed = BodySchema.safeParse(rawBody)
     if (!parsed.success) {

@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.3.0] - 2026-02-28
+### Adicionado
+- **Chat NEX modo livre**: assistente acessivel sem documento carregado para duvidas gerais sobre SST, NRs, EPIs e compliance. Transicao automatica para modo grounded (restrito ao documento) ao carregar arquivo.
+- **Botao FAB flutuante**: acesso permanente ao chat NEX via botao fixo no canto inferior direito.
+- **Testes E2E com Playwright**: 27 cenarios cobrindo health check, navegacao, catalogo de normas (listagem, busca, detalhe), upload de documentos, extracao de texto, NR-6 e API do chat.
+- **Backend Core Hardening**: modelos IA configuraveis via env (`GROQ_MODEL`, `GROQ_MODEL_NR6`), rate limiting em todas as rotas desprotegidas, validacao Zod em todas as rotas sem validacao, formato de resposta padronizado (`createSuccessResponse`/`createErrorResponse`), decomposicao de `persistencia-analise.ts` (591 linhas) em 4 modulos especializados e logging estruturado com Pino em rotas restantes.
+
+### Alterado
+- **Chat NEX redesenhado**: interface modernizada seguindo padroes de chatbots contemporaneos (ChatGPT/Claude). Mensagens do assistente sem avatar, bolhas do usuario em indigo, input com borda arredondada e botao ArrowUp, sugestoes em grid 2x2 com icone ArrowUpRight, typing indicator compacto.
+- **UX/UI Global Overhaul**: consistencia visual em todas as paginas, tipografia padronizada, cores alinhadas ao tema indigo, navegacao refinada.
+- **Respostas API padronizadas**: todas as rotas agora retornam `{ success, data, timestamp }` via `createSuccessResponse`.
+
+### Corrigido
+- **Bug critico no frontend**: sugestao de NRs e chat nao processavam respostas apos padronizacao de API (acessavam `data.sugeridas` ao inves de `data.data.sugeridas`).
+- **Navegacao do chat mobile**: botao Voltar explicito, backdrop clicavel e listener de Escape adicionados.
+- **Timeout em uploads grandes**: aumentado timeout client-side para 120s e server-side maxDuration para 120s.
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run lint` ✅
+- `npm run test:ci` ✅ (54/54)
+- `npm run test:e2e` ✅ (27 cenarios)
+
 ## [2.2.19] - 2026-02-27
 ### Segurança e Correções
 - **Chat NEX Forense**: endurecimento da resposta do chat para evitar alucinações e proteger a integridade da análise documental:

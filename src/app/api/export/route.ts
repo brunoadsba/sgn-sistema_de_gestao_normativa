@@ -1,17 +1,36 @@
+import { NextRequest } from "next/server";
+import { z } from "zod";
 import { getNormas } from "@/lib/data/normas";
+import { rateLimit } from "@/lib/security/rate-limit";
+import { createSuccessResponse, createErrorResponse } from "@/middlewares/validation";
 
-export async function GET(request: Request) {
+const ExportQuerySchema = z.object({
+  format: z.enum(['json', 'csv']).default('json'),
+  search: z.string().max(200).default(''),
+  status: z.string().max(50).default(''),
+  categoria: z.string().max(50).default(''),
+  limit: z.coerce.number().int().min(1).max(1000).default(1000),
+});
+
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const format = searchParams.get("format") || "json";
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
-    const categoria = searchParams.get("categoria") || "";
-    const limit = Math.min(parseInt(searchParams.get("limit") || "1000"), 1000);
+    const rl = rateLimit(request, { windowMs: 60_000, max: 10, keyPrefix: 'rl:export' });
+    if (rl.limitExceeded) {
+      return createErrorResponse("Limite de requisições excedido", 429);
+    }
+
+    const raw = Object.fromEntries(new URL(request.url).searchParams.entries());
+    const parsed = ExportQuerySchema.safeParse(raw);
+
+    if (!parsed.success) {
+      const msgs = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+      return createErrorResponse(`Dados inválidos: ${msgs}`, 400);
+    }
+
+    const { format, search, status, categoria, limit } = parsed.data;
 
     let normas = getNormas();
 
-    // Aplicar filtros
     if (search) {
       const q = search.toLowerCase();
       normas = normas.filter(n =>
@@ -53,15 +72,14 @@ export async function GET(request: Request) {
       });
     }
 
-    return Response.json({
-      success: true,
+    return createSuccessResponse({
       format,
       exported_at: new Date().toISOString(),
       total_records: normas.length,
-      data: normas,
+      records: normas,
     });
 
   } catch {
-    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+    return createErrorResponse("Erro interno do servidor", 500);
   }
 }

@@ -4,6 +4,7 @@ import { db, schema } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation';
 import { rateLimit } from '@/lib/security/rate-limit';
+import { createRequestLogger } from '@/lib/logger';
 
 export async function GET(
     request: NextRequest,
@@ -63,7 +64,8 @@ export async function GET(
             completedAt: job.completedAt,
         });
     } catch (error) {
-        console.error('[API] Erro ao buscar job:', error);
+        const logger = createRequestLogger(request, 'api.jobs');
+        logger.error({ error }, 'Erro ao buscar job');
         return createErrorResponse('Erro interno ao buscar job', 500);
     }
 }

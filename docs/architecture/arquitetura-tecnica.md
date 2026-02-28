@@ -1,6 +1,6 @@
 # SGN - Arquitetura Tecnica
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-28
 
 ## 1. Resumo
 
@@ -91,6 +91,9 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 4. Health endpoint com status de API, DB e LLM (Groq check).
 5. Headers de seguranca em `next.config.js`.
 6. Rate limiting in-memory nas rotas de alto custo (`/api/ia/analisar-conformidade`, `/api/extrair-texto`, `/api/chat-documento`, `/api/ia/jobs/[id]`).
+7. Rate limiting padronizado em todas as rotas de API.
+8. Modelos de IA configuraveis via variaveis de ambiente (`GROQ_MODEL`, `GROQ_MODEL_NR6`).
+9. Persistencia de analise decomposta em modulos (`jobs`, `consultas`, `revisao`, `export`).
 
 ## 7. Observacoes de Drift Tecnico
 
@@ -98,19 +101,19 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 2. Historicos antigos citam ausencia do polling, mas a rota `GET /api/ia/jobs/[id]` esta ativa no codigo atual.
 3. Artefatos legados de deploy/producao foram reduzidos com remocao de `harbor-tasks/**`; permanecem referencias historicas apenas em `docs/archive`.
 
-## 8. Qualidade Atual (2026-02-26)
+## 8. Qualidade Atual (2026-02-28)
 
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou com `next build --webpack` apos migracao de fonte para self-host.
 4. `npm run test:ci`: passou (`54/54`).
-5. `npm run test:e2e`: passou (`33/33`).
+5. `npm run test:e2e`: passou (`27` cenarios).
 
 ## 9. Debito Tecnico Priorizado
 
-1. Concluir validação manual da impressão em Edge para fechamento do checklist operacional.
-2. Expandir suíte dedicada para endpoints de revisão humana (`aprovar/rejeitar/histórico`) e exportação PDF.
-3. Manter revisão periódica de segurança para limites/rate-limit em cenários de carga real.
+1. Validar chat NEX modo livre com Z.AI em cenario de rede estavel.
+2. Expandir testes E2E para fluxos de analise completa com IA.
+3. Manter revisao periodica de seguranca para limites/rate-limit em cenarios de carga real.
 
 ## 10. Documentos Relacionados
 

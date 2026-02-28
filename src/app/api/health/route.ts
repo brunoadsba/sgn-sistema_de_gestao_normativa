@@ -57,21 +57,18 @@ export async function GET() {
     });
 
   } catch (error) {
-    const duration = Date.now() - checkStartTime;
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
     return NextResponse.json(
       {
         status: 'error' as const,
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || '1.0.0',
         environment: env.NODE_ENV,
-        services: { ...services, api: 'error' as const },
-        performance: { duration: `${duration}ms` },
-        uptime,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        services: { database: 'error' as const, api: 'error' as const, llm: 'error' as const },
+        error: message,
+        uptime: Math.floor((Date.now() - startTime) / 1000),
       },
-      { status: 503 }
+      { status: 503, headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } }
     );
   }
 }

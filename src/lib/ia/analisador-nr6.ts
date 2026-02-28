@@ -68,7 +68,7 @@ export async function analisarNR6(request: AnaliseNR6Request): Promise<AnaliseNR
           content: prompt
         }
       ],
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: env.GROQ_MODEL_NR6,
       temperature: 0,
       max_tokens: 3000,
       top_p: 0.8

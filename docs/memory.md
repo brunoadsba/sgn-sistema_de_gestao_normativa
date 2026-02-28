@@ -1,10 +1,10 @@
 # SGN - Memoria Operacional
 
-> Atualizado em: 2026-02-27
+> Atualizado em: 2026-02-28
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.2.19`
+- Versao atual (documental): `2.3.0`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -34,6 +34,7 @@ Plataforma para analise de conformidade SST usando IA sobre documentos tecnicos 
 - `GET /api/ia/analisar-conformidade/[id]/revisao`
 - `POST /api/nr6/analisar`
 - `POST /api/chat-documento`
+- `GET /api/ia/jobs/[id]`
 - `GET /api/health`
 - `GET /api/normas`
 - `GET /api/normas/[id]`
@@ -57,10 +58,11 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. Analise com IA e persistencia de jobs/resultados.
 3. Catalogo de normas com busca e detalhe por NR.
 4. Fluxo dedicado NR-6.
-5. Assistente NEX contextual.
+5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento).
 6. Exportacao em `CSV/JSON`.
 7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
 8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
+9. Testes E2E com Playwright cobrindo navegacao, normas, upload, NR-6 e chat.
 
 ## 5. Divergencias Tecnicas Relevantes
 
@@ -69,17 +71,18 @@ Tabelas principais em `src/lib/db/schema.ts`:
 3. Idempotencia atual foi normalizada para persistencia em banco (`idempotency_cache`), com fallback em memoria apenas para compatibilidade quando schema ainda nao foi sincronizado.
 4. Existem artefatos legados de deploy/producao coexistindo com o direcionamento local-only.
 
-## 6. Qualidade Atual (medicao em 2026-02-26)
+## 6. Qualidade Atual (medicao em 2026-02-28)
 
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou (`next build --webpack`) apos migracao para fonte local/self-host.
 4. `npm run test:ci`: passou (`54/54`).
+5. `npm run test:e2e`: passou (27 cenarios).
 
 ## 7. Prioridades Imediatas
 
-1. Testar determinismo: enviar o mesmo documento 3x e confirmar scores identicos.
-2. Expandir testes de integração para revisão humana de laudo e geração de PDF.
+1. Validar chat NEX modo livre com Z.AI em cenario de rede estavel.
+2. Expandir testes E2E para fluxos de analise completa com IA.
 3. Continuar 5S documental para evitar novo drift.
 
 ## 8. Historico de Marco (resumo)
@@ -106,6 +109,11 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 72 | 2026-02-26 | Matriz de gaps da UI refatorada para tabela técnica com colunas estruturadas (`Severidade`, `Categoria`, `Norma`, `Status`, `Descrição`, `Recomendação`), badges semânticos, zebra/hover e bloqueio de hifenização automática; sugestão/seleção de NRs normalizada em ordem crescente. |
 | 73 | 2026-02-27 | Estabilização de scores: determinismo absoluto em 3 providers (Groq/Z.AI/Ollama), recálculo de score pós-filtro de gaps, prompts reforçados com aderência estrita à KB normativa, fórmula determinística de score, sugestão de NRs determinística, fix do círculo SVG 100% e centralização do header do PDF. |
 | 74 | 2026-02-27 | Endurecimento pericial do Chat NEX: parâmetros de sampling determinísticos (`temperature: 0`, `top_p: 1`, `seed: 42`) aplicados na rota de chat interativo. System prompt reenquadrado para perfil de "auditor forense", vetando respostas por inferência externa ou ausência de lastro. |
+| 75 | 2026-02-28 | Backend Core Hardening: modelos IA configuraveis via env (`GROQ_MODEL`, `GROQ_MODEL_NR6`), rate limiting em todas as rotas desprotegidas, validacao Zod padronizada, formato de resposta unificado (`createSuccessResponse`/`createErrorResponse`), decomposicao de `persistencia-analise.ts` em modulos e logging estruturado com Pino. |
+| 76 | 2026-02-28 | UX/UI Global Overhaul + Chat Refactoring: redesign de todas as paginas para consistencia visual, correcao de navegacao do chat mobile/desktop, fix de timeout em upload de documentos grandes. |
+| 77 | 2026-02-28 | Testes E2E com Playwright: 27 cenarios cobrindo health, navegacao, catalogo de normas, upload, extracao de texto, NR-6 e API do chat. |
+| 78 | 2026-02-28 | Chat NEX modo livre: assistente acessivel sem documento para duvidas gerais de SST/NRs, com transicao automatica para modo grounded ao carregar documento. UI redesenhada seguindo padroes modernos de chatbot. |
+| 79 | 2026-02-28 | Fix critico: frontend do chat e sugestao de NRs corrigidos para ler `data.data.*` apos padronizacao de respostas API (Phase 4 backend hardening). |
 
 ## 9. Arquivo Historico Completo
 

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { groq } from '@/lib/ia/groq'
 import { env } from '@/lib/env'
 import { iaLogger as logger } from '@/lib/logger'
@@ -11,6 +12,13 @@ import { getZaiThinkingOptions } from '@/lib/ia/zai-options'
 import { inferirNormasHeuristicas, jaccardNormas } from '@/lib/ia/nr-heuristics'
 import { montarSystemPromptEspecialista, selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
 import { ordenarCodigosNr } from '@/lib/normas/ordem'
+import { rateLimit } from '@/lib/security/rate-limit'
+import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation'
+
+const SugerirNrsSchema = z.object({
+  textoExtraido: z.string().min(1).max(500_000),
+  tipoDocumento: z.string().optional(),
+})
 
 const DEFAULT_NRS = ['nr-1']
 const DEFAULT_RESPONSE = '{"nrs":["nr-1"]}'
@@ -118,7 +126,7 @@ function calcularConfiancaSugestao(parseOk: boolean, normasIa: string[], normasH
 }
 
 async function chamarGroqSugestao(systemPrompt: string, texto: string): Promise<string> {
-  const model = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : 'llama-3.3-70b-versatile'
+  const model = env.AI_PROVIDER === 'ollama' ? env.OLLAMA_MODEL : env.GROQ_MODEL
   const chatCompletion = await groq.chat.completions.create({
     messages: [
       { role: 'system', content: systemPrompt },
@@ -210,15 +218,21 @@ async function chamarZaiSugestao(systemPrompt: string, texto: string): Promise<s
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { textoExtraido, tipoDocumento } = await request.json()
+  const rl = rateLimit(request, { windowMs: 60_000, max: 20, keyPrefix: 'rl:sugerir-nrs' })
+  if (rl.limitExceeded) {
+    return createErrorResponse('Muitas requisicoes. Tente novamente em breve.', 429)
+  }
 
-    if (!textoExtraido || typeof textoExtraido !== 'string') {
-      return NextResponse.json(
-        { success: false, error: "Parâmetro 'textoExtraido' inválido ou ausente." },
-        { status: 400 }
-      )
+  try {
+    const body = await request.json()
+    const parsed = SugerirNrsSchema.safeParse(body)
+
+    if (!parsed.success) {
+      const msg = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')
+      return createErrorResponse(`Dados invalidos: ${msg}`, 400)
     }
+
+    const { textoExtraido, tipoDocumento } = parsed.data
 
     const trechoInicial = textoExtraido.substring(0, 5000)
     const trechoSanitizado = trechoInicial.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
@@ -281,8 +295,7 @@ APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`
     const sugeridas = consolidarNormasSugestao(normasIa, normasHeuristica)
     const confianca = calcularConfiancaSugestao(parseOk, normasIa, normasHeuristica)
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       sugeridas,
       confiancaSugestao: confianca.confiancaSugestao,
       concordanciaNormativa: confianca.concordancia,
@@ -298,9 +311,6 @@ APENAS o JSON puro. Se não souber, retorne {"nrs": ["nr-1"]}.`
     })
   } catch (error) {
     logger.error({ error: toErrorMessage(error) }, 'Erro interno em /api/ia/sugerir-nrs')
-    return NextResponse.json(
-      { success: false, error: 'Falha interna ao sugerir NRs' },
-      { status: 500 }
-    )
+    return createErrorResponse('Falha interna ao sugerir NRs', 500)
   }
 }

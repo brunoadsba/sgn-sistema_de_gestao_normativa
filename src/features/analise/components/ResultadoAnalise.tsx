@@ -177,7 +177,7 @@ function ScoreIndicador({ score }: { score: number }) {
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      className={`flex flex-col items-center justify-center p-8 rounded-[2rem] border ${bgCor} min-w-[180px] bg-white/50 dark:bg-gray-900/50 backdrop-blur-3xl relative overflow-hidden transition-all duration-500`}
+      className={`flex flex-col items-center justify-center p-8 rounded-2xl border ${bgCor} min-w-[180px] bg-white/50 dark:bg-gray-900/50 backdrop-blur-3xl relative overflow-hidden transition-all duration-500`}
     >
       <div className="relative w-28 h-28">
         <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
@@ -521,11 +521,11 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
             </div>
 
             <div className="lg:col-span-9">
-              <Card className="h-full border border-gray-100 dark:border-white/5 bg-white/@50 dark:bg-gray-950/30 backdrop-blur-2xl rounded-[2rem] shadow-sm overflow-hidden relative">
+              <Card className="h-full border border-gray-100 dark:border-white/5 bg-white/@50 dark:bg-gray-950/30 backdrop-blur-2xl rounded-2xl shadow-sm overflow-hidden relative">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-400">Resumo da Auditoria</CardTitle>
-                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border font-black text-[10px] uppercase shadow-sm ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].bg} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].border} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].text}`}>
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wide text-gray-400">Resumo da Auditoria</CardTitle>
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border font-semibold text-xs uppercase shadow-sm ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].bg} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].border} ${CONFIG_RISCO[resultado.nivelRisco || 'medio'].text}`}>
                       <Shield className="w-3.5 h-3.5" />
                       {CONFIG_RISCO[resultado.nivelRisco || 'medio'].label}
                     </div>
@@ -534,19 +534,19 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Documento</p>
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wide">Documento</p>
                       <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{resultado.nomeArquivo || 'Relatório de SST'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Data</p>
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wide">Data</p>
                       <p className="text-sm font-bold text-gray-600 dark:text-gray-300">{new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Status legal</p>
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wide">Status legal</p>
                       <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{formatarStatusLaudo(reportStatusLocal)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Confiabilidade</p>
+                      <p className="text-xs font-semibold uppercase text-gray-400 tracking-wide">Confiabilidade</p>
                       <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
                         {typeof resultado.confidenceScore === 'number' ? `${resultado.confidenceScore}/100` : 'N/A'}
                       </p>
@@ -556,11 +556,11 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                         variant="outline"
                         size="sm"
                         onClick={onChatOpen}
-                        className="rounded-xl font-bold text-[10px] uppercase h-9 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                        className="rounded-xl font-bold text-xs uppercase h-9 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
                       >
                         <MessageSquare className="w-3.5 h-3.5 mr-2" /> Chat
                       </Button>
-                      <Button variant="outline" size="sm" onClick={abrirPreviewImpressao} className="rounded-xl font-bold text-[10px] uppercase h-9">
+                      <Button variant="outline" size="sm" onClick={abrirPreviewImpressao} className="rounded-xl font-bold text-xs uppercase h-9">
                         <Printer className="w-3.5 h-3.5 mr-2" /> Visualizar impressão
                       </Button>
                       {reportStatusLocal === 'pre_laudo_pendente' && (
@@ -570,7 +570,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                             size="sm"
                             disabled={registrandoRevisao}
                             onClick={() => void registrarRevisao('aprovar')}
-                            className="rounded-xl font-bold text-[10px] uppercase h-9 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            className="rounded-xl font-bold text-xs uppercase h-9 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                           >
                             Aprovar laudo
                           </Button>
@@ -579,13 +579,13 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                             size="sm"
                             disabled={registrandoRevisao}
                             onClick={() => void registrarRevisao('rejeitar')}
-                            className="rounded-xl font-bold text-[10px] uppercase h-9 border-red-200 text-red-700 hover:bg-red-50"
+                            className="rounded-xl font-bold text-xs uppercase h-9 border-red-200 text-red-700 hover:bg-red-50"
                           >
                             Rejeitar laudo
                           </Button>
                         </>
                       )}
-                      <Button variant="ghost" size="sm" onClick={onNovaAnalise} className="rounded-xl font-bold text-[10px] uppercase h-9 text-gray-400">
+                      <Button variant="ghost" size="sm" onClick={onNovaAnalise} className="rounded-xl font-bold text-xs uppercase h-9 text-gray-400">
                         <RotateCcw className="w-3.5 h-3.5 mr-2" /> Novo
                       </Button>
                     </div>
@@ -607,7 +607,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
 
           {/* SUMÁRIO EXECUTIVO */}
           <motion.div variants={itemVariants}>
-            <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-[2rem] p-8 border border-gray-100 dark:border-white/5">
+            <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl p-8 border border-gray-100 dark:border-white/5">
               <h3 className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Veredito da IA</h3>
               <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-relaxed font-bold tracking-tight italic">
                 &ldquo;{resumoExibicao}&rdquo;
@@ -618,7 +618,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           {/* PONTOS POSITIVOS E ATENÇÃO */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div variants={itemVariants}>
-              <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+              <div className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
                 <div className="flex items-center gap-3 mb-6">
                   <CheckCircle className="w-6 h-6 text-emerald-500" />
                   <span className="text-base font-black uppercase tracking-tight">Pontos Fortes</span>
@@ -635,7 +635,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <div className="p-6 rounded-[2rem] bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+              <div className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
                 <div className="flex items-center gap-3 mb-6">
                   <AlertTriangle className="w-6 h-6 text-amber-500" />
                   <span className="text-base font-black uppercase tracking-tight">Oportunidades de Melhoria</span>
@@ -661,12 +661,12 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                 </div>
                 <div>
                   <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tighter leading-none">Matriz de Gaps</h2>
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mt-2">Mapeamento de Riscos e Exposição</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-2">Mapeamento de Riscos e Exposição</p>
                 </div>
               </div>
               <div className="hidden sm:block text-right">
                 <span className="text-5xl font-black text-gray-100 dark:text-gray-800 tabular-nums leading-none">{resultado.gaps.length}</span>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest -mt-1">Inconformidades</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide -mt-1">Inconformidades</p>
               </div>
             </div>
 
@@ -690,12 +690,12 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                       </colgroup>
                       <thead>
                         <tr className="bg-[#0F4C81] text-white">
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Severidade</th>
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Categoria</th>
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Norma</th>
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Status</th>
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Descrição</th>
-                          <th className="px-3 py-3 text-[11px] font-black uppercase tracking-widest">Recomendação</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Severidade</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Categoria</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Norma</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Descrição</th>
+                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Recomendação</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -711,18 +711,18 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                               className="align-top border-b border-slate-200 odd:bg-white even:bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
                             >
                               <td className="px-3 py-3">
-                                <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-black uppercase tracking-wide ${severidadeConfig.classes}`}>
+                                <span className={`inline-flex rounded-lg border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${severidadeConfig.classes}`}>
                                   {severidadeConfig.label}
                                 </span>
                               </td>
                               <td className="px-3 py-3">
-                                <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-700">
+                                <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-bold text-indigo-700">
                                   {categoriaNormalizada}
                                 </span>
                               </td>
                               <td className="px-3 py-3 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
                               <td className="px-3 py-3">
-                                <span className={`inline-flex rounded-lg border px-2 py-1 text-[11px] font-bold ${statusGapClasses(status)}`}>
+                                <span className={`inline-flex rounded-lg border px-2 py-1 text-xs font-bold ${statusGapClasses(status)}`}>
                                   {status}
                                 </span>
                               </td>
@@ -754,21 +754,21 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {resultado.planoAcao.map((acao) => (
                   <div key={acao.id} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
-                    <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">{acao.id}</div>
+                    <div className="text-xs font-semibold text-indigo-500 mb-2 uppercase">{acao.id}</div>
                     <p className="text-sm text-gray-900 dark:text-gray-100 font-bold leading-relaxed mb-2">{acao.what}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                       <span className="font-semibold">Responsável:</span> {acao.who}
                     </p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                       <span className="font-semibold">Prazo:</span> {acao.prazoDias} dias
                     </p>
                     {acao.evidenciaConclusao && (
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                         <span className="font-semibold">Evidência:</span> {acao.evidenciaConclusao}
                       </p>
                     )}
                     {acao.kpi && (
-                      <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                         KPI: {acao.kpi}
                       </p>
                     )}
@@ -779,7 +779,7 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {resultado.proximosPassos?.map((passo, i) => (
                   <div key={i} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
-                    <div className="text-[10px] font-black text-indigo-500 mb-2 uppercase">Etapa {i + 1}</div>
+                    <div className="text-xs font-semibold text-indigo-500 mb-2 uppercase">Etapa {i + 1}</div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 font-bold leading-relaxed">{passo}</p>
                   </div>
                 ))}

@@ -51,7 +51,14 @@ export async function fetchWithRetry(
       lastError = new Error(`Status retryável recebido: ${response.status}`)
     } catch (error) {
       clearTimeout(timeout)
-      lastError = error
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        lastError = new Error(
+          `A requisicao excedeu o tempo limite de ${Math.round(timeoutMs / 1000)}s. ` +
+          'Se o arquivo for grande, tente um documento menor ou aguarde mais tempo.'
+        )
+      } else {
+        lastError = error
+      }
     }
 
     if (attempt < retries - 1) {
@@ -60,5 +67,8 @@ export async function fetchWithRetry(
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('Falha de rede após tentativas de retry')
+  if (lastError instanceof Error) {
+    throw lastError
+  }
+  throw new Error('Falha de conexao com o servidor. Verifique sua rede e tente novamente.')
 }

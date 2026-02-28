@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { rateLimit } from '@/lib/security/rate-limit'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
 import { buscarAnalisePorId, registrarRevisaoAnalise } from '@/lib/ia/persistencia-analise'
 
@@ -13,6 +14,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string; acao: string }> }
 ) {
   try {
+    const rl = rateLimit(request, {
+      windowMs: 60_000,
+      max: 30,
+      keyPrefix: 'rl:revisao',
+    })
+
+    if (rl.limitExceeded) {
+      return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
+    }
+
     const { id, acao } = await params
     const acaoNormalizada = acao.toLowerCase()
     if (acaoNormalizada !== 'aprovar' && acaoNormalizada !== 'rejeitar') {

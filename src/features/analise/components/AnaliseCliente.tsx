@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { Brain, Sparkles, CheckSquare, Upload } from 'lucide-react'
+import { Brain, Sparkles, CheckSquare, Upload, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,7 +10,6 @@ import { SeletorNormas } from './SeletorNormas'
 import { ResultadoAnalise } from './ResultadoAnalise'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { ChatSidePanel } from '@/features/chat-documento/components/ChatSidePanel'
-import { ChatFloatingBubble } from '@/features/chat-documento/components/ChatFloatingBubble'
 import { HistoricoAnalisesCard } from './HistoricoAnalisesCard'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { useQueryState } from 'nuqs'
@@ -134,7 +133,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             const response = await fetchWithRetry('/api/extrair-texto', {
                 method: 'POST',
                 body: formData,
-            }, { retries: silencioso ? 1 : 3, timeoutMs: silencioso ? 30_000 : 60_000 })
+            }, { retries: silencioso ? 1 : 2, timeoutMs: silencioso ? 30_000 : 120_000 })
 
             if (!response.ok) {
                 if (response.status === 413) {
@@ -337,8 +336,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
 
                 if (sugestaoRes.ok) {
                     const sugestaoData = await sugestaoRes.json()
-                    if (sugestaoData.success && sugestaoData.sugeridas) {
-                        const sugeridas = ordenarCodigosNr(sugestaoData.sugeridas as string[])
+                    const sugestaoPayload = sugestaoData.data ?? sugestaoData
+                    if (sugestaoData.success && sugestaoPayload.sugeridas) {
+                        const sugeridas = ordenarCodigosNr(sugestaoPayload.sugeridas as string[])
                         setNormasSelecionadas(sugeridas)
                         const normasTexto = sugeridas.join(', ')
                         setErro(`Sugestão de Aplicabilidade: ${normasTexto}. Valide as normas selecionadas e inicie a análise.`)
@@ -388,7 +388,11 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             }
         } catch (err) {
             window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
-            setErro(err instanceof Error ? err.message : 'Erro desconhecido na análise')
+            const msg = err instanceof Error ? err.message : 'Erro desconhecido na analise'
+            const msgFinal = msg === 'fetch failed' || msg === 'Failed to fetch'
+                ? 'Falha de conexao com o servidor. Verifique se o servidor esta rodando e tente novamente.'
+                : msg
+            setErro(msgFinal)
             setAnalisando(false)
         }
     }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced, extrairTextoDocumento])
@@ -459,8 +463,8 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             {/* Header */}
             <div className="relative mb-8 sm:mb-12">
                 <div className="text-center relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-blue-500/20 blur-3xl -z-10 rounded-full"></div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tighter mb-3 sm:mb-4 pb-2 leading-normal">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-sgn-primary-500/10 blur-[80px] -z-10 rounded-full"></div>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-3 sm:mb-4 pb-2 leading-normal">
                         Análise de Conformidade
                     </h1>
                     <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
@@ -535,8 +539,8 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                         transition={{ duration: 0.5, type: "spring", damping: 20 }}
                                         className="w-full"
                                     >
-                                        <div className="p-1 rounded-[2.5rem] bg-gradient-to-b from-blue-500/20 to-indigo-500/20 border border-white/10 shadow-2xl overflow-hidden">
-                                            <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-3xl rounded-[2.4rem] p-8 sm:p-10 space-y-8">
+                                        <div className="p-1 rounded-3xl bg-gradient-to-b from-blue-500/20 to-indigo-500/20 border border-white/10 shadow-2xl overflow-hidden">
+                                            <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-3xl rounded-3xl p-8 sm:p-10 space-y-8">
                                                 {/* Badge de Resumo do Job */}
                                                 <div className="flex flex-wrap gap-4 items-center p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-950/40 border border-white/20 dark:border-white/5">
                                                     <div className="flex items-center gap-2">
@@ -546,7 +550,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                     <div className="h-4 w-px bg-gray-200 dark:bg-gray-800 hidden sm:block" />
                                                     <div className="flex items-center gap-2">
                                                         <Sparkles className="w-4 h-4 text-indigo-500" />
-                                                        <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                                             {normasSelecionadas.length > 0 ? normasSelecionadas.join(', ') : 'Normas Gerais'}
                                                         </span>
                                                     </div>
@@ -556,7 +560,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 <div className="flex items-center justify-between">
                                                     <div className="space-y-1">
                                                         <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase">
-                                                            Processamento Neural
+                                                            Processamento em andamento
                                                         </h3>
                                                         <div className="flex items-center gap-2">
                                                             <motion.div
@@ -623,7 +627,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                                             <s.icon className={`w-5 h-5 ${active ? 'animate-pulse' : ''}`} />
                                                                         )}
                                                                     </motion.div>
-                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}>
+                                                                    <span className={`text-xs font-semibold uppercase tracking-wide ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}>
                                                                         {s.label}
                                                                     </span>
                                                                 </div>
@@ -633,7 +637,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 </div>
 
                                                 {/* Logs Imersivos (Console Mini) */}
-                                                <div className="bg-gray-950 rounded-2xl p-4 border border-white/5 font-mono text-[10px] sm:text-xs text-blue-400/80 space-y-1 overflow-hidden h-24 relative shadow-inner">
+                                                <div className="bg-gray-950 rounded-2xl p-4 border border-white/5 font-mono text-xs sm:text-xs text-blue-400/80 space-y-1 overflow-hidden h-24 relative shadow-inner">
                                                     <div className="absolute top-2 right-4 flex gap-1">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
                                                         <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
@@ -681,7 +685,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/30'
                                                 : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xl shadow-indigo-500/30'
                                         }
-                                        ${analisando || sugerindoNrs ? 'scale-90 opacity-0 pointer-events-none' : 'hover:-translate-y-2 hover:scale-[1.02]'}
+                                        ${analisando || sugerindoNrs ? 'scale-90 opacity-0 pointer-events-none' : 'hover:scale-[1.02]'}
                                     `}
                                 >
                                     {/* Efeito de Reflexo no Hover */}
@@ -761,17 +765,22 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                 )}
             </div>
 
-            {/* COMPONENTES DE CHAT (PROTÓTIPOS) */}
-            {arquivo && (
-                <>
-                    <ChatSidePanel
-                        isOpen={chatAberto}
-                        onClose={() => setChatAberto(false)}
-                        documentContext={textoExtraidoChat}
-                    />
-                    <ChatFloatingBubble documentContext={textoExtraidoChat} />
-                </>
+            {!chatAberto && (
+                <button
+                    onClick={() => setChatAberto(true)}
+                    className="fixed bottom-6 right-6 z-40 p-4 bg-sgn-primary-600 hover:bg-sgn-primary-700 text-white rounded-full shadow-lg shadow-sgn-primary-500/30 hover:shadow-xl hover:shadow-sgn-primary-500/40 transition-all hover:scale-105 active:scale-95 no-print"
+                    aria-label="Abrir assistente NEX"
+                >
+                    <MessageCircle className="w-6 h-6" />
+                </button>
             )}
+
+            <ChatSidePanel
+                isOpen={chatAberto}
+                onClose={() => setChatAberto(false)}
+                documentContext={textoExtraidoChat}
+                documentName={arquivo?.name}
+            />
         </div>
     )
 }

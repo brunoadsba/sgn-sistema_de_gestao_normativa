@@ -92,7 +92,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             placeholder="Buscar Norma Regulamentadora"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="text-center h-14 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-2xl shadow-xl text-base dark:text-gray-100 placeholder:text-gray-400 backdrop-blur-md transition-all"
+            className="h-14 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-2xl shadow-xl text-base dark:text-gray-100 placeholder:text-gray-400 backdrop-blur-md transition-all pl-10"
           />
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
@@ -100,7 +100,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             variant="secondary"
             size="sm"
             onClick={selecionarTodas}
-            className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl h-8 px-4 text-[10px] uppercase font-black tracking-widest transition-all"
+            className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl h-8 px-4 text-xs font-semibold uppercase tracking-wide transition-all"
           >
             Todas
           </Button>
@@ -109,7 +109,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             size="sm"
             onClick={limparSelecao}
             disabled={selecionadas.length === 0}
-            className="text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl h-8 px-4 text-[10px] uppercase font-black tracking-widest transition-all"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl h-8 px-4 text-xs font-semibold uppercase tracking-wide transition-all"
           >
             Limpar
           </Button>
@@ -123,7 +123,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             {normasSelecionadasObjetos.map((norma) => (
               <span
                 key={norma.id}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 uppercase tracking-tight"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 uppercase tracking-tight"
               >
                 {extrairCodigoCurto(norma.codigo)}
                 <button
@@ -148,7 +148,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
                 <div className="bg-indigo-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
                   <CheckSquare className="h-5 w-5 text-indigo-400" />
                 </div>
-                <span className="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-tight">
                   {filtro ? 'Resultados Encontrados' : 'Catálogo de Normas'}
                 </span>
               </div>
@@ -179,14 +179,14 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-xs">{codigoCurto}</span>
                           {sugeridaIA && (
-                            <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-[8px] font-black uppercase text-blue-600 dark:text-blue-400">
+                            <span className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">
                               <Sparkles className="h-2 w-2" /> IA
                             </span>
                           )}
                         </div>
                         {selecionada && <CheckSquare className="h-3 w-3 text-indigo-600" />}
                       </div>
-                      <span className="text-[10px] leading-tight text-gray-500 line-clamp-1 group-hover:line-clamp-none transition-all">
+                      <span className="text-xs leading-tight text-gray-500 line-clamp-1 group-hover:line-clamp-none transition-all">
                         {norma.titulo}
                       </span>
                     </button>

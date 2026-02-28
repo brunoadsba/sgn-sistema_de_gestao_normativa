@@ -153,7 +153,7 @@ async function executarComRetry(
               content: prompt,
             },
           ],
-          model: 'llama-3.3-70b-versatile',
+          model: env.GROQ_MODEL,
           temperature: 0,
           max_tokens: 4000,
           top_p: 1,
@@ -176,7 +176,7 @@ async function executarComRetry(
         {
           provider: 'groq',
           specialist_profile: specialistProfile,
-          model: 'llama-3.3-70b-versatile',
+          model: env.GROQ_MODEL,
           attempt: attempt + 1,
           maxAttempts: GROQ_RETRY_ATTEMPTS,
           duration_ms: Date.now() - attemptStart,

@@ -85,7 +85,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           onDragLeave={handleDragLeave}
           onClick={() => !desabilitado && fileInputRef.current?.click()}
           className={`
-            relative rounded-[2rem] border-2 border-dashed p-8 sm:p-10 text-center transition-all duration-500 overflow-hidden group
+            relative rounded-2xl border-2 border-dashed p-8 sm:p-10 text-center transition-all duration-500 overflow-hidden group
             ${desabilitado ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             ${dragging
               ? 'border-blue-500 bg-blue-500/10 scale-[1.02] shadow-[0_0_30px_rgba(59,130,246,0.2)]'
@@ -108,21 +108,15 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
               <Upload className={`h-8 w-8 ${dragging ? 'text-white animate-bounce' : 'text-blue-400/80'}`} />
             </div>
             <div className="space-y-2">
-              <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
-                {dragging ? 'Solte para Iniciar' : 'Mergulhe seu documento aqui'}
+              <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+                {dragging ? 'Solte para Iniciar' : 'Arraste o documento aqui'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-[10px] bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT (Máx 4.5MB em nuvem)</span>
+                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-xs bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT (Max 4.5MB em nuvem)</span>
               </p>
             </div>
           </div>
-          {!dragging && (
-            <div className="absolute bottom-4 left-0 right-0">
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest opacity-40">
-                Data Auditor Engine v4.0
-              </p>
-            </div>
-          )}
+          
         </div>
       ) : (
         <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-2xl animate-in fade-in zoom-in-95">
@@ -134,7 +128,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
               <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[150px] sm:max-w-xs" title={arquivo.name}>
                 {arquivo.name}
               </p>
-              <p className="text-[10px] font-bold text-indigo-500/70 uppercase">
+              <p className="text-xs font-medium text-indigo-500/70 uppercase">
                 {formatarTamanho(arquivo.size)}
               </p>
             </div>

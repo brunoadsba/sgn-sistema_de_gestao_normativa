@@ -94,13 +94,14 @@ export function NR6Cliente() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          MVP NR-6 - Análise de EPIs
+    <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+      <div className="text-center relative py-6 sm:py-8 mb-8">
+        <div className="absolute inset-0 bg-sgn-primary-500/10 blur-[80px] pointer-events-none" />
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground relative">
+          NR-6 - Analise de EPIs
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Análise especializada de conformidade com a NR-6 (Equipamento de Proteção Individual)
+        <p className="text-base text-muted-foreground mt-3 relative">
+          Analise especializada de conformidade com a NR-6 (Equipamento de Protecao Individual)
         </p>
       </div>
 
@@ -201,7 +202,7 @@ export function NR6Cliente() {
                 <h4 className="font-medium">Gaps Identificados ({resultado.gaps.length})</h4>
                 <div className="space-y-2">
                   {resultado.gaps.map((gap) => (
-                    <div key={gap.id} className="border rounded-md p-3">
+                    <div key={gap.id} className="border rounded-2xl p-3">
                       <div className="flex items-center gap-2 mb-1">
                         {getSeveridadeIcon(gap.severidade)}
                         <Badge variant="outline">{gap.categoria}</Badge>

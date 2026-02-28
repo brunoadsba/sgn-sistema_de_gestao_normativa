@@ -76,7 +76,7 @@
   }
 }
 
-/* 🚀 ANIMAÇÕES DE PERFORMANCE OTIMIZADAS */
+/* Animacoes */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -99,7 +99,7 @@
   }
 }
 
-/* 🚀 OTIMIZAÇÕES HARDWARE ACCELERATION */
+/* Hardware acceleration */
 .animate-fadeInUp {
   animation: fadeInUp 0.5s ease-out forwards;
   will-change: transform, opacity;
@@ -110,33 +110,19 @@
   will-change: transform, opacity;
 }
 
-/* 🚀 PERFORMANCE: Composite layers para animações */
-.hover\:shadow-lg:hover,
-.hover\:shadow-md:hover {
-  will-change: box-shadow;
-  transform: translateZ(0);
-}
-
-/* 🚀 OTIMIZAÇÃO: Scroll suave */
+/* Scroll suave */
 html {
   scroll-behavior: smooth;
 }
 
-/* 🚀 OTIMIZAÇÃO: Reduzir paint em transições */
-.transition-shadow {
-  transition: box-shadow 0.15s ease-in-out;
-  will-change: box-shadow;
-}
-
-/* 🚀 DESIGN PREMIUM: Glassmorphism & Shimmer */
+/* Glassmorphism */
 .glass-mora {
   @apply bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl border border-white/20 dark:border-gray-800/50 shadow-xl;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-mora:hover {
-  @apply border-white/40 dark:border-gray-700/80 shadow-2xl;
-  transform: translateY(-2px);
+  @apply border-white/40 dark:border-gray-700/80;
 }
 
 .shimmer-text {
