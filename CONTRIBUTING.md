@@ -1,6 +1,6 @@
 # Contributing
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-28
 
 Fluxo oficial de contribuicao para o SGN.
 

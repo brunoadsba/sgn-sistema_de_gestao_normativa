@@ -107,7 +107,7 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 2. `npm run lint`: passou.
 3. `npm run build`: passou com `next build --webpack` apos migracao de fonte para self-host.
 4. `npm run test:ci`: passou (`54/54`).
-5. `npm run test:e2e`: passou (`27` cenarios).
+5. `npm run test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
 
 ## 9. Debito Tecnico Priorizado
 

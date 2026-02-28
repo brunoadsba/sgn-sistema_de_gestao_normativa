@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.1] - 2026-02-28
+### Alterado
+- **Documentacao completa**: README, docs/README, arquitetura, memory, operacao-local, CONTRIBUTING, SECURITY e 5s-documentacao alinhados ao estado real do repositorio.
+- **Testes E2E**: referencias atualizadas para 47 cenarios (45 passados, 2 pulados) em 8 suites.
+- **Teste pagina-inicial**: seletor de upload ajustado para texto exato "Arraste o documento aqui".
+
+### Qualidade
+- `npm run test:e2e` ✅ (45/47 passados, 2 pulados em chat.spec.ts)
+
 ## [2.3.0] - 2026-02-28
 ### Adicionado
 - **Chat NEX modo livre**: assistente acessivel sem documento carregado para duvidas gerais sobre SST, NRs, EPIs e compliance. Transicao automatica para modo grounded (restrito ao documento) ao carregar arquivo.
@@ -21,7 +30,7 @@
 - `npx tsc --noEmit` ✅
 - `npm run lint` ✅
 - `npm run test:ci` ✅ (54/54)
-- `npm run test:e2e` ✅ (27 cenarios)
+- `npm run test:e2e` ✅ (47 cenarios, 45 passados, 2 pulados)
 
 ## [2.2.19] - 2026-02-27
 ### Segurança e Correções

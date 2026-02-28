@@ -1,6 +1,6 @@
 # 5S da Documentacao SGN
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-28
 > Responsavel: Engenharia SGN
 
 ## Objetivo

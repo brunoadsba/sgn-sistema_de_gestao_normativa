@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.3.0`
+- Versao atual (documental): `2.3.1`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -77,7 +77,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. `npm run lint`: passou.
 3. `npm run build`: passou (`next build --webpack`) apos migracao para fonte local/self-host.
 4. `npm run test:ci`: passou (`54/54`).
-5. `npm run test:e2e`: passou (27 cenarios).
+5. `npm run test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
 
 ## 7. Prioridades Imediatas
 
@@ -111,9 +111,10 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 74 | 2026-02-27 | Endurecimento pericial do Chat NEX: parâmetros de sampling determinísticos (`temperature: 0`, `top_p: 1`, `seed: 42`) aplicados na rota de chat interativo. System prompt reenquadrado para perfil de "auditor forense", vetando respostas por inferência externa ou ausência de lastro. |
 | 75 | 2026-02-28 | Backend Core Hardening: modelos IA configuraveis via env (`GROQ_MODEL`, `GROQ_MODEL_NR6`), rate limiting em todas as rotas desprotegidas, validacao Zod padronizada, formato de resposta unificado (`createSuccessResponse`/`createErrorResponse`), decomposicao de `persistencia-analise.ts` em modulos e logging estruturado com Pino. |
 | 76 | 2026-02-28 | UX/UI Global Overhaul + Chat Refactoring: redesign de todas as paginas para consistencia visual, correcao de navegacao do chat mobile/desktop, fix de timeout em upload de documentos grandes. |
-| 77 | 2026-02-28 | Testes E2E com Playwright: 27 cenarios cobrindo health, navegacao, catalogo de normas, upload, extracao de texto, NR-6 e API do chat. |
+| 77 | 2026-02-28 | Testes E2E com Playwright: 47 cenarios (45 passados, 2 pulados) cobrindo health, navegacao, catalogo de normas, upload, extracao de texto, NR-6 e API do chat. |
 | 78 | 2026-02-28 | Chat NEX modo livre: assistente acessivel sem documento para duvidas gerais de SST/NRs, com transicao automatica para modo grounded ao carregar documento. UI redesenhada seguindo padroes modernos de chatbot. |
 | 79 | 2026-02-28 | Fix critico: frontend do chat e sugestao de NRs corrigidos para ler `data.data.*` apos padronizacao de respostas API (Phase 4 backend hardening). |
+| 80 | 2026-02-28 | Documentacao completa atualizada: README, docs, arquitetura, memory, operacao-local, CONTRIBUTING, SECURITY, 5s. Versao documental 2.3.1. E2E: 47 cenarios (45 passados, 2 pulados). |
 
 ## 9. Arquivo Historico Completo
 

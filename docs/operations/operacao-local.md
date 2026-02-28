@@ -1,6 +1,6 @@
 # SGN - Runbook de Operacao Local
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-28
 
 ## 1. Objetivo
 
@@ -57,13 +57,13 @@ npm run test:ci
 npm run test:e2e
 ```
 
-Estado medido em `2026-02-26`:
+Estado medido em `2026-02-28`:
 
 1. `tsc`: passou.
 2. `lint`: passou.
 3. `build`: passou (`next build --webpack`) com fonte local/self-host.
 4. `test:ci`: passou (`54/54`).
-5. `test:e2e`: passou (`33/33`).
+5. `test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
 
 Regra operacional:
 

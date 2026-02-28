@@ -5,7 +5,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 ## Snapshot Atual
 
 - Atualizado em: `2026-02-28`
-- Versao documental: `2.3.0`
+- Versao documental: `2.3.1`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
@@ -31,7 +31,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - `npm run lint`: passou.
 - `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
 - `npm run test:ci`: passou (`54/54`).
-- Referencia atual de suites E2E no repositorio: 5 suites em `e2e/*.spec.ts` (27 cenarios).
+- Referencia atual de suites E2E no repositorio: 8 suites em `e2e/*.spec.ts` (47 cenarios, 45 passados, 2 pulados).
 
 ## Capacidades Principais
 
@@ -41,7 +41,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 4. Assistente NEX com modo livre (SST geral) e grounded (restrito ao documento).
 5. Exportacao de dados em `CSV/JSON`.
 6. Health check em `GET /api/health`.
-7. Testes E2E com Playwright (27 cenarios).
+7. Testes E2E com Playwright (47 cenarios, 45 passados, 2 pulados).
 
 ## Endpoints API Ativos
 

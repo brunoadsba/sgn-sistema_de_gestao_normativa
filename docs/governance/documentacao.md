@@ -1,6 +1,6 @@
 # Governanca de Documentacao
 
-> Atualizado em: 2026-02-26
+> Atualizado em: 2026-02-28
 
 ## 1. Objetivo
 

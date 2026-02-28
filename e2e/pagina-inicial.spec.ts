@@ -22,9 +22,7 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
 
   test('exibe a seção de upload de documento', async ({ page }) => {
     await expect(page.getByText('Envio do Documento')).toBeVisible()
-    await expect(
-      page.getByText('Mergulhe seu documento aqui')
-    ).toBeVisible()
+    await expect(page.getByText('Arraste o documento aqui')).toBeVisible()
   })
 
   test('exibe a seção de seleção de normas', async ({ page }) => {
