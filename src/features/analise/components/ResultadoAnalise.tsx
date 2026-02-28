@@ -8,201 +8,30 @@ import {
   ArrowRight, RotateCcw,
   Printer, MessageSquare
 } from 'lucide-react'
-import { AnaliseConformidadeResponse, GapConformidade } from '@/types/ia'
+import { AnaliseConformidadeResponse } from '@/types/ia'
 import { motion } from 'framer-motion'
 import { toReportData } from '@/lib/ia/report-mapper'
-import { normalizarCodigoNr } from '@/lib/normas/ordem'
+import {
+  CONFIG_RISCO,
+  CONFIG_SEVERIDADE_BADGE,
+  ORDEM_SEVERIDADE,
+  formatarDataHora,
+  gerarTituloRelatorioParaImpressao,
+  formatarNivelRisco,
+  formatarStatusLaudo,
+  formatarSeveridadeRelatorio,
+  obterNormaPrincipalGap,
+  normalizarCategoriaGap,
+  statusGap,
+  statusGapClasses,
+  limparResumoRelatorio,
+} from './resultado-utils'
+import { ScoreIndicador } from './ScoreIndicador'
 
 interface ResultadoAnaliseProps {
   resultado: AnaliseConformidadeResponse
   onNovaAnalise: () => void
   onChatOpen: () => void
-}
-
-
-const CONFIG_RISCO = {
-  baixo: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400', label: 'Risco Baixo' },
-  medio: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-600 dark:text-amber-400', label: 'Risco Médio' },
-  alto: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-600 dark:text-orange-400', label: 'Risco Alto' },
-  critico: { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-600 dark:text-red-400', label: 'Risco Crítico' },
-} as const
-
-const CONFIG_SEVERIDADE_BADGE: Record<GapConformidade['severidade'], { label: string; classes: string }> = {
-  baixa: { label: 'Baixa', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  media: { label: 'Média', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
-  alta: { label: 'Alta', classes: 'bg-red-50 text-red-700 border-red-200' },
-  critica: { label: 'Crítica', classes: 'bg-red-100 text-red-800 border-red-300' },
-}
-
-const ORDEM_SEVERIDADE: Record<string, number> = {
-  critica: 0,
-  alta: 1,
-  media: 2,
-  baixa: 3,
-}
-
-function formatarDataHora(data: Date): string {
-  const dataParte = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(data)
-  const horaParte = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(data)
-  return `${dataParte} ${horaParte}`
-}
-
-function gerarTituloRelatorioParaImpressao(): string {
-  const agora = new Date()
-  const dataBr = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(agora)
-  const horaBr = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(agora)
-
-  // Mantém padrão estável e compatível com nomes de arquivo.
-  const dataSegura = dataBr.replace(/\//g, '-')
-  const horaSegura = horaBr.replace(':', '-')
-  return `Relatório_SGN_${dataSegura}_${horaSegura}`
-}
-
-function formatarNivelRisco(nivel: AnaliseConformidadeResponse['nivelRisco']): string {
-  const mapa = {
-    baixo: 'Baixo',
-    medio: 'Médio',
-    alto: 'Alto',
-    critico: 'Crítico',
-  } as const
-
-  return mapa[nivel] ?? 'Médio'
-}
-
-function formatarStatusLaudo(status?: AnaliseConformidadeResponse['reportStatus']): string {
-  if (status === 'laudo_aprovado') return 'Laudo Aprovado'
-  if (status === 'laudo_rejeitado') return 'Laudo Rejeitado'
-  return 'Pré-laudo pendente'
-}
-
-function formatarSeveridadeRelatorio(severidade: GapConformidade['severidade']): string {
-  const mapa = {
-    critica: 'CRÍTICA',
-    alta: 'ALTA',
-    media: 'MÉDIA',
-    baixa: 'BAIXA',
-  } as const
-
-  return mapa[severidade] ?? String(severidade).toUpperCase()
-}
-
-function obterNormaPrincipalGap(gap: GapConformidade): string {
-  const normaRelacionada = gap.normasRelacionadas?.find((item) => item.trim().length > 0)
-  if (normaRelacionada) return normalizarCodigoNr(normaRelacionada)
-  const normaEvidencia = gap.evidencias?.find((item) => item.normaCodigo.trim().length > 0)?.normaCodigo
-  if (normaEvidencia) return normalizarCodigoNr(normaEvidencia)
-  return '-'
-}
-
-function normalizarCategoriaGap(categoria: string | undefined): string {
-  if (!categoria || categoria.trim().length === 0) return 'Geral'
-  const limpa = categoria.trim()
-
-  if (/gest[aã]o/i.test(limpa) && /(sst|seguran|sa[uú]de)/i.test(limpa)) return 'Gestão SST'
-  if (/vi[aá]ria/i.test(limpa)) return 'Segurança Viária'
-  if (/acesso/i.test(limpa)) return 'Segurança no Acesso'
-
-  return limpa
-}
-
-function statusGap(reportStatus?: AnaliseConformidadeResponse['reportStatus']): 'Aberto' | 'Em andamento' | 'Resolvido' {
-  if (reportStatus === 'laudo_aprovado') return 'Em andamento'
-  if (reportStatus === 'laudo_rejeitado') return 'Aberto'
-  return 'Aberto'
-}
-
-function statusGapClasses(status: 'Aberto' | 'Em andamento' | 'Resolvido'): string {
-  if (status === 'Resolvido') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-  if (status === 'Em andamento') return 'bg-blue-50 text-blue-700 border-blue-200'
-  return 'bg-red-50 text-red-700 border-red-200'
-}
-
-function limparResumoRelatorio(texto: string): string {
-  if (!texto) return ''
-
-  const linhasLimpas = texto
-    .replace(/\r\n/g, '\n')
-    .replace(/An[aá]lise consolidada de \d+ blocos do documento\.?/gi, '')
-    .replace(/\bPontos-?Chave\b:?/gi, '')
-    .split('\n')
-    .map((linha) => linha.trim())
-    .join('\n')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-
-  return linhasLimpas
-}
-
-function ScoreIndicador({ score }: { score: number }) {
-  const cor =
-    score >= 80 ? 'text-emerald-600'
-      : score >= 60 ? 'text-amber-600'
-        : score >= 40 ? 'text-orange-600'
-          : 'text-red-600'
-
-  const bgCor =
-    score >= 80 ? 'bg-emerald-500/5 border-emerald-500/20'
-      : score >= 60 ? 'bg-amber-500/5 border-amber-500/20'
-        : score >= 40 ? 'bg-orange-500/5 border-orange-500/20'
-          : 'bg-red-500/5 border-red-500/20'
-
-  const porcentagem = Math.min(100, Math.max(0, score))
-  const raio = 42
-  const circunferencia = 2 * Math.PI * raio
-  const isFull = porcentagem >= 100
-  const offset = isFull ? 0 : circunferencia - (porcentagem / 100) * circunferencia
-  const corTraco = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : score >= 40 ? '#f97316' : '#ef4444'
-
-  return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className={`flex flex-col items-center justify-center p-8 rounded-2xl border ${bgCor} min-w-[180px] bg-white/50 dark:bg-gray-900/50 backdrop-blur-3xl relative overflow-hidden transition-all duration-500`}
-    >
-      <div className="relative w-28 h-28">
-        <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r={raio} fill="none" stroke="currentColor" strokeWidth="4" className="text-gray-100 dark:text-gray-800" />
-          <motion.circle
-            initial={{ strokeDashoffset: isFull ? 0 : circunferencia }}
-            animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 2, ease: "easeOut" }}
-            cx="50" cy="50" r={raio}
-            fill="none"
-            stroke={corTraco}
-            strokeWidth="6"
-            strokeLinecap={isFull ? "butt" : "round"}
-            strokeDasharray={circunferencia}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-4xl font-black tracking-tighter leading-none ${cor}`}>{score}</span>
-        </div>
-      </div>
-      <span className={`text-[9px] font-black uppercase tracking-[0.2em] mt-3 ${cor} bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full border border-white/20`}>
-        {score >= 80 ? 'Excelente' : score >= 60 ? 'Parcial' : score >= 40 ? 'Baixa' : 'Crítica'}
-      </span>
-    </motion.div>
-  )
 }
 
 export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: ResultadoAnaliseProps) {

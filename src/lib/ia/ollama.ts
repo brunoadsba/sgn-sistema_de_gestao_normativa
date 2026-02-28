@@ -3,9 +3,10 @@ import { iaLogger } from '@/lib/logger'
 import { AnaliseConformidadeRequest, AnaliseConformidadeResponse } from '@/types/ia'
 import { z } from 'zod'
 import { montarSystemPromptEspecialista, selecionarPerfilPorRequest } from './specialist-agent'
+import { sanitizeInput } from './sanitize'
 
-// Limite máximo de caracteres para documentos enviados à IA
-const MAX_DOCUMENT_LENGTH = 500000
+const OLLAMA_RETRY_ATTEMPTS = 2
+const OLLAMA_RETRY_DELAY_MS = 1000
 
 const EvidenciaNormativaSchema = z.object({
     chunkId: z.string(),
@@ -54,13 +55,6 @@ const AnaliseConformidadeResponseSchema = z.object({
     proximosPassos: z.array(z.string()).default([]),
 })
 
-function sanitizeInput(input: string): string {
-    return input
-        .slice(0, MAX_DOCUMENT_LENGTH)
-        .replace(/```/g, '')
-        .trim()
-}
-
 export async function analisarConformidadeOllama(
     request: AnaliseConformidadeRequest
 ): Promise<AnaliseConformidadeResponse> {
@@ -68,7 +62,7 @@ export async function analisarConformidadeOllama(
         const prompt = gerarPromptAnalise(request)
         const profile = selecionarPerfilPorRequest(request)
         const systemPrompt = montarSystemPromptEspecialista('analise_conformidade', profile)
-        const response = await executarOllama(prompt, systemPrompt)
+        const response = await executarOllamaComRetry(prompt, systemPrompt)
         return parsearRespostaAnalise(response)
     } catch (error) {
         iaLogger.error(
@@ -85,22 +79,16 @@ async function executarOllama(prompt: string, systemPrompt: string): Promise<str
     const payload = {
         model: env.OLLAMA_MODEL,
         messages: [
-            {
-                role: 'system',
-                content: systemPrompt,
-            },
-            {
-                role: 'user',
-                content: prompt,
-            },
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt },
         ],
         stream: false,
         options: {
             temperature: 0,
             top_p: 1,
             seed: 42,
-            num_ctx: 16384 // Aumentando o contexto para documentos SST
-        }
+            num_ctx: 16384,
+        },
     }
 
     const response = await fetch(url, {
@@ -116,6 +104,25 @@ async function executarOllama(prompt: string, systemPrompt: string): Promise<str
 
     const data = await response.json()
     return data.message.content
+}
+
+async function executarOllamaComRetry(prompt: string, systemPrompt: string): Promise<string> {
+    let lastError: unknown
+    for (let attempt = 0; attempt < OLLAMA_RETRY_ATTEMPTS; attempt++) {
+        try {
+            return await executarOllama(prompt, systemPrompt)
+        } catch (error) {
+            lastError = error
+            if (attempt < OLLAMA_RETRY_ATTEMPTS - 1) {
+                iaLogger.warn(
+                    { attempt: attempt + 1, maxAttempts: OLLAMA_RETRY_ATTEMPTS, error: error instanceof Error ? error.message : 'Erro desconhecido' },
+                    'Falha Ollama, tentando novamente'
+                )
+                await new Promise((r) => setTimeout(r, OLLAMA_RETRY_DELAY_MS * (attempt + 1)))
+            }
+        }
+    }
+    throw lastError
 }
 
 function gerarPromptAnalise(request: AnaliseConformidadeRequest): string {
@@ -174,7 +181,7 @@ FORMATO:
 
 function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
     try {
-        console.log(`\n[DEBUG] OLLAMA RESPONSE START >>>\n${response}\n<<< OLLAMA RESPONSE END`)
+        iaLogger.debug({ provider: 'ollama', preview: response.substring(0, 500) }, 'Preview de resposta IA')
         const jsonMatch = response.match(/\{[\s\S]*\}/)
         if (!jsonMatch) throw new Error('JSON não encontrado')
 
@@ -182,7 +189,7 @@ function parsearRespostaAnalise(response: string): AnaliseConformidadeResponse {
         return AnaliseConformidadeResponseSchema.parse(parsed) as AnaliseConformidadeResponse
     } catch (error) {
         if (error instanceof z.ZodError) {
-            console.error(`[DEBUG] Zod Ollama Error:`, JSON.stringify(error.issues, null, 2))
+            iaLogger.debug({ provider: 'ollama', error_class: 'schema_validation', issues: error.issues }, 'Falha de validação na resposta Ollama')
         }
         throw error
     }

@@ -89,6 +89,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
           <div className="absolute inset-0 bg-indigo-500/5 blur-xl group-focus-within:bg-indigo-500/10 transition-colors -z-10" />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors" />
           <Input
+            aria-label="Buscar norma regulamentadora"
             placeholder="Buscar Norma Regulamentadora"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}

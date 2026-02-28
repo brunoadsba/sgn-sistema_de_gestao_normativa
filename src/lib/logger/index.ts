@@ -1,31 +1,37 @@
 import pino from 'pino';
 import { randomUUID } from 'crypto';
 import type { NextRequest } from 'next/server';
+import { env } from '@/lib/env';
 
-// Configuração do logger Pino para produção
-const pinoOptions: pino.LoggerOptions = {
-  level: process.env.LOG_LEVEL || 'info',
-  formatters: {
-    level: (label) => {
-      return { level: label };
+function createBaseLogger(): pino.Logger {
+  return pino({
+    level: env.LOG_LEVEL,
+    formatters: {
+      level: (label) => {
+        return { level: label };
+      },
     },
-  },
-  timestamp: pino.stdTimeFunctions.isoTime,
-  base: {
-    service: 'sgn-api',
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-  },
-};
+    timestamp: pino.stdTimeFunctions.isoTime,
+    base: {
+      service: 'sgn-api',
+      version: env.NPM_PACKAGE_VERSION,
+      environment: env.NODE_ENV,
+    },
+  });
+}
 
-// pino-pretty transport desabilitado em dev — usa worker threads
-// que conflitam com hot-reload do Next.js (erro MODULE_NOT_FOUND worker.js)
+let _logger: pino.Logger | null = null;
 
-const logger = pino(pinoOptions);
+function getLogger(): pino.Logger {
+  if (!_logger) {
+    _logger = createBaseLogger();
+  }
+  return _logger;
+}
 
 // Logger com contexto para APIs
 export const createLogger = (context: string) => {
-  return logger.child({ context });
+  return getLogger().child({ context });
 };
 
 export function getCorrelationId(request?: NextRequest): string {
@@ -35,11 +41,17 @@ export function getCorrelationId(request?: NextRequest): string {
 
 export function createRequestLogger(request: NextRequest, context = 'api') {
   const correlationId = getCorrelationId(request);
-  return logger.child({ context, correlationId });
+  return getLogger().child({ context, correlationId });
 }
 
-// Logger padrão para uso geral
-export const log = logger;
+// Logger padrão para uso geral (lazy proxy)
+const logProxy = new Proxy({} as pino.Logger, {
+  get(_, prop) {
+    return (getLogger() as unknown as Record<string, unknown>)[prop as string];
+  },
+});
+
+export const log = logProxy;
 
 // Loggers específicos para diferentes módulos
 export const apiLogger = createLogger('api');
@@ -50,68 +62,87 @@ export const authLogger = createLogger('auth');
 
 // Função para log de erro com stack trace e contexto
 export const logError = (error: Error, context?: Record<string, unknown>) => {
-  logger.error({
-    error: {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
+  getLogger().error(
+    {
+      error: {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      },
+      ...context,
     },
-    ...context,
-  }, 'Erro capturado');
+    'Erro capturado'
+  );
 };
 
 // Função para log de performance com métricas
 export const logPerformance = (operation: string, duration: number, context?: Record<string, unknown>) => {
-  logger.info({
-    operation,
-    duration,
-    performance: {
+  getLogger().info(
+    {
       operation,
-      duration_ms: duration,
-      timestamp: new Date().toISOString(),
+      duration,
+      performance: {
+        operation,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      },
+      ...context,
     },
-    ...context,
-  }, `Operação ${operation} executada em ${duration}ms`);
+    `Operação ${operation} executada em ${duration}ms`
+  );
 };
 
 // Função para log de auditoria (ações importantes)
 export const logAudit = (action: string, userId?: string, context?: Record<string, unknown>) => {
-  logger.info({
-    audit: {
-      action,
-      userId,
-      timestamp: new Date().toISOString(),
-      ip: context?.ip,
-      userAgent: context?.userAgent,
+  getLogger().info(
+    {
+      audit: {
+        action,
+        userId,
+        timestamp: new Date().toISOString(),
+        ip: context?.ip,
+        userAgent: context?.userAgent,
+      },
+      ...context,
     },
-    ...context,
-  }, `Ação de auditoria: ${action}`);
+    `Ação de auditoria: ${action}`
+  );
 };
 
 // Função para log de segurança
-export const logSecurity = (event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: Record<string, unknown>) => {
-  logger.warn({
-    security: {
-      event,
-      severity,
-      timestamp: new Date().toISOString(),
-      ip: context?.ip,
-      userAgent: context?.userAgent,
+export const logSecurity = (
+  event: string,
+  severity: 'low' | 'medium' | 'high' | 'critical',
+  context?: Record<string, unknown>
+) => {
+  getLogger().warn(
+    {
+      security: {
+        event,
+        severity,
+        timestamp: new Date().toISOString(),
+        ip: context?.ip,
+        userAgent: context?.userAgent,
+      },
+      ...context,
     },
-    ...context,
-  }, `Evento de segurança [${severity.toUpperCase()}]: ${event}`);
+    `Evento de segurança [${severity.toUpperCase()}]: ${event}`
+  );
 };
 
 // Função para log de negócio (métricas importantes)
 export const logBusiness = (metric: string, value: number, context?: Record<string, unknown>) => {
-  logger.info({
-    business: {
-      metric,
-      value,
-      timestamp: new Date().toISOString(),
+  getLogger().info(
+    {
+      business: {
+        metric,
+        value,
+        timestamp: new Date().toISOString(),
+      },
+      ...context,
     },
-    ...context,
-  }, `Métrica de negócio: ${metric} = ${value}`);
+    `Métrica de negócio: ${metric} = ${value}`
+  );
 };
 
-export default logger;
+export default logProxy;

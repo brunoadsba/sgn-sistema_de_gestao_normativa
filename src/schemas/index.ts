@@ -52,6 +52,12 @@ export const CreateAnaliseSchema = AnaliseConformidadeSchema.omit({
   status: true,
 });
 
+// Schema para parâmetros de rota [id] (UUID - jobs, análises)
+export const IdParamSchema = z.object({ id: z.string().uuid('ID inválido') })
+
+// Schema para parâmetros de rota normas/[id] (IDs numéricos como "1", "6")
+export const NormaIdParamSchema = z.object({ id: z.string().min(1, 'ID da norma é obrigatório') })
+
 // Schema para parâmetros de query
 export const QueryParamsSchema = z.object({
   page: z.string().default('1').transform(Number).pipe(z.number().min(1)),

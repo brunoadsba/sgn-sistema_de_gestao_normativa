@@ -79,7 +79,7 @@ async function callGroq(messages: ChatMessage[]): Promise<string> {
 }
 
 async function callZai(messages: ChatMessage[]): Promise<string> {
-  const apiKey = env.ZAI_API_KEY || process.env.OPENAI_API_KEY
+  const apiKey = env.ZAI_API_KEY || env.OPENAI_API_KEY
   if (!apiKey) throw new Error('ZAI_API_KEY ausente para fallback')
 
   const response = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {

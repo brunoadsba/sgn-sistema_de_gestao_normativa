@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
+import { getRiscoColor } from '@/lib/constants/risco'
 
 interface AnaliseResultado {
   score: number
@@ -73,16 +74,6 @@ export function NR6Cliente() {
     }
   }
 
-  const getRiscoColor = (risco: string) => {
-    switch (risco) {
-      case 'baixo': return 'bg-green-500'
-      case 'medio': return 'bg-yellow-500'
-      case 'alto': return 'bg-orange-500'
-      case 'critico': return 'bg-red-500'
-      default: return 'bg-gray-500'
-    }
-  }
-
   const getSeveridadeIcon = (severidade: string) => {
     switch (severidade) {
       case 'baixa': return <CheckCircle className="h-4 w-4 text-green-500" />
@@ -112,9 +103,9 @@ export function NR6Cliente() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Tipo de Documento</label>
+              <label htmlFor="tipo-documento-nr6" className="text-sm font-medium">Tipo de Documento</label>
               <Select value={tipoDocumento} onValueChange={setTipoDocumento}>
-                <SelectTrigger>
+                <SelectTrigger id="tipo-documento-nr6">
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -130,8 +121,9 @@ export function NR6Cliente() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Documento</label>
+              <label htmlFor="documento-nr6" className="text-sm font-medium">Documento</label>
               <Textarea
+                id="documento-nr6"
                 value={documento}
                 onChange={(e) => setDocumento(e.target.value)}
                 placeholder="Cole aqui o conteúdo do documento para análise..."

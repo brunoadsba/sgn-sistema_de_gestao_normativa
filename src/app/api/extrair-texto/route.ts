@@ -51,6 +51,11 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Nenhum arquivo fornecido', 400)
     }
 
+    const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
+    if (file.size > MAX_FILE_SIZE) {
+      return createErrorResponse('Arquivo excede 100MB', 400)
+    }
+
     logger.info({ nome: file.name, tipo: file.type, tamanho: file.size }, 'Extraindo texto do arquivo')
 
     const fileName = file.name.toLowerCase()

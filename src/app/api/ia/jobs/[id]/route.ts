@@ -5,13 +5,20 @@ import { eq } from 'drizzle-orm';
 import { createSuccessResponse, createErrorResponse } from '@/middlewares/validation';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { createRequestLogger } from '@/lib/logger';
+import { IdParamSchema } from '@/schemas';
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const log = createRequestLogger(request, 'api.jobs');
     try {
-        const { id: jobId } = await params;
+        const rawParams = await params;
+        const parsed = IdParamSchema.safeParse(rawParams);
+        if (!parsed.success) {
+            return createErrorResponse('ID invalido', 400);
+        }
+        const { id: jobId } = parsed.data;
 
         // 1. Rate Limiting (Hardening)
         const rl = rateLimit(request, {
@@ -64,8 +71,7 @@ export async function GET(
             completedAt: job.completedAt,
         });
     } catch (error) {
-        const logger = createRequestLogger(request, 'api.jobs');
-        logger.error({ error }, 'Erro ao buscar job');
+        log.error({ error }, 'Erro ao buscar job');
         return createErrorResponse('Erro interno ao buscar job', 500);
     }
 }

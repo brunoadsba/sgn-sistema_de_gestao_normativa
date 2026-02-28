@@ -93,3 +93,4 @@ obsoleto/
 # ============================================
 docs/harbor/
 /jobs/
+test-results/

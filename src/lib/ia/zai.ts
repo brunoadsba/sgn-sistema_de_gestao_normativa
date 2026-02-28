@@ -32,7 +32,7 @@ function calculateBackoffDelay(attempt: number): number {
 export async function analisarConformidadeZai(
     request: AnaliseConformidadeRequest
 ): Promise<AnaliseConformidadeResponse> {
-    const apiKey = env.ZAI_API_KEY || process.env.OPENAI_API_KEY
+    const apiKey = env.ZAI_API_KEY || env.OPENAI_API_KEY
     const modelosPorTentativa = [env.ZAI_MODEL || 'glm-4.7', 'glm-4.5']
 
     if (!apiKey) {

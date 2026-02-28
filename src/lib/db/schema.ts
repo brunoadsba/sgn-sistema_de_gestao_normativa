@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql, relations } from 'drizzle-orm';
 
 const nowDefault = sql`(datetime('now'))`;
@@ -35,7 +35,10 @@ export const analiseJobs = sqliteTable('analise_jobs', {
   createdAt: text('created_at').notNull().default(nowDefault),
   startedAt: text('started_at'),
   completedAt: text('completed_at'),
-});
+}, (table) => ({
+  documentoIdx: index('idx_analise_jobs_documento_id').on(table.documentoId),
+  statusIdx: index('idx_analise_jobs_status').on(table.status),
+}));
 
 export const analiseJobsRelations = relations(analiseJobs, ({ one }) => ({
   documento: one(documentos, {
@@ -54,7 +57,9 @@ export const analiseResultados = sqliteTable('analise_resultados', {
   statusGeral: text('status_geral'),
   metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
   createdAt: text('created_at').notNull().default(nowDefault),
-});
+}, (table) => ({
+  createdAtIdx: index('idx_analise_resultados_created_at').on(table.createdAt),
+}));
 
 export const analiseResultadosRelations = relations(analiseResultados, ({ one, many }) => ({
   job: one(analiseJobs, {
@@ -89,7 +94,10 @@ export const conformidadeGaps = sqliteTable('conformidade_gaps', {
   classificacao: text('classificacao'),
   prazoDias: integer('prazo_dias'),
   createdAt: text('created_at').notNull().default(nowDefault),
-});
+}, (table) => ({
+  resultadoIdx: index('idx_conformidade_gaps_resultado_id').on(table.analiseResultadoId),
+  severidadeIdx: index('idx_conformidade_gaps_severidade').on(table.severidade),
+}));
 
 export const conformidadeGapsRelations = relations(conformidadeGaps, ({ one }) => ({
   resultado: one(analiseResultados, {

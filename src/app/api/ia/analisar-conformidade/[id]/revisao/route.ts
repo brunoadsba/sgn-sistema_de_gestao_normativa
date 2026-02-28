@@ -1,13 +1,21 @@
 import { NextRequest } from 'next/server'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
 import { buscarAnalisePorId, listarRevisoesAnalise } from '@/lib/ia/persistencia-analise'
+import { IdParamSchema } from '@/schemas'
+import { createRequestLogger } from '@/lib/logger'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const log = createRequestLogger(request, 'api.ia.revisao')
   try {
-    const { id } = await params
+    const rawParams = await params
+    const parsed = IdParamSchema.safeParse(rawParams)
+    if (!parsed.success) {
+      return createErrorResponse('ID invalido', 400)
+    }
+    const { id } = parsed.data
     const analise = await buscarAnalisePorId(id)
     if (!analise) {
       return createErrorResponse('Análise não encontrada', 404)
@@ -20,6 +28,7 @@ export async function GET(
       revisoes,
     })
   } catch (error) {
+    log.error({ error }, 'Erro ao buscar histórico de revisão')
     return createErrorResponse(
       'Erro ao buscar histórico de revisão',
       500,

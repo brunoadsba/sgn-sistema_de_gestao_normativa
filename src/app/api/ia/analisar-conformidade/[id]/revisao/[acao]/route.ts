@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { rateLimit } from '@/lib/security/rate-limit'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
 import { buscarAnalisePorId, registrarRevisaoAnalise } from '@/lib/ia/persistencia-analise'
+import { IdParamSchema } from '@/schemas'
+import { createRequestLogger } from '@/lib/logger'
 
 const RevisaoSchema = z.object({
   revisor: z.string().trim().min(2, 'Campo revisor deve ter pelo menos 2 caracteres'),
@@ -13,6 +15,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; acao: string }> }
 ) {
+  const log = createRequestLogger(request, 'api.ia.revisao.acao')
   try {
     const rl = rateLimit(request, {
       windowMs: 60_000,
@@ -24,7 +27,13 @@ export async function POST(
       return createErrorResponse('Muitas requisições. Tente novamente em breve.', 429)
     }
 
-    const { id, acao } = await params
+    const rawParams = await params
+    const idParsed = IdParamSchema.safeParse({ id: rawParams.id })
+    if (!idParsed.success) {
+      return createErrorResponse('ID invalido', 400)
+    }
+    const { id } = idParsed.data
+    const { acao } = rawParams
     const acaoNormalizada = acao.toLowerCase()
     if (acaoNormalizada !== 'aprovar' && acaoNormalizada !== 'rejeitar') {
       return createErrorResponse('Ação inválida. Use aprovar ou rejeitar.', 400)
@@ -57,6 +66,7 @@ export async function POST(
       revisao: resultado.revisao,
     })
   } catch (error) {
+    log.error({ error }, 'Erro ao registrar revisão humana')
     return createErrorResponse(
       'Erro ao registrar revisão humana',
       500,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Brain, Sparkles, CheckSquare, Upload, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,32 +26,9 @@ interface AnaliseClienteProps {
     normasIniciais: SeletorNorma[]
 }
 
-// Tipos alinhados com o HistoricoAnalisesCard
-type HistoricoAnalise = {
-    id: string
-    nomeDocumento: string
-    tipoDocumento: string
-    score: number
-    confidenceScore?: number
-    reportStatus?: 'pre_laudo_pendente' | 'laudo_aprovado' | 'laudo_rejeitado'
-    nivelRisco: 'baixo' | 'medio' | 'alto' | 'critico'
-    timestamp: string
-    tempoProcessamento: number
-    modeloUsado: string
-}
-
-type PeriodoHistorico = 'today' | '7d' | '30d' | 'all'
-type OrdenacaoHistorico = 'data_desc' | 'data_asc' | 'score_desc' | 'score_asc'
-
-type PaginacaoHistorico = {
-    pagina: number
-    totalPaginas: number
-    temProxima: boolean
-    temAnterior: boolean
-}
-
-// Usando o tipo oficial do backend para o resultado detalhado
 import type { AnaliseConformidadeResponse } from '@/types/ia'
+import { useExtracao } from '../hooks/useExtracao'
+import { useHistorico, type PeriodoHistorico, type OrdenacaoHistorico } from '../hooks/useHistorico'
 
 export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
     // Estados do Fluxo de Análise
@@ -68,10 +45,6 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
     // Estado do Histórico via Nuqs (Compartilhado com GlobalNav)
     const [mostrarHistoricoQuery] = useQueryState('hist_vis', { defaultValue: 'false', shallow: true })
     const mostrarHistorico = mostrarHistoricoQuery === 'true'
-
-    const [historico, setHistorico] = useState<HistoricoAnalise[]>([])
-    const [carregandoHistorico, setCarregandoHistorico] = useState(false)
-    const [limpandoHistorico, setLimpandoHistorico] = useState(false)
 
     const [paginaHistoricoQuery, setPaginaHistoricoQuery] = useQueryState('page', { shallow: true })
     const [periodoHistoricoQuery, setPeriodoHistoricoQuery] = useQueryState('period', { shallow: true })
@@ -100,155 +73,31 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
     const buscaDocumento = buscaDocumentoQuery || ''
     const [buscaDebounced, setBuscaDebounced] = useState('')
     const [chatAberto, setChatAberto] = useState(false)
-    const [textoExtraidoChat, setTextoExtraidoChat] = useState<string | null>(null)
-    const cacheExtracaoRef = useRef<Map<string, string>>(new Map())
-    const extracaoEmAndamentoRef = useRef<Map<string, Promise<string>>>(new Map())
-    const [paginacao, setPaginacao] = useState<PaginacaoHistorico>({
-        pagina: 1,
-        totalPaginas: 0,
-        temProxima: false,
-        temAnterior: false,
+
+    const { textoExtraidoChat, extrairTextoDocumento, limparCache } = useExtracao(arquivo, analisando)
+
+    const {
+        historico,
+        carregandoHistorico,
+        limpandoHistorico,
+        paginacao,
+        carregarHistorico,
+        formatarDataHoraBrasilia,
+        exportarHistoricoCsv,
+        limparHistorico: limparHistoricoBase,
+    } = useHistorico({
+        mostrarHistorico,
+        paginaHistorico,
+        periodoHistorico,
+        ordenacaoHistorico,
+        buscaDebounced,
+        onPaginaReset: () => setPaginaHistoricoQuery('1'),
     })
-
-    const gerarArquivoKey = useCallback((file: File) => {
-        return `${file.name}-${file.size}-${file.lastModified}`
-    }, [])
-
-    const extrairTextoDocumento = useCallback(async (
-        file: File,
-        options?: { silencioso?: boolean }
-    ): Promise<string> => {
-        const key = gerarArquivoKey(file)
-        const cacheAtual = cacheExtracaoRef.current.get(key)
-        if (cacheAtual) return cacheAtual
-
-        const requisicaoAtual = extracaoEmAndamentoRef.current.get(key)
-        if (requisicaoAtual) return requisicaoAtual
-
-        const silencioso = options?.silencioso ?? false
-        const requisicao = (async () => {
-            const formData = new FormData()
-            formData.append('file', file)
-
-            const response = await fetchWithRetry('/api/extrair-texto', {
-                method: 'POST',
-                body: formData,
-            }, { retries: silencioso ? 1 : 2, timeoutMs: silencioso ? 30_000 : 120_000 })
-
-            if (!response.ok) {
-                if (response.status === 413) {
-                    throw new Error('O arquivo excede o limite de 4.5MB permitido pelo ambiente em nuvem (Vercel). Para documentos maiores, utilize a plataforma via Docker Local ou divida o arquivo.')
-                }
-                const err = await response.json().catch(() => ({}))
-                throw new Error(err.error || `Erro ${response.status} ao extrair texto`)
-            }
-
-            const payload = await response.json()
-            const texto = payload?.data?.texto
-            if (typeof texto !== 'string' || texto.length === 0) {
-                throw new Error('Resposta inválida ao extrair texto do documento')
-            }
-
-            cacheExtracaoRef.current.set(key, texto)
-            return texto
-        })()
-
-        extracaoEmAndamentoRef.current.set(key, requisicao)
-
-        try {
-            return await requisicao
-        } finally {
-            extracaoEmAndamentoRef.current.delete(key)
-        }
-    }, [gerarArquivoKey])
-
-    useEffect(() => {
-        if (!arquivo) {
-            setTextoExtraidoChat(null)
-            return
-        }
-
-        const key = gerarArquivoKey(arquivo)
-        const textoCache = cacheExtracaoRef.current.get(key) ?? null
-        setTextoExtraidoChat(textoCache)
-    }, [arquivo, gerarArquivoKey])
-
-    // Extração automática para o Chat em Background (deduplicada com cache/in-flight)
-    useEffect(() => {
-        if (!arquivo || analisando) return
-        let cancelado = false
-
-        const extrairParaChat = async () => {
-            try {
-                const texto = await extrairTextoDocumento(arquivo, { silencioso: true })
-                if (!cancelado) setTextoExtraidoChat(texto)
-            } catch (e) {
-                if (cancelado) return
-                const mensagem = e instanceof Error ? e.message : 'Erro desconhecido'
-                if (mensagem.includes('4.5MB')) {
-                    console.error('Documento muito grande para extração silenciosa de chat.')
-                    return
-                }
-                console.error('Erro na extração silenciosa para chat:', e)
-            }
-        }
-
-        void extrairParaChat()
-
-        return () => {
-            cancelado = true
-        }
-    }, [arquivo, analisando, extrairTextoDocumento])
-
-    const carregarHistorico = useCallback(async (
-        pagina: number,
-        periodo: PeriodoHistorico,
-        ordenacao: OrdenacaoHistorico,
-        busca: string
-    ) => {
-        setCarregandoHistorico(true)
-        try {
-            const params = new URLSearchParams({
-                limite: '8',
-                pagina: String(pagina),
-                periodo,
-                ordenacao,
-            })
-            if (busca.trim()) {
-                params.set('busca', busca.trim())
-            }
-
-            const response = await fetchWithRetry(`/api/ia/analisar-conformidade?${params.toString()}`, {
-                method: 'GET',
-            }, { retries: 2, timeoutMs: 20_000 })
-
-            const payload = await response.json().catch(() => null)
-            if (!response.ok || !payload?.success) {
-                return
-            }
-
-            const itens = Array.isArray(payload.data?.historico) ? payload.data.historico : []
-            setHistorico(itens)
-            setPaginacao({
-                pagina: payload.data?.paginacao?.pagina ?? pagina,
-                totalPaginas: payload.data?.paginacao?.totalPaginas ?? 0,
-                temProxima: Boolean(payload.data?.paginacao?.temProxima),
-                temAnterior: Boolean(payload.data?.paginacao?.temAnterior),
-            })
-        } finally {
-            setCarregandoHistorico(false)
-        }
-    }, [])
 
     useEffect(() => {
         const timeout = setTimeout(() => setBuscaDebounced(buscaDocumento), 300)
         return () => clearTimeout(timeout)
     }, [buscaDocumento])
-
-    useEffect(() => {
-        if (!mostrarHistorico) return
-        void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
-    }, [carregarHistorico, mostrarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
 
     // Polling de Job
     useEffect(() => {
@@ -321,7 +170,6 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
         try {
             setEtapa('Iniciando extração...')
             const textoDocumento = await extrairTextoDocumento(arquivo, { silencioso: false })
-            setTextoExtraidoChat((anterior) => anterior ?? textoDocumento)
 
             if (normasSelecionadas.length === 0) {
                 setSugerindoNrs(true)
@@ -406,55 +254,14 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
         setProgresso(0)
         setEtapa('')
         setSugerindoNrs(false)
-        setTextoExtraidoChat(null)
-        cacheExtracaoRef.current.clear()
-        extracaoEmAndamentoRef.current.clear()
-    }
-
-    const formatarDataHoraBrasilia = (isoDate: string) =>
-        new Intl.DateTimeFormat('pt-BR', {
-            timeZone: 'America/Sao_Paulo',
-            dateStyle: 'short',
-            timeStyle: 'medium',
-        }).format(new Date(isoDate))
-
-    const exportarHistoricoCsv = () => {
-        const params = new URLSearchParams({
-            format: 'csv',
-            periodo: periodoHistorico,
-            ordenacao: ordenacaoHistorico,
-        })
-        if (buscaDebounced.trim()) {
-            params.set('busca', buscaDebounced.trim())
-        }
-        const url = `/api/ia/analisar-conformidade?${params.toString()}`
-        window.open(url, '_blank', 'noopener,noreferrer')
+        limparCache()
     }
 
     const limparHistorico = async () => {
-        if (historico.length === 0) return
-
-        const confirmou = window.confirm(
-            'Deseja realmente apagar todo o histórico de análises? Esta ação não pode ser desfeita.'
-        )
-        if (!confirmou) return
-
-        setLimpandoHistorico(true)
-        setErro(null)
         try {
-            const response = await fetchWithRetry('/api/ia/analisar-conformidade', {
-                method: 'DELETE',
-            }, { retries: 2, timeoutMs: 20_000 })
-            const payload = await response.json().catch(() => null)
-            if (!response.ok || !payload?.success) {
-                throw new Error(payload?.error || 'Falha ao limpar histórico')
-            }
-            await setPaginaHistoricoQuery('1')
-            await carregarHistorico(1, periodoHistorico, ordenacaoHistorico, buscaDebounced)
+            await limparHistoricoBase()
         } catch (err) {
-            setErro(err instanceof Error ? err.message : 'Erro desconhecido ao limpar histórico')
-        } finally {
-            setLimpandoHistorico(false)
+            setErro(err instanceof Error ? err.message : 'Erro desconhecido ao limpar historico')
         }
     }
 

@@ -13,8 +13,9 @@ test.describe('APIs — Smoke Tests', () => {
     expect(response.status()).toBe(200)
     const body = await response.json()
     expect(body.success).toBe(true)
-    expect(Array.isArray(body.data)).toBe(true)
-    expect(body.data.length).toBeGreaterThan(0)
+    expect(body.data).toHaveProperty('items')
+    expect(Array.isArray(body.data.items)).toBe(true)
+    expect(body.data.items.length).toBeGreaterThan(0)
   })
 
   test('GET /api/normas/stats retorna estatísticas', async ({ request }) => {

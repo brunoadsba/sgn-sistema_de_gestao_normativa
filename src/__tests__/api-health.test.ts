@@ -1,9 +1,11 @@
 /**
  * @jest-environment node
  */
+import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/health/route';
 import { isDatabaseReady } from '@/lib/db';
 
+const mockRequest = new NextRequest('http://localhost/api/health');
 
 // Mock dependencies
 jest.mock('@/lib/db', () => ({
@@ -14,6 +16,8 @@ jest.mock('@/lib/env', () => ({
     env: {
         NODE_ENV: 'test',
         GROQ_API_KEY: 'fake_key',
+        LOG_LEVEL: 'silent',
+        NPM_PACKAGE_VERSION: '1.0.0',
     },
 }));
 
@@ -37,7 +41,7 @@ describe('GET /api/health', () => {
             json: async () => ({}),
         });
 
-        const response = await GET();
+        const response = await GET(mockRequest);
         const data = await response.json();
 
         expect(response.status).toBe(200);
@@ -56,7 +60,7 @@ describe('GET /api/health', () => {
             json: async () => ({}),
         });
 
-        const response = await GET();
+        const response = await GET(mockRequest);
         const data = await response.json();
 
         expect(response.status).toBe(503);
@@ -70,7 +74,7 @@ describe('GET /api/health', () => {
         (isDatabaseReady as jest.Mock).mockReturnValue(true);
         (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-        const response = await GET();
+        const response = await GET(mockRequest);
         const data = await response.json();
 
         expect(response.status).toBe(200);
@@ -84,7 +88,7 @@ describe('GET /api/health', () => {
             throw new Error('Unexpected catastrophe');
         });
 
-        const response = await GET();
+        const response = await GET(mockRequest);
         const data = await response.json();
 
         expect(response.status).toBe(503);

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { eq, lt } from 'drizzle-orm'
 import { db, schema } from '@/lib/db'
+import { isTest } from '@/lib/env'
 import { AnaliseConformidadeRequest } from '@/types/ia'
 
 type MemoryEntry = {
@@ -13,9 +14,9 @@ const CACHE_TTL_MS = 1000 * 60 * 60
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 5
 
 const memoryFallback = new Map<string, MemoryEntry>()
-let memoryMode = process.env.NODE_ENV === 'test'
+let memoryMode = isTest
 let lastCleanupAt = 0
-let schemaEnsured = process.env.NODE_ENV === 'test'
+let schemaEnsured = isTest
 
 export class IdempotencyConflictError extends Error {
   constructor(message: string) {

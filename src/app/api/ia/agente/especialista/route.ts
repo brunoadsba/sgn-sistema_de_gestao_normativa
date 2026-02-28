@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { rateLimit } from '@/lib/security/rate-limit'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
+import { createRequestLogger } from '@/lib/logger'
 import { inferirNormasHeuristicas } from '@/lib/ia/nr-heuristics'
 import { selecionarPerfilEspecialista } from '@/lib/ia/specialist-agent'
 
@@ -11,6 +12,7 @@ const BodySchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const log = createRequestLogger(request, 'api.ia.especialista')
   try {
     const rl = rateLimit(request, {
       windowMs: 60_000,
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
       normasHeuristicas,
     })
   } catch (error) {
+    log.error({ error }, 'Erro ao selecionar agente especialista')
     return createErrorResponse(
       'Erro ao selecionar agente especialista',
       500,

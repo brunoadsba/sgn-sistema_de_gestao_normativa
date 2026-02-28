@@ -133,6 +133,7 @@ export function HistoricoAnalisesCard({
             className="border-gray-300 dark:border-gray-600"
           />
           <select
+            aria-label="Ordenar historico"
             value={ordenacaoHistorico}
             onChange={(event) => onOrdenacaoChange(event.target.value as OrdenacaoHistorico)}
             className="h-10 rounded-md border border-gray-300 bg-transparent px-3 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200"

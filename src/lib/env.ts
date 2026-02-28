@@ -30,7 +30,17 @@ const envSchema = z.object({
   PORT: z.string().regex(/^\d+$/).default('3001'),
   NEXT_TELEMETRY_DISABLED: z.string().default('1'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-});
+  OPENAI_API_KEY: z.string().optional(),
+  NPM_PACKAGE_VERSION: z.string().default('1.0.0'),
+}).refine(
+  (data) => {
+    if (data.AI_PROVIDER === 'zai' && !data.ZAI_API_KEY && !data.OPENAI_API_KEY) {
+      return false;
+    }
+    return true;
+  },
+  { message: 'ZAI_API_KEY ou OPENAI_API_KEY obrigatoria quando AI_PROVIDER=zai' }
+);
 
 export type Env = z.infer<typeof envSchema>;
 
@@ -71,6 +81,8 @@ export function validateEnv(): Env {
       PORT: process.env.PORT,
       NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED,
       LOG_LEVEL: process.env.LOG_LEVEL,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      NPM_PACKAGE_VERSION: process.env.npm_package_version,
     });
 
     return validatedEnv;

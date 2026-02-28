@@ -3,6 +3,7 @@ import { z } from "zod";
 import { searchNormas } from "@/lib/data/normas";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createSuccessResponse, createErrorResponse } from "@/middlewares/validation";
+import { createRequestLogger } from "@/lib/logger";
 
 const SearchQuerySchema = z.object({
   q: z.string().min(1).max(200),
@@ -10,6 +11,7 @@ const SearchQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const log = createRequestLogger(request, 'api.search');
   try {
     const rl = rateLimit(request, { windowMs: 60_000, max: 60, keyPrefix: 'rl:search' });
     if (rl.limitExceeded) {
@@ -48,7 +50,8 @@ export async function GET(request: NextRequest) {
       total_found: results.length,
     });
 
-  } catch {
+  } catch (error) {
+    log.error({ error }, 'Erro na busca');
     return createErrorResponse("Erro interno do servidor", 500);
   }
 }

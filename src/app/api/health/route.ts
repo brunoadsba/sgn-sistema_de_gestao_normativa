@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isDatabaseReady } from '@/lib/db';
 import { env } from '@/lib/env';
+import { createRequestLogger } from '@/lib/logger';
 
 interface HealthCheck {
   status: 'ok' | 'error';
@@ -20,7 +21,8 @@ interface HealthCheck {
 
 const startTime = Date.now();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const log = createRequestLogger(request, 'api.health');
   const checkStartTime = Date.now();
   const services: HealthCheck['services'] = {
     database: 'error',
@@ -40,7 +42,7 @@ export async function GET() {
     const health: HealthCheck = {
       status,
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: env.NPM_PACKAGE_VERSION,
       environment: env.NODE_ENV,
       services,
       performance: {
@@ -58,11 +60,12 @@ export async function GET() {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    log.error({ error }, 'Falha no health check');
     return NextResponse.json(
       {
         status: 'error' as const,
         timestamp: new Date().toISOString(),
-        version: process.env.npm_package_version || '1.0.0',
+        version: env.NPM_PACKAGE_VERSION,
         environment: env.NODE_ENV,
         services: { database: 'error' as const, api: 'error' as const, llm: 'error' as const },
         error: message,

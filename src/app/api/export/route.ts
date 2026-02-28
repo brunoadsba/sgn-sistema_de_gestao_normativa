@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getNormas } from "@/lib/data/normas";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { createSuccessResponse, createErrorResponse } from "@/middlewares/validation";
+import { createRequestLogger } from "@/lib/logger";
 
 const ExportQuerySchema = z.object({
   format: z.enum(['json', 'csv']).default('json'),
@@ -13,6 +14,7 @@ const ExportQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const log = createRequestLogger(request, 'api.export');
   try {
     const rl = rateLimit(request, { windowMs: 60_000, max: 10, keyPrefix: 'rl:export' });
     if (rl.limitExceeded) {
@@ -79,7 +81,8 @@ export async function GET(request: NextRequest) {
       records: normas,
     });
 
-  } catch {
+  } catch (error) {
+    log.error({ error }, 'Erro ao exportar');
     return createErrorResponse("Erro interno do servidor", 500);
   }
 }

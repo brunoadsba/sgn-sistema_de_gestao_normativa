@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
   const logger = createRequestLogger(request, 'api.nr6')
   try {
     const body = await request.json()
-
-    const parsed = NR6AnalisarSchema.parse(body)
+    const result = NR6AnalisarSchema.safeParse(body)
+    if (!result.success) {
+      const detalhes = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')
+      return createErrorResponse(`Dados invalidos: ${detalhes}`, 400)
+    }
+    const parsed = result.data
 
     const inicioProcessamento = Date.now()
 
@@ -50,11 +54,6 @@ export async function POST(request: NextRequest) {
     return createSuccessResponse(respostaCompleta)
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const detalhes = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')
-      return createErrorResponse(`Dados de entrada inválidos: ${detalhes}`, 400)
-    }
-
     logger.error({ error: error instanceof Error ? error.message : 'Erro desconhecido' }, 'Erro na análise NR-6')
 
     return createErrorResponse(
