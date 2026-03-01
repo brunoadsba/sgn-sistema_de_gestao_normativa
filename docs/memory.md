@@ -58,7 +58,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. Analise com IA e persistencia de jobs/resultados.
 3. Catalogo de normas com busca e detalhe por NR.
 4. Fluxo dedicado NR-6.
-5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento).
+5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento) - corrigido problema da tela do chat.
 6. Exportacao em `CSV/JSON`.
 7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
 8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
