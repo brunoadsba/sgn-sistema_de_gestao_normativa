@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.3] - 2026-03-01
+### Adicionado
+- **Chat NEX Centralizado**: remodelagem do assistente para um Modal Central imersivo com backdrop blur, abandonando o painel lateral para maior foco na conversa.
+- **Integração no GlobalNav**: migração do gatilho do chat do botão flutuante para um item fixo de alta visibilidade no Header superior (Assistente NEX).
+
+### Alterado
+- **Simplificação da Home**: remoção do componente redundante de ações rápidas (`QuickActionsHome`) para um design mais limpo focado em upload e seleção de normas.
+- **Otimização de Espaço Vertical**: aplicação de travas de altura (`min-h-0`, `max-h-full`) no modal do chat para evitar cortes na interface em resoluções baixas ou com zoom elevado.
+
+### Corrigido
+- **Corte de Input no Chat**: bug visual onde a caixa de digitação sumia ou era empurrada para fora da viewport em mensagens longas.
+- **Estabilização E2E**: atualização de todos os seletores e fluxos de teste no Playwright para suportar o novo posicionamento no Header (45/45 passados).
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run lint` ✅
+- `npm run test:e2e` ✅ (45/45 passados e consolidados).
+
 ## [2.3.2] - 2026-03-01
 ### Adicionado
 - **Empty States Ilustrados**: telas vazias mais ricas e descritivas para histórico e resultados sem inconformidades, com iconografia moderna (`Inbox` e `ShieldCheck`).

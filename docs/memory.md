@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.3.2`
+- Versao atual (documental): `2.3.3`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -116,6 +116,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 79 | 2026-02-28 | Fix critico: frontend do chat e sugestao de NRs corrigidos para ler `data.data.*` apos padronizacao de respostas API (Phase 4 backend hardening). |
 | 80 | 2026-02-28 | Documentacao completa atualizada: README, docs, arquitetura, memory, operacao-local, CONTRIBUTING, SECURITY, 5s. Versao documental 2.3.1. E2E: 47 cenarios (45 passados, 2 pulados). |
 | 81 | 2026-03-01 | **UX/UI Consolidation Finalizada (Phase 2 e 3)**: empty states ilustrados, brand avatar no chat, persistência via `localStorage`, `GlobalNav` fixo no desktop, e testes E2E estabilizados com 45/45 testes passados no total. |
+| 82 | 2026-03-01 | **UX/UI Refinement & Layout Fixes**: Chat NEX migrado para o Header (GlobalNav) e transformado em Modal Centralizado imersivo com backdrop blur. Remoção de componentes redundantes na Home (`QuickActionsHome`). Correção de overflow vertical e corte de interface no chat para todas as resoluções. |
 
 ## 9. Arquivo Historico Completo
 
