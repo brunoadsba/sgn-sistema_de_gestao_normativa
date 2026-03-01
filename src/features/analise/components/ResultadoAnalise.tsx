@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  CheckCircle, AlertTriangle, Shield,
+  CheckCircle, AlertTriangle, Shield, ShieldCheck,
   ArrowRight, RotateCcw,
   Printer, MessageSquare
 } from 'lucide-react'
@@ -501,9 +501,14 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
 
             <div className="space-y-6">
               {resultado.gaps.length === 0 ? (
-                <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-gray-900/50 bg-gray-50/50 dark:bg-gray-950/20">
-                  <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto opacity-50" />
-                  <p className="no-gaps-message font-black uppercase tracking-[0.3em]">Nenhum Gap Detectado</p>
+                <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20">
+                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center rounded-full mx-auto mb-4">
+                    <ShieldCheck className="w-10 h-10 text-emerald-500" />
+                  </div>
+                  <p className="no-gaps-message font-black uppercase tracking-[0.3em] text-gray-900 dark:text-gray-100 text-xl">Nenhum Gap Detectado</p>
+                  <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                    O documento analisado está em total conformidade técnica com as Normas Regulamentadoras selecionadas para esta auditoria.
+                  </p>
                 </div>
               ) : (
                 <div className="rounded-3xl border border-slate-200 bg-white/80 shadow-sm overflow-hidden">
