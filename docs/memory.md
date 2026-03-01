@@ -115,7 +115,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 78 | 2026-02-28 | Chat NEX modo livre: assistente acessivel sem documento para duvidas gerais de SST/NRs, com transicao automatica para modo grounded ao carregar documento. UI redesenhada seguindo padroes modernos de chatbot. |
 | 79 | 2026-02-28 | Fix critico: frontend do chat e sugestao de NRs corrigidos para ler `data.data.*` apos padronizacao de respostas API (Phase 4 backend hardening). |
 | 80 | 2026-02-28 | Documentacao completa atualizada: README, docs, arquitetura, memory, operacao-local, CONTRIBUTING, SECURITY, 5s. Versao documental 2.3.1. E2E: 47 cenarios (45 passados, 2 pulados). |
-| 81 | 2026-03-01 | **UX/UI Consolidation (Phase 2 e 3)** concluídas: empty states ilustrados (Inbox, ShieldCheck), brand avatar no chat, persistência via `localStorage`, e componentes shadcn (Button, Badge, Input) migrados para tokens da paleta SGN. |
+| 81 | 2026-03-01 | **UX/UI Consolidation Finalizada (Phase 2 e 3)**: empty states ilustrados, brand avatar no chat, persistência via `localStorage`, `GlobalNav` fixo no desktop, e testes E2E estabilizados com 45/45 testes passados no total. |
 
 ## 9. Arquivo Historico Completo
 

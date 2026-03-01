@@ -7,10 +7,13 @@ import { Button } from '@/components/ui/button'
 import { useQueryState } from 'nuqs'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useChatContext } from '@/features/chat-documento/context/ChatContext'
+import { MessageCircle } from 'lucide-react'
 
 export function GlobalNav() {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
+    const { openChat } = useChatContext()
 
     const [mostrarHistorico, setMostrarHistorico] = useQueryState('hist_vis', {
         defaultValue: 'false',
@@ -64,6 +67,14 @@ export function GlobalNav() {
                         Historico
                     </button>
                 )}
+
+                <button
+                    onClick={openChat}
+                    className="ml-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow"
+                >
+                    <MessageCircle className="h-4 w-4" />
+                    Assistente NEX
+                </button>
             </nav>
 
             {/* Mobile hamburger */}
@@ -72,7 +83,7 @@ export function GlobalNav() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="h-10 w-10 rounded-lg"
+                    className="h-10 w-10 rounded-lg lg:hidden"
                     aria-label="Menu de navegacao"
                 >
                     {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -117,6 +128,17 @@ export function GlobalNav() {
                                         {mostrarHistorico === 'true' ? 'Ocultar Historico' : 'Ver Historico'}
                                     </button>
                                 )}
+
+                                <button
+                                    onClick={() => {
+                                        openChat();
+                                        setIsOpen(false);
+                                    }}
+                                    className="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    Assistente NEX
+                                </button>
                             </div>
                         </div>
                     </>

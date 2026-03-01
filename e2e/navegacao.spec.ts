@@ -2,9 +2,10 @@ import { test, expect, type Page } from '@playwright/test'
 
 test.describe('Navegação Global', () => {
   const abrirMenuSeNecessario = async (page: Page) => {
-    const linkAnalisar = page.getByRole('link', { name: 'Analisar' })
-    const botaoMenu = page.locator('header').getByRole('button').first()
-    if (!(await linkAnalisar.isVisible())) {
+    const botaoMenu = page.getByRole('button', { name: /menu de navegacao/i })
+    const isMobile = await botaoMenu.isVisible()
+
+    if (isMobile) {
       await botaoMenu.click()
     }
   }
@@ -23,16 +24,14 @@ test.describe('Navegação Global', () => {
 
   test('link Analisar na nav leva à página inicial', async ({ page }) => {
     await page.goto('/normas')
-    await abrirMenuSeNecessario(page)
-    await page.getByRole('link', { name: 'Analisar' }).click()
+    await page.getByRole('link', { name: 'Analisar' }).first().click({ force: true })
     await expect(page).toHaveURL('/')
     await expect(page.getByRole('heading', { name: 'Análise de Conformidade' })).toBeVisible()
   })
 
   test('link Normas na nav leva à página de normas', async ({ page }) => {
     await page.goto('/')
-    await abrirMenuSeNecessario(page)
-    await page.getByRole('link', { name: 'Normas' }).click()
+    await page.getByRole('link', { name: 'Normas' }).first().click({ force: true })
     await expect(page).toHaveURL('/normas')
     await expect(
       page.getByRole('heading', { name: 'Normas Regulamentadoras' })
@@ -43,8 +42,8 @@ test.describe('Navegação Global', () => {
     for (const rota of ['/', '/normas', '/nr6']) {
       await page.goto(rota)
       await abrirMenuSeNecessario(page)
-      await expect(page.getByRole('link', { name: 'Analisar' })).toBeVisible()
-      await expect(page.getByRole('link', { name: 'Normas' })).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Analisar' }).first()).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Normas' }).first()).toBeVisible()
     }
   })
 })

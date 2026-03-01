@@ -13,7 +13,7 @@ test.describe('Upload de documento', () => {
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
 
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 10_000 })
   })
 
   test('exibe nome e tamanho do arquivo apos upload', async ({ page }) => {
@@ -21,14 +21,14 @@ test.describe('Upload de documento', () => {
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
 
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 10_000 })
   })
 
   test('botao de remover arquivo funciona', async ({ page }) => {
     await page.goto('/')
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 10_000 })
 
     const removeBtn = page.locator('button').filter({ has: page.locator('svg') }).filter({ hasText: '' }).first()
     if (await removeBtn.isVisible()) {
@@ -70,7 +70,7 @@ test.describe('Fluxo de analise completa', () => {
 
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 15_000 })
 
     await page.waitForTimeout(3_000)
 
@@ -91,7 +91,7 @@ test.describe('Seletor de normas', () => {
     await page.goto('/')
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 10_000 })
 
     const todasBtn = page.getByRole('button', { name: /todas/i })
     if (await todasBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
@@ -103,7 +103,7 @@ test.describe('Seletor de normas', () => {
     await page.goto('/')
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 10_000 })
 
     await page.waitForTimeout(2_000)
     const limparBtn = page.getByRole('button', { name: /limpar/i })

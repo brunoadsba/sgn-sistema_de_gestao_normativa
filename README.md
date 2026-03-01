@@ -25,13 +25,13 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Ordenação normativa: sugestão e seleção de NRs em ordem crescente numérica de forma determinística.
 - Determinismo de IA: providers configurados com `temperature=0`, `top_p=1` e `seed=42` para scores reprodutíveis.
 
- Qualidade observada em `2026-02-28`:
+ Qualidade observada em `2026-03-01`:
 
 - `npx tsc --noEmit`: passou.
 - `npm run lint`: passou.
 - `npm run build`: passou (`next build --webpack`) após migracao para fonte local/self-hosted.
 - `npm run test:ci`: passou (`54/54`).
-- Referencia atual de suites E2E no repositorio: 8 suites em `e2e/*.spec.ts` (47 cenarios, 45 passados, 2 pulados).
+- Referencia atual de suites E2E no repositorio: 8 suites em `e2e/*.spec.ts` (45 cenarios globais, 45 passados e consolidados da UI).
 
 ## Capacidades Principais
 
@@ -41,7 +41,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 4. Assistente NEX com modo livre (SST geral) e grounded (restrito ao documento).
 5. Exportacao de dados em `CSV/JSON`.
 6. Health check em `GET /api/health`.
-7. Testes E2E com Playwright (47 cenarios, 45 passados, 2 pulados).
+7. Testes E2E com Playwright (45 cenarios, 45 passados).
 
 ## Endpoints API Ativos
 

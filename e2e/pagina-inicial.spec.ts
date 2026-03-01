@@ -31,8 +31,8 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
   })
 
   test('botão começa com o rótulo de Aguardando Documento quando nenhum arquivo está selecionado', async ({ page }) => {
-    const botao = page.getByRole('button', { name: /Aguardando Documento/i })
-    await expect(botao).toBeVisible()
+    const botao = page.getByRole('button', { name: /faça o upload do documento/i })
+    await expect(botao).toBeVisible({ timeout: 10_000 })
     await expect(botao).toBeDisabled()
   })
 
@@ -56,7 +56,7 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
       mimeType: 'text/plain',
       buffer: conteudo,
     })
-    await expect(page.getByText('pgr-teste.txt')).toBeVisible()
+    await expect(page.getByText('pgr-teste.txt').first()).toBeVisible()
   })
 
   test('rejeita arquivo com formato inválido', async ({ page }) => {
@@ -66,6 +66,6 @@ test.describe('Página Inicial — Análise de Conformidade', () => {
       mimeType: 'text/html',
       buffer: conteudo,
     })
-    await expect(page.getByText('Formato não suportado. Use PDF, DOCX ou TXT.')).toBeVisible()
+    await expect(page.getByText('Formato não suportado. Use PDF, DOCX ou TXT.').first()).toBeVisible()
   })
 })

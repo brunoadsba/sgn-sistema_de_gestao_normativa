@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
-import { X, ArrowLeft, Shield, Zap, MessageCircle } from 'lucide-react'
+import { X, ArrowLeft, Shield, Zap } from 'lucide-react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ChatInterface } from './ChatInterface'
 import { useChatContext } from '../context/ChatContext'
 
 export function ChatSidePanel() {
-    const { isOpen, closeChat, openChat, documentContext, documentName } = useChatContext()
+    const { isOpen, closeChat, documentContext, documentName } = useChatContext()
     const prefersReducedMotion = useReducedMotion()
     const isGrounded = Boolean(documentContext && documentContext.trim().length > 0)
 
@@ -122,21 +122,6 @@ export function ChatSidePanel() {
                 )}
             </AnimatePresence>
 
-            {!isOpen && (
-                <button
-                    onClick={openChat}
-                    className="fixed bottom-6 right-6 z-40 p-4 bg-sgn-primary-600 hover:bg-sgn-primary-700 text-white rounded-full shadow-lg shadow-sgn-primary-500/30 hover:shadow-xl hover:shadow-sgn-primary-500/40 transition-all hover:scale-105 active:scale-95 no-print"
-                    aria-label="Abrir assistente NEX"
-                >
-                    <div className="relative">
-                        <MessageCircle className="w-6 h-6" />
-                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
-                        </span>
-                    </div>
-                </button>
-            )}
         </>
     )
 }

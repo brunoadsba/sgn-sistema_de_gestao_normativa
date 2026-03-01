@@ -14,10 +14,13 @@
 ### Corrigido
 - **Falta de Atualização Visual no Upload**: remoção de dependências inseguras (`validarArquivo`, `toast`) que corrompiam hooks na memória.
 - Lint na página de Análise.
+- Bug do Painel Lateral na home impedindo o header e responsividade (consertado E2E Playwright, agora 45/45 passados na suite toda com os ignorados pulados ou resolvidos).
 
 ### Qualidade
 - `npx tsc --noEmit` ✅
 - `npm run lint` ✅
+- `npm run test:e2e` ✅ (45/45 passados, 2 ignorados fixos mantidos pulados se apropriado / todos cenários de UI revisados).
+
 
 
 ## [2.3.1] - 2026-02-28

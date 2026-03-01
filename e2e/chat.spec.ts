@@ -14,7 +14,7 @@ test.describe('Chat NEX - painel lateral', () => {
 
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 15_000 })
 
     await page.waitForTimeout(3_000)
 
@@ -30,7 +30,7 @@ test.describe('Chat NEX - painel lateral', () => {
       page.getByText(/score|conformidade|gaps|resultado/i).first()
     ).toBeVisible({ timeout: 120_000 })
 
-    const chatBtn = page.getByRole('button', { name: /chat/i })
+    const chatBtn = page.getByRole('button', { name: /assistente nex/i }).first()
     if (!(await chatBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
       test.skip()
       return
@@ -52,7 +52,7 @@ test.describe('Chat NEX - painel lateral', () => {
 
     const fileInput = page.locator('input[type="file"]')
     await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 15_000 })
 
     await page.waitForTimeout(3_000)
 
@@ -68,7 +68,7 @@ test.describe('Chat NEX - painel lateral', () => {
       page.getByText(/score|conformidade|gaps|resultado/i).first()
     ).toBeVisible({ timeout: 120_000 })
 
-    const chatBtn = page.getByRole('button', { name: /chat/i })
+    const chatBtn = page.getByRole('button', { name: /assistente nex/i }).first()
     if (!(await chatBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
       test.skip()
       return
