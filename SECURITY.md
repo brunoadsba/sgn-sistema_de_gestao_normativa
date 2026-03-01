@@ -21,6 +21,7 @@ Postura de seguranca do SGN no estado atual do repositorio, com foco em operacao
 5. Persistencia local com SQLite/LibSQL.
 6. Health check em `GET /api/health`.
 7. Rate limiting in-memory ativo em rotas de alto custo (`/api/ia/analisar-conformidade`, `/api/extrair-texto`, `/api/chat-documento`, `/api/ia/jobs/[id]`).
+8. Rate limiting padronizado em todas as rotas de API desprotegidas.
 
 ## 4. Riscos Conhecidos
 

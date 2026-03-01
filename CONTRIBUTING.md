@@ -81,10 +81,10 @@ Exemplos:
 
 ## 6. Observacao Operacional
 
-Baseline atual em `2026-02-26`:
+Baseline atual em `2026-02-28`:
 
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
-3. `npm run build`: passou.
-4. `npm run test:ci`: passou.
-5. `npm run test:e2e`: passou (`33/33`).
+3. `npm run build`: passou (`next build --webpack`).
+4. `npm run test:ci`: passou (`54/54`).
+5. `npm run test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
