@@ -11,7 +11,6 @@ import { ResultadoAnalise } from './ResultadoAnalise'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { useChatContext } from '@/features/chat-documento/context/ChatContext'
 import { HistoricoAnalisesCard } from './HistoricoAnalisesCard'
-import { QuickActionsHome } from './QuickActionsHome'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { useQueryState } from 'nuqs'
 import { ordenarCodigosNr } from '@/lib/normas/ordem'
@@ -301,7 +300,6 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                         </div>
                     ) : (
                         <div className="space-y-8">
-                            {!arquivo && <QuickActionsHome />}
                             <AnimatePresence mode="wait">
                                 {!analisando ? (
                                     <motion.div
