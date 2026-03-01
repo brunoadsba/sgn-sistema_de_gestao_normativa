@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Download, Trash2, ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 type PeriodoHistorico = 'today' | '7d' | '30d'
@@ -150,7 +150,13 @@ export function HistoricoAnalisesCard({
         {carregandoHistorico ? (
           <p className="text-sm text-gray-500 dark:text-gray-400">Carregando histórico...</p>
         ) : historico.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma análise registrada ainda.</p>
+          <div className="flex flex-col items-center justify-center py-6 text-center text-gray-500 dark:text-gray-400 animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800/50 flex items-center justify-center rounded-full mb-3">
+              <Inbox className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            </div>
+            <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Nenhuma análise registrada</p>
+            <p className="text-xs max-w-[200px] mx-auto mt-1">Os documentos analisados aparecerão aqui para fácil acesso posterior.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-3">

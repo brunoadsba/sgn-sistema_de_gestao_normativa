@@ -6,6 +6,9 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { CanvasBackgroundShell } from "@/components/ui/CanvasBackgroundShell";
 import { SessionSplashGate } from "@/components/loading/SessionSplashGate";
 import { GlobalNav } from "@/components/navigation/GlobalNav";
+import { Toaster } from "@/components/ui/toaster";
+import { ChatProvider } from "@/features/chat-documento/context/ChatContext";
+import { ChatSidePanel } from "@/features/chat-documento/components/ChatSidePanel";
 
 const sgnSans = localFont({
   src: [
@@ -63,8 +66,12 @@ export default function RootLayout({
             </header>
 
             <main className="min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] relative z-10 py-6 sm:py-10">
-              {children}
+              <ChatProvider>
+                {children}
+                <ChatSidePanel />
+              </ChatProvider>
             </main>
+            <Toaster />
           </SessionSplashGate>
         </NuqsAdapter>
       </body>

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, FileText, X } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface UploadDocumentoProps {
   arquivo: File | null
@@ -25,6 +26,7 @@ function formatarTamanho(bytes: number): string {
 }
 
 export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: UploadDocumentoProps) {
+  const { toast } = useToast()
   const [dragging, setDragging] = useState(false)
   const [erroLocal, setErroLocal] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -41,11 +43,12 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
     const erro = validarArquivo(file)
     if (erro) {
       setErroLocal(erro)
+      toast({ variant: 'destructive', title: 'Falha no upload', description: erro })
       return
     }
     setErroLocal(null)
     onArquivoChange(file)
-  }, [validarArquivo, onArquivoChange])
+  }, [validarArquivo, onArquivoChange, toast])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -116,7 +119,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
               </p>
             </div>
           </div>
-          
+
         </div>
       ) : (
         <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-2xl animate-in fade-in zoom-in-95">

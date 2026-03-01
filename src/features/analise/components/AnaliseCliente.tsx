@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Brain, Sparkles, CheckSquare, Upload, MessageCircle } from 'lucide-react'
+import { Brain, Sparkles, CheckSquare, Upload } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -9,11 +9,13 @@ import { UploadDocumento } from './UploadDocumento'
 import { SeletorNormas } from './SeletorNormas'
 import { ResultadoAnalise } from './ResultadoAnalise'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
-import { ChatSidePanel } from '@/features/chat-documento/components/ChatSidePanel'
+import { useChatContext } from '@/features/chat-documento/context/ChatContext'
 import { HistoricoAnalisesCard } from './HistoricoAnalisesCard'
+import { QuickActionsHome } from './QuickActionsHome'
 import { fetchWithRetry } from '@/lib/fetch-with-retry'
 import { useQueryState } from 'nuqs'
 import { ordenarCodigosNr } from '@/lib/normas/ordem'
+import { useToast } from '@/hooks/use-toast'
 
 interface SeletorNorma {
     id: string
@@ -31,6 +33,7 @@ import { useExtracao } from '../hooks/useExtracao'
 import { useHistorico, type PeriodoHistorico, type OrdenacaoHistorico } from '../hooks/useHistorico'
 
 export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) {
+    const { toast } = useToast()
     // Estados do Fluxo de Análise
     const [arquivo, setArquivo] = useState<File | null>(null)
     const [normasSelecionadas, setNormasSelecionadas] = useState<string[]>([])
@@ -72,9 +75,14 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             : 'data_desc'
     const buscaDocumento = buscaDocumentoQuery || ''
     const [buscaDebounced, setBuscaDebounced] = useState('')
-    const [chatAberto, setChatAberto] = useState(false)
+    const { openChat, setDocumentContext, setDocumentName } = useChatContext()
 
     const { textoExtraidoChat, extrairTextoDocumento, limparCache } = useExtracao(arquivo, analisando)
+
+    useEffect(() => {
+        setDocumentContext(textoExtraidoChat)
+        setDocumentName(arquivo?.name)
+    }, [textoExtraidoChat, arquivo?.name, setDocumentContext, setDocumentName])
 
     const {
         historico,
@@ -135,11 +143,13 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                         setResultado(payloadFinal.data.analises[0])
                         setAnalisando(false)
                         setJobId(null)
+                        toast({ title: 'Análise concluída', description: 'Os gaps e recomendações foram gerados com sucesso.' })
                         void carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
                     }
                 } else if (job.status === 'error') {
                     window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
                     setErro(job.erroDetalhes || 'Erro ao processar documento')
+                    toast({ variant: 'destructive', title: 'Erro na análise', description: job.erroDetalhes || 'Ocorreu um problema no processamento do documento.' })
                     setAnalisando(false)
                     setJobId(null)
                 } else {
@@ -153,7 +163,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
 
         timer = setTimeout(checkStatus, 2000)
         return () => clearTimeout(timer)
-    }, [jobId, analisando, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced])
+    }, [jobId, analisando, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced, toast])
 
     const executarAnalise = useCallback(async () => {
         if (!arquivo) {
@@ -227,11 +237,13 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
             const analysisData = await analysisRes.json()
             if (analysisData.success && analysisData.data?.jobId) {
                 setJobId(analysisData.data.jobId)
+                toast({ title: 'Análise iniciada', description: 'Processamento rodando em background.' })
                 setEtapa('Job aceito. Acompanhando progresso...')
             } else if (analysisData.success && !analysisData.data?.jobId) {
                 setResultado(analysisData.data)
                 setProgresso(100)
                 setAnalisando(false)
+                toast({ title: 'Análise concluída', description: 'Processamentos e recomendações gerados.' })
                 await carregarHistorico(paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced)
             }
         } catch (err) {
@@ -241,9 +253,10 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                 ? 'Falha de conexao com o servidor. Verifique se o servidor esta rodando e tente novamente.'
                 : msg
             setErro(msgFinal)
+            toast({ variant: 'destructive', title: 'Erro ao iniciar análise', description: msgFinal })
             setAnalisando(false)
         }
-    }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced, extrairTextoDocumento])
+    }, [arquivo, normasSelecionadas, carregarHistorico, paginaHistorico, periodoHistorico, ordenacaoHistorico, buscaDebounced, extrairTextoDocumento, toast])
 
     const novaAnalise = () => {
         window.dispatchEvent(new CustomEvent('sgn-analysis-stop'))
@@ -284,10 +297,11 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                 <div className="flex-1 min-w-0 w-full">
                     {resultado ? (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <ResultadoAnalise resultado={resultado} onNovaAnalise={novaAnalise} onChatOpen={() => setChatAberto(true)} />
+                            <ResultadoAnalise resultado={resultado} onNovaAnalise={novaAnalise} onChatOpen={openChat} />
                         </div>
                     ) : (
                         <div className="space-y-8">
+                            {!arquivo && <QuickActionsHome />}
                             <AnimatePresence mode="wait">
                                 {!analisando ? (
                                     <motion.div
@@ -310,7 +324,11 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 <CardContent className="pt-6">
                                                     <UploadDocumento
                                                         arquivo={arquivo}
-                                                        onArquivoChange={(f) => { setArquivo(f); setErro(null) }}
+                                                        onArquivoChange={(f) => {
+                                                            setArquivo(f);
+                                                            setErro(null);
+                                                            if (f) toast({ title: 'Upload concluído', description: f.name });
+                                                        }}
                                                         desabilitado={analisando}
                                                     />
                                                 </CardContent>
@@ -510,7 +528,10 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 <span>IA Mapeando Normas...</span>
                                             </>
                                         ) : !arquivo ? (
-                                            "Aguardando Documento"
+                                            <>
+                                                <Upload className="w-6 h-6 opacity-50 group-hover:-translate-y-1 transition-transform" />
+                                                <span>Faça o upload do documento para iniciar</span>
+                                            </>
                                         ) : normasSelecionadas.length === 0 ? (
                                             <>
                                                 <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
@@ -572,22 +593,6 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                 )}
             </div>
 
-            {!chatAberto && (
-                <button
-                    onClick={() => setChatAberto(true)}
-                    className="fixed bottom-6 right-6 z-40 p-4 bg-sgn-primary-600 hover:bg-sgn-primary-700 text-white rounded-full shadow-lg shadow-sgn-primary-500/30 hover:shadow-xl hover:shadow-sgn-primary-500/40 transition-all hover:scale-105 active:scale-95 no-print"
-                    aria-label="Abrir assistente NEX"
-                >
-                    <MessageCircle className="w-6 h-6" />
-                </button>
-            )}
-
-            <ChatSidePanel
-                isOpen={chatAberto}
-                onClose={() => setChatAberto(false)}
-                documentContext={textoExtraidoChat}
-                documentName={arquivo?.name}
-            />
         </div>
     )
 }

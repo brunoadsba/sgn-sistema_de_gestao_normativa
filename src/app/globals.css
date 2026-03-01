@@ -29,6 +29,22 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Typography Tokens */
+    --font-h1: 2.25rem;
+    --font-h2: 1.875rem;
+    --font-h3: 1.5rem;
+    --font-body: 1rem;
+    --font-caption: 0.875rem;
+
+    /* Spacing Tokens */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
   }
 
   .dark {

@@ -2,27 +2,43 @@
 
 import { ArrowUpRight } from 'lucide-react'
 
-const SUGGESTIONS_GROUNDED = [
-    'Quais gaps críticos foram identificados?',
-    'Resuma as não conformidades',
-    'Quais NRs não estão sendo atendidas?',
-    'Sugira um plano de ação',
-]
+import { useChatContext } from '../context/ChatContext'
 
-const SUGGESTIONS_FREE = [
-    'O que é o PGR e quando é obrigatório?',
-    'Quais EPIs são exigidos pela NR-6?',
-    'Diferença entre NR-1 e NR-9',
-    'O que a CIPA faz conforme NR-5?',
-]
+export function ChatSuggestions({ onSelect }: { onSelect: (text: string) => void }) {
+    const { documentContext, documentName, contextoTela } = useChatContext()
+    const isGrounded = Boolean(documentContext && documentContext.trim().length > 0)
 
-interface ChatSuggestionsProps {
-    onSelect: (text: string) => void
-    isGrounded?: boolean
-}
+    let suggestions: string[] = []
 
-export function ChatSuggestions({ onSelect, isGrounded = false }: ChatSuggestionsProps) {
-    const suggestions = isGrounded ? SUGGESTIONS_GROUNDED : SUGGESTIONS_FREE
+    if (isGrounded) {
+        suggestions = [
+            'Quais gaps críticos foram identificados?',
+            `Resuma as não conformidades de ${documentName || 'este documento'}`,
+            'Quais NRs não estão sendo atendidas?',
+            'Sugira um plano de ação detalhado',
+        ]
+    } else if (contextoTela === 'Catálogo de Normas') {
+        suggestions = [
+            'Qual a diferença entre NR-1 e NR-9?',
+            'Quais NRs tratam de trabalho em altura?',
+            'Liste as normas mais autuadas',
+            'Como funciona a hierarquia de normas SST?'
+        ]
+    } else if (contextoTela === 'Análise NR-6') {
+        suggestions = [
+            'O que é C.A de EPI?',
+            'Como validar a entrega de EPIs?',
+            'Quais EPIs são obrigatórios para ruído?',
+            'Responsabilidades do empregador na NR-6'
+        ]
+    } else {
+        suggestions = [
+            'O que é o PGR e quando é obrigatório?',
+            'Quais EPIs são exigidos pela NR-6?',
+            'Diferença entre NR-1 e NR-9',
+            'O que a CIPA faz conforme NR-5?',
+        ]
+    }
 
     return (
         <div className="grid grid-cols-2 gap-2 pt-4">

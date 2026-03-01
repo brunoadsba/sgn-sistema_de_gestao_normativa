@@ -1,38 +1,77 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react'
 import { AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ChatMessageBubble, type Message } from './ChatMessageBubble'
 import { ChatTypingIndicator } from './ChatTypingIndicator'
 import { ChatSuggestions } from './ChatSuggestions'
 import { cn } from '@/lib/utils'
+import { useChatContext } from '../context/ChatContext'
 
-interface ChatInterfaceProps {
-    documentContext?: string | null | undefined
-}
-
-const WELCOME_GROUNDED: Message = {
+const getWelcomeGrounded = (documentName?: string): Message => ({
     id: 'welcome',
     role: 'assistant',
-    content: 'Analisei o documento carregado. Pergunte sobre gaps, conformidade ou recomendações.',
+    content: documentName
+        ? `Identifiquei que você carregou o documento **${documentName}**. Quer que eu verifique gaps de conformidade ou sugira recomendações?`
+        : 'Analisei o documento carregado. Pergunte sobre gaps, conformidade ou recomendações.',
     timestamp: new Date(),
-}
+})
 
-const WELCOME_FREE: Message = {
+const getWelcomeFree = (contextoTela?: string): Message => ({
     id: 'welcome',
     role: 'assistant',
-    content: 'Posso ajudar com dúvidas sobre **Normas Regulamentadoras**, EPIs, compliance e segurança do trabalho. Para análise documental, faça upload de um arquivo.',
+    content: contextoTela === 'Catálogo de Normas'
+        ? 'Estou pronto para tirar dúvidas sobre as **Normas Regulamentadoras**. Você pode me perguntar sobre itens específicos, penalidades ou histórico de alterações.'
+        : 'Posso ajudar com dúvidas sobre **Normas Regulamentadoras**, EPIs, compliance e segurança do trabalho. Para análise documental, faça upload de um arquivo.',
     timestamp: new Date(),
-}
+})
 
-export function ChatInterface({ documentContext }: ChatInterfaceProps) {
+export function ChatInterface() {
+    const { documentContext, documentName, contextoTela } = useChatContext()
     const isGrounded = Boolean(documentContext && documentContext.trim().length > 0)
-    const [messages, setMessages] = useState<Message[]>([isGrounded ? WELCOME_GROUNDED : WELCOME_FREE])
+
+    // Calcula as mensagens dinâmicas
+    const welcomeMsg = isGrounded ? getWelcomeGrounded(documentName) : getWelcomeFree(contextoTela)
+
+    const [messages, setMessages] = useState<Message[]>([welcomeMsg])
     const [input, setInput] = useState('')
     const [isTyping, setIsTyping] = useState(false)
     const [showScrollBtn, setShowScrollBtn] = useState(false)
     const prevGroundedRef = useRef(isGrounded)
+    const prevContextoRef = useRef(contextoTela)
+    const STORAGE_KEY = `sgn-chat-history-${isGrounded ? 'grounded' : 'free'}`
+
+    // Carregar histórico inicial do localStorage (apenas no cliente)
+    useEffect(() => {
+        try {
+            const saved = window.localStorage.getItem(STORAGE_KEY)
+            if (saved) {
+                const parsed = JSON.parse(saved)
+                // Reconstruir datas das strings JSON
+                const messagesWithDates = parsed.map((m: Message) => ({
+                    ...m,
+                    timestamp: new Date(m.timestamp)
+                }))
+                if (messagesWithDates.length > 0) {
+                    setMessages(messagesWithDates)
+                }
+            }
+        } catch (e) {
+            console.error('Falha ao restaurar histórico do chat:', e)
+        }
+    }, [STORAGE_KEY])
+
+    // Salvar histórico no localStorage sempre que 'messages' mudar
+    useEffect(() => {
+        try {
+            if (messages.length > 0) {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+            }
+        } catch (e) {
+            console.error('Falha ao salvar histórico do chat:', e)
+        }
+    }, [messages, STORAGE_KEY])
 
     const scrollRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -40,12 +79,13 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
     const prefersReducedMotion = useReducedMotion()
 
     useEffect(() => {
-        if (prevGroundedRef.current !== isGrounded) {
+        if (prevGroundedRef.current !== isGrounded || prevContextoRef.current !== contextoTela) {
             prevGroundedRef.current = isGrounded
-            setMessages([isGrounded ? WELCOME_GROUNDED : WELCOME_FREE])
+            prevContextoRef.current = contextoTela
+            setMessages([isGrounded ? getWelcomeGrounded(documentName) : getWelcomeFree(contextoTela)])
             setInput('')
         }
-    }, [isGrounded])
+    }, [isGrounded, contextoTela, documentName])
 
     const scrollToBottom = useCallback(() => {
         if (scrollRef.current) {
@@ -141,20 +181,41 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
         setTimeout(() => sendMessage(lastUserContent), 50)
     }, [messages, sendMessage])
 
+    const handleClearChat = () => {
+        if (confirm('Tem certeza que deseja apagar o histórico dessa conversa?')) {
+            window.localStorage.removeItem(STORAGE_KEY)
+            setMessages([welcomeMsg])
+            setInput('')
+        }
+    }
+
     const handleSend = () => sendMessage(input)
     const handleSuggestionSelect = (text: string) => sendMessage(text)
     const showSuggestions = messages.length === 1 && !isTyping
     const canSend = input.trim().length > 0 && !isTyping
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
+            {/* Header / Clear Actions */}
+            {messages.length > 1 && (
+                <div className="absolute top-2 right-4 z-10">
+                    <button
+                        onClick={handleClearChat}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                        title="Limpar histórico da conversa"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {/* Messages */}
             <div
                 ref={scrollRef}
                 onScroll={checkNearBottom}
                 role="log"
                 aria-live="polite"
-                className="flex-1 overflow-y-auto px-4 py-5 space-y-5"
+                className="flex-1 overflow-y-auto px-4 py-5 space-y-5 mt-4"
             >
                 <AnimatePresence initial={false}>
                     {messages.map((msg) => (
@@ -169,7 +230,7 @@ export function ChatInterface({ documentContext }: ChatInterfaceProps) {
                 {isTyping && <ChatTypingIndicator />}
 
                 {showSuggestions && (
-                    <ChatSuggestions onSelect={handleSuggestionSelect} isGrounded={isGrounded} />
+                    <ChatSuggestions onSelect={handleSuggestionSelect} />
                 )}
             </div>
 
