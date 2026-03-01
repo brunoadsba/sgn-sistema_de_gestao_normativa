@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.3.2] - 2026-03-01
+### Adicionado
+- **Empty States Ilustrados**: telas vazias mais ricas e descritivas para histórico e resultados sem inconformidades, com iconografia moderna (`Inbox` e `ShieldCheck`).
+- **Avatar de Marca SGN**: ícone customizado de Bot no balão do chatbot NEX.
+- **Persistência de Histórico do Chat**: armazenamento local (`localStorage`) das conversões separadas por contexto (livre vs focado em documento).
+- **Botão Limpar Histórico do Chat**: botão dedicado (ícone de lixeira) no painel do chat para zerar a conversa atual mediante confirmação.
+
+### Alterado
+- **Customização de Componentes ShadCN**: refatoração de `Button`, `Badge` e `Input` para o uso estrito de *design tokens* da paleta SGN, substituindo os utilitários genéricos do Tailwind.
+- **Responsividade Mobile**: revisão de layout das "Quick Actions", cards do Histórico e modais para se adaptarem bem em telas menores.
+
+### Corrigido
+- **Falta de Atualização Visual no Upload**: remoção de dependências inseguras (`validarArquivo`, `toast`) que corrompiam hooks na memória.
+- Lint na página de Análise.
+
+### Qualidade
+- `npx tsc --noEmit` ✅
+- `npm run lint` ✅
+
+
 ## [2.3.1] - 2026-02-28
 ### Alterado
 - **Documentacao completa**: README, docs/README, arquitetura, memory, operacao-local, CONTRIBUTING, SECURITY e 5s-documentacao alinhados ao estado real do repositorio.

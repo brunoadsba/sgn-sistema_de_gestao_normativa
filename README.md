@@ -4,8 +4,8 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 
 ## Snapshot Atual
 
-- Atualizado em: `2026-02-28`
-- Versao documental: `2.3.1`
+- Atualizado em: `2026-03-01`
+- Versao documental: `2.3.2`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
