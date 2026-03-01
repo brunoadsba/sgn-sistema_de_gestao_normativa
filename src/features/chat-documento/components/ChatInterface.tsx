@@ -195,7 +195,7 @@ export function ChatInterface() {
     const canSend = input.trim().length > 0 && !isTyping
 
     return (
-        <div className="flex flex-col h-full relative">
+        <div className="flex flex-col h-full min-h-0 relative">
             {/* Header / Clear Actions */}
             {messages.length > 1 && (
                 <div className="absolute top-2 right-4 z-10">
@@ -215,7 +215,7 @@ export function ChatInterface() {
                 onScroll={checkNearBottom}
                 role="log"
                 aria-live="polite"
-                className="flex-1 overflow-y-auto px-4 py-5 space-y-5 mt-4"
+                className="flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-5 mt-4"
             >
                 <AnimatePresence initial={false}>
                     {messages.map((msg) => (

@@ -49,7 +49,7 @@ export function ChatSidePanel() {
                                 transition={springTransition}
                                 role="dialog"
                                 aria-label="Assistente NEX"
-                                className="w-full h-full sm:w-[800px] sm:max-w-full sm:h-[85vh] bg-gray-50 dark:bg-[#0a0a0f] flex flex-col no-print shadow-2xl sm:rounded-2xl sm:border border-gray-200/60 dark:border-white/[0.06] overflow-hidden pointer-events-auto"
+                                className="w-full h-[100dvh] sm:w-[800px] sm:max-w-full sm:h-[700px] sm:max-h-[calc(100dvh-4rem)] bg-gray-50 dark:bg-[#0a0a0f] flex flex-col no-print shadow-2xl sm:rounded-2xl sm:border border-gray-200/60 dark:border-white/[0.06] overflow-hidden pointer-events-auto"
                             >
                                 {/* Header */}
                                 <div className="px-4 py-3 flex items-center justify-between bg-white dark:bg-[#111118] border-b border-gray-200/60 dark:border-white/[0.06] shrink-0">
@@ -95,7 +95,7 @@ export function ChatSidePanel() {
                                 </div>
 
                                 {/* Chat area */}
-                                <div className="flex-1 overflow-hidden relative">
+                                <div className="flex-1 min-h-0 overflow-hidden relative">
                                     <ChatInterface />
                                 </div>
 
