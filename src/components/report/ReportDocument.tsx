@@ -52,12 +52,6 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
   },
-  subtitle: {
-    marginTop: 2,
-    fontSize: 8,
-    color: colors.neutral500,
-    maxWidth: 300,
-  },
   headerMeta: {
     fontSize: 7,
     color: colors.neutral500,
@@ -245,13 +239,9 @@ export function ReportDocument({ data }: { data: ReportData }) {
           <View>
             <Text style={s.brandLabel}>SGN - Sistema de Gestão Normativa</Text>
             <Text style={s.title}>Relatório Técnico de Conformidade SST</Text>
-            <Text style={s.subtitle}>{data.summary.documentTitle}</Text>
           </View>
           <View>
             <Text style={s.headerMeta}>{data.meta.createdAt}</Text>
-            <Text style={s.headerMeta}>ID: {data.meta.id}</Text>
-            <Text style={s.headerMeta}>Analista: {data.meta.analyst}</Text>
-            <Text style={s.headerMeta}>Versão: {data.meta.version}</Text>
           </View>
         </View>
 
@@ -287,9 +277,6 @@ export function ReportDocument({ data }: { data: ReportData }) {
               </Text>
             </View>
           </View>
-          <Text style={s.summaryText}>
-            Confiança: {data.summary.confidenceScore}/100 ({data.summary.confidenceClass.replace('confianca_', '')})
-          </Text>
           {data.governance.alertasConfiabilidade.length > 0 && (
             <Text style={[s.summaryText, { color: colors.warning }]}>
               Alertas: {data.governance.alertasConfiabilidade.join(' | ')}
@@ -375,9 +362,6 @@ export function ReportDocument({ data }: { data: ReportData }) {
             <Text style={s.footerBrand}>SGN - Sistema de Gestão Normativa</Text>
             <Text style={s.footerText}>
               Relatório técnico para suporte à auditoria SST.
-            </Text>
-            <Text style={s.footerText}>
-              Sessão: {data.meta.sessionId}
             </Text>
           </View>
           <Text

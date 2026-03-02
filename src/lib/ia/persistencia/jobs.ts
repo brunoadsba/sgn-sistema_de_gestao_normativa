@@ -90,9 +90,15 @@ export async function finalizarJobAnalise(
       .values({
         jobId,
         documentoId,
-        scoreGeral: Math.round(resultado.score),
+        scoreGeral: (() => {
+          const s = Number(resultado.score)
+          return Number.isFinite(s) ? Math.min(100, Math.max(0, Math.round(s))) : 0
+        })(),
         nivelRisco: resultado.nivelRisco,
-        statusGeral: resultado.score >= 80 ? 'conforme' : resultado.score >= 60 ? 'parcial_conforme' : 'nao_conforme',
+        statusGeral: (() => {
+          const s = Number.isFinite(Number(resultado.score)) ? Number(resultado.score) : 0
+          return s >= 80 ? 'conforme' : s >= 60 ? 'parcial_conforme' : 'nao_conforme'
+        })(),
         metadata: {
           resumo: resultado.resumo,
           nomeArquivo: entrada.tipoDocumento,

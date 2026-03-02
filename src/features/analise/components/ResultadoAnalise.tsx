@@ -73,10 +73,13 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
   }, [previewImpressao])
 
   const gerarDadosRelatorio = () => {
-    return toReportData(resultado, {
-      documentTitle: resultado.nomeArquivo ?? 'Relatório Técnico SST',
-      documentType: 'OUTRO',
-    })
+    return toReportData(
+      { ...resultado, reportStatus: reportStatusLocal ?? 'pre_laudo_pendente' },
+      {
+        documentTitle: resultado.nomeArquivo ?? 'Relatório Técnico SST',
+        documentType: 'OUTRO',
+      }
+    )
   }
 
   const baixarPdfViaApi = async () => {
@@ -340,11 +343,11 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="space-y-12 pb-20 no-print"
+          className="space-y-6 pb-10 no-print"
         >
 
           {/* DASHBOARD SST */}
-          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
             <div className="lg:col-span-3">
               <ScoreIndicador score={resultado.score} />
             </div>
@@ -436,25 +439,27 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
 
           {/* SUMÁRIO EXECUTIVO */}
           <motion.div variants={itemVariants}>
-            <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl p-8 border border-gray-100 dark:border-white/5">
-              <h3 className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-4">Veredito da IA</h3>
-              <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 leading-relaxed font-bold tracking-tight italic">
-                &ldquo;{resumoExibicao}&rdquo;
+            <div className="bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl px-6 py-5 border border-gray-100 dark:border-white/5">
+              <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-2">Veredito da IA</p>
+              <h2 className="text-base font-black uppercase tracking-tight text-gray-900 dark:text-gray-100 mb-3">Resumo Executivo</h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-6">
+                {resumoExibicao}
               </p>
             </div>
           </motion.div>
 
           {/* PONTOS POSITIVOS E ATENÇÃO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <motion.div variants={itemVariants}>
-              <div className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <CheckCircle className="w-6 h-6 text-emerald-500" />
-                  <span className="text-base font-black uppercase tracking-tight">Pontos Fortes</span>
+              <div className="px-5 py-5 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+                <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">Diagnóstico</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  <h2 className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-gray-100">Pontos Fortes</h2>
                 </div>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {resultado.pontosPositivos?.map((ponto, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                       {ponto}
                     </li>
@@ -464,14 +469,15 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <div className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <AlertTriangle className="w-6 h-6 text-amber-500" />
-                  <span className="text-base font-black uppercase tracking-tight">Oportunidades de Melhoria</span>
+              <div className="px-5 py-5 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5 h-full">
+                <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">Diagnóstico</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <h2 className="text-sm font-black uppercase tracking-tight text-gray-900 dark:text-gray-100">Oportunidades de Melhoria</h2>
                 </div>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {resultado.pontosAtencao?.map((ponto, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
+                    <li key={i} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
                       {ponto}
                     </li>
@@ -482,32 +488,31 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           </div>
 
           {/* ANÁLISE DE GAPS */}
-          <motion.div variants={itemVariants} className="space-y-8">
+          <motion.div variants={itemVariants} className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="p-4 bg-red-500/10 rounded-3xl rotate-3 shadow-xl shadow-red-500/10">
-                  <Shield className="w-10 h-10 text-red-500" />
+              <div>
+                <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">Conformidade</p>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-red-500" />
+                  <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">Matriz de Gaps</h2>
                 </div>
-                <div>
-                  <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tighter leading-none">Matriz de Gaps</h2>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-2">Mapeamento de Riscos e Exposição</p>
-                </div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-1">Mapeamento de Riscos e Exposição</p>
               </div>
-              <div className="hidden sm:block text-right">
-                <span className="text-5xl font-black text-gray-100 dark:text-gray-800 tabular-nums leading-none">{resultado.gaps.length}</span>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide -mt-1">Inconformidades</p>
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-3xl font-black text-gray-200 dark:text-gray-700 tabular-nums leading-none">{resultado.gaps.length}</span>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Inconformidades</p>
               </div>
             </div>
 
             <div className="space-y-6">
               {resultado.gaps.length === 0 ? (
-                <div className="py-20 text-center space-y-4 rounded-[3rem] border-4 border-dashed border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center rounded-full mx-auto mb-4">
-                    <ShieldCheck className="w-10 h-10 text-emerald-500" />
+                <div className="py-10 text-center space-y-3 rounded-2xl border-2 border-dashed border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20">
+                  <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center rounded-full mx-auto">
+                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <p className="no-gaps-message font-black uppercase tracking-[0.3em] text-gray-900 dark:text-gray-100 text-xl">Nenhum Gap Detectado</p>
-                  <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                    O documento analisado está em total conformidade técnica com as Normas Regulamentadoras selecionadas para esta auditoria.
+                  <p className="no-gaps-message font-black uppercase tracking-[0.3em] text-gray-900 dark:text-gray-100 text-base">Nenhum Gap Detectado</p>
+                  <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    O documento analisado está em total conformidade técnica com as Normas Regulamentadoras selecionadas.
                   </p>
                 </div>
               ) : (
@@ -524,12 +529,12 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                       </colgroup>
                       <thead>
                         <tr className="bg-[#0F4C81] text-white">
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Severidade</th>
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Categoria</th>
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Norma</th>
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Descrição</th>
-                          <th className="px-3 py-3 text-xs font-semibold uppercase tracking-wide">Recomendação</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Severidade</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Categoria</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Norma</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Status</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Descrição</th>
+                          <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide">Recomendação</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -544,26 +549,26 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                               key={gap.id || i}
                               className="align-top border-b border-slate-200 odd:bg-white even:bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
                             >
-                              <td className="px-3 py-3">
+                              <td className="px-4 py-4">
                                 <span className={`inline-flex rounded-lg border px-2 py-1 text-xs font-semibold uppercase tracking-wide ${severidadeConfig.classes}`}>
                                   {severidadeConfig.label}
                                 </span>
                               </td>
-                              <td className="px-3 py-3">
+                              <td className="px-4 py-4">
                                 <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-bold text-indigo-700">
                                   {categoriaNormalizada}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
-                              <td className="px-3 py-3">
+                              <td className="px-4 py-4 text-sm font-semibold text-slate-700">{normaPrincipal}</td>
+                              <td className="px-4 py-4">
                                 <span className={`inline-flex rounded-lg border px-2 py-1 text-xs font-bold ${statusGapClasses(status)}`}>
                                   {status}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                              <td className="px-4 py-4 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
                                 {gap.descricao}
                               </td>
-                              <td className="px-3 py-3 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
+                              <td className="px-4 py-4 text-sm leading-relaxed text-slate-700 whitespace-normal break-words [hyphens:none]">
                                 {gap.recomendacao}
                                 {gap.prazoDias != null ? ` (Prazo sugerido: ${gap.prazoDias} dias)` : ''}
                               </td>
@@ -579,17 +584,20 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           </motion.div>
 
           {/* PRÓXIMOS PASSOS / PLANO 5W2H */}
-          <motion.div variants={itemVariants} className="space-y-6">
-            <div className="flex items-center gap-3">
-              <ArrowRight className="w-6 h-6 text-indigo-500" />
-              <span className="text-lg font-black uppercase tracking-tighter">Plano de Ação Remediadora</span>
+          <motion.div variants={itemVariants} className="space-y-4">
+            <div>
+              <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">Remediação</p>
+              <div className="flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-indigo-500" />
+                <h2 className="text-xl font-black uppercase tracking-tight text-gray-900 dark:text-gray-100">Plano de Ação</h2>
+              </div>
             </div>
             {resultado.planoAcao && resultado.planoAcao.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {resultado.planoAcao.map((acao) => (
-                  <div key={acao.id} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
+                  <div key={acao.id} className="px-5 py-5 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
                     <div className="text-xs font-semibold text-indigo-500 mb-2 uppercase">{acao.id}</div>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 font-bold leading-relaxed mb-2">{acao.what}</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100 font-bold leading-relaxed mb-3">{acao.what}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                       <span className="font-semibold">Responsável:</span> {acao.who}
                     </p>
@@ -610,9 +618,9 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {resultado.proximosPassos?.map((passo, i) => (
-                  <div key={i} className="p-6 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
+                  <div key={i} className="px-5 py-5 rounded-2xl bg-white/50 dark:bg-gray-950/20 border border-gray-100 dark:border-white/5">
                     <div className="text-xs font-semibold text-indigo-500 mb-2 uppercase">Etapa {i + 1}</div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 font-bold leading-relaxed">{passo}</p>
                   </div>
@@ -622,24 +630,24 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
           </motion.div>
 
           {/* Ações Mobile/Desktop (no-print) */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 pb-8 no-print">
+          <div className="flex flex-row flex-wrap items-center justify-center gap-3 pt-6 pb-4 no-print">
             <Button
               onClick={abrirPreviewImpressao}
-              size="lg"
-              className="h-14 px-10 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] transition-all font-black text-base shadow-lg flex items-center gap-3 active:scale-95"
+              size="sm"
+              className="h-10 px-6 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] transition-all font-bold text-sm shadow-md flex items-center gap-2 active:scale-95"
             >
-              <Printer className="h-5 w-5" />
+              <Printer className="h-4 w-4" />
               Visualizar para Impressão
             </Button>
 
             <Button
               onClick={handlePrint}
-              size="lg"
+              size="sm"
               variant="outline"
               disabled={gerandoPdf}
-              className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
+              className="h-10 px-6 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-bold text-sm active:scale-95"
             >
-              <Printer className="h-5 w-5 mr-2" />
+              <Printer className="h-4 w-4 mr-2" />
               {pdfEngine === 'react-pdf'
                 ? (gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF')
                 : 'Imprimir / Salvar PDF'}
@@ -647,11 +655,11 @@ export function ResultadoAnalise({ resultado, onNovaAnalise, onChatOpen }: Resul
 
             <Button
               onClick={onNovaAnalise}
-              size="lg"
+              size="sm"
               variant="outline"
-              className="h-14 px-10 rounded-2xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-black text-base active:scale-95"
+              className="h-10 px-6 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all font-bold text-sm active:scale-95"
             >
-              <RotateCcw className="h-5 w-5 mr-2" />
+              <RotateCcw className="h-4 w-4 mr-2" />
               Novo Diagnóstico
             </Button>
           </div>

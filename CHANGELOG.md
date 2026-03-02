@@ -1,6 +1,31 @@
 # Changelog
 
-## [2.3.3] - 2026-03-01
+## [2.3.4] - 2026-03-02
+
+### Alterado
+
+- **Limpeza do PDF gerado**: removidos campos técnicos internos do `ReportDocument.tsx`: `ID da análise`, `Analista: Sistema SGN`, `Versão: 2.2.x`, `Confiança: X/100` e `Sessão: {sessionId}`. O cabeçalho passa a exibir apenas título e data de geração.
+- **Nome do arquivo removido do PDF**: campo `documentTitle` (ex.: `analise-f0c195b3.txt`) removido do subtítulo do cabeçalho e da style órfã `subtitle`.
+- **Compactação geral de UX/UI na página de resultado**:
+  - Espaçamento entre seções: `space-y-12` → `space-y-6`; rodapé: `pb-20` → `pb-10`.
+  - Gap do dashboard: `gap-8` → `gap-5`.
+  - Seção Resumo Executivo: `px-10 py-8` → `px-6 py-5`, `leading-7` → `leading-6`.
+  - Cards Pontos Fortes/Oportunidades: `px-8 py-8 mb-6 space-y-4` → `px-5 py-5 mb-3 space-y-2`, grid `gap-6` → `gap-4`.
+  - Empty state "Nenhum Gap Detectado": `py-20 rounded-[3rem] border-4` → `py-10 rounded-2xl border-2`; ícone `w-20 h-20` → `w-12 h-12`.
+  - Cards Plano de Ação e Próximos Passos: `px-8 py-7 gap-6` → `px-5 py-5 gap-4`.
+  - Botões de rodapé: `h-14 px-10 text-base` → `h-10 px-6 text-sm`; passaram de coluna (`flex-col`) para linha fixa (`flex-row flex-wrap`).
+  - Tabela Gaps: células `px-3 py-3` → `px-4 py-3.5/4`.
+
+### Corrigido
+
+- **Bug `scoreGeral = 0` ao reler do banco**: `Math.round(resultado.score)` substituído por expressão segura com `Number.isFinite` + clamp `[0, 100]` + fallback `0` em `persistencia/jobs.ts`. Elimina o caso em que `resultado.score` é `undefined`/`NaN` → SQLite persiste `NULL` → releitura retorna `0` via `?? 0`.
+- **`statusGeral` calculado sobre `score` não validado**: corrigido para usar a mesma variável normalizada do `scoreGeral`.
+
+### Informação técnica
+
+- **Confiabilidade ≠ Score**: o campo `Confiabilidade` (ex.: `80/100`) é calculado internamente por `calcularConfiancaAnalise` com base em 5 sinais técnicos independentes (`parseOk`, `nrConcordancia`, `evidenceCoverage`, `kbCoverage`, `providerStability`) e não reflete a conformidade do documento com as NRs. É esperado que um documento com score 100 apresente confiabilidade < 100 caso a concordância de normas com a heurística seja parcial.
+
+
 ### Adicionado
 - **Chat NEX Centralizado**: remodelagem do assistente para um Modal Central imersivo com backdrop blur, abandonando o painel lateral para maior foco na conversa.
 - **Integração no GlobalNav**: migração do gatilho do chat do botão flutuante para um item fixo de alta visibilidade no Header superior (Assistente NEX).
