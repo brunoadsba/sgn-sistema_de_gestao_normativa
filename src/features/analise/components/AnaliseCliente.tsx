@@ -280,26 +280,26 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
     return (
         <div className={`container mx-auto px-4 sm:px-6 transition-all duration-500 ${mostrarHistorico ? 'max-w-7xl' : 'max-w-5xl'}`}>
             {/* Header */}
-            <div className="relative mb-6 sm:mb-12">
+            <div className="relative mb-4 sm:mb-12">
                 <div className="text-center relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-sgn-primary-500/10 blur-[80px] -z-10 rounded-full"></div>
-                    <h1 className="text-2xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-2 sm:mb-4 pb-2 leading-tight sm:leading-normal">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-24 sm:h-32 bg-sgn-primary-500/10 blur-[60px] sm:blur-[80px] -z-10 rounded-full"></div>
+                    <h1 className="text-xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-1.5 sm:mb-4 pb-2 leading-tight sm:leading-normal">
                         Análise de Conformidade
                     </h1>
-                    <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-1">
-                        Faça upload do seu documento SST e deixe nossa IA identificar gaps e gerar recomendações precisas.
+                    <p className="text-xs sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-0 sm:px-1">
+                        Faça upload do seu documento SST e deixe nossa IA identificar gaps e gerar recomendações.
                     </p>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
                 <div className="flex-1 min-w-0 w-full">
                     {resultado ? (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <ResultadoAnalise resultado={resultado} onNovaAnalise={novaAnalise} onChatOpen={openChat} />
                         </div>
                     ) : (
-                        <div className="space-y-8">
+                        <div className="space-y-6 sm:space-y-8">
                             <AnimatePresence mode="wait">
                                 {!analisando ? (
                                     <motion.div
@@ -308,7 +308,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
                                         transition={{ duration: 0.4 }}
-                                        className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-stretch"
+                                        className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch"
                                     >
                                         {/* Esquerda - Upload */}
                                         <div className="flex-1 min-w-0">
@@ -362,10 +362,10 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                         transition={{ duration: 0.5, type: "spring", damping: 20 }}
                                         className="w-full"
                                     >
-                                        <div className="p-1 rounded-3xl bg-gradient-to-b from-blue-500/20 to-indigo-500/20 border border-white/10 shadow-2xl overflow-hidden">
-                                            <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-3xl rounded-3xl p-8 sm:p-10 space-y-8">
+                                        <div className="p-1 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-blue-500/20 to-indigo-500/20 border border-white/10 shadow-2xl overflow-hidden">
+                                            <div className="bg-white/70 dark:bg-gray-900/80 backdrop-blur-3xl rounded-2xl sm:rounded-3xl p-4 sm:p-10 space-y-6 sm:space-y-8">
                                                 {/* Badge de Resumo do Job */}
-                                                <div className="flex flex-wrap gap-4 items-center p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-950/40 border border-white/20 dark:border-white/5">
+                                                <div className="flex flex-wrap gap-3 sm:gap-4 items-center p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-50/50 dark:bg-gray-950/40 border border-white/20 dark:border-white/5">
                                                     <div className="flex items-center gap-2">
                                                         <Upload className="w-4 h-4 text-blue-500" />
                                                         <span className="text-xs font-black text-gray-900 dark:text-gray-100 truncate max-w-[150px]">{arquivo?.name}</span>
@@ -380,9 +380,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 </div>
 
                                                 {/* Header do Stepper */}
-                                                <div className="flex items-center justify-between">
-                                                    <div className="space-y-1">
-                                                        <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase">
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                    <div className="space-y-1 min-w-0">
+                                                        <h3 className="text-base sm:text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 uppercase">
                                                             Processamento em andamento
                                                         </h3>
                                                         <div className="flex items-center gap-2">
@@ -407,9 +407,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 </div>
 
                                                 {/* Track Neural */}
-                                                <div className="relative pt-6 pb-2 px-4">
+                                                <div className="relative pt-4 sm:pt-6 pb-2 px-2 sm:px-4">
                                                     {/* Background Line */}
-                                                    <div className="absolute top-[35%] left-0 right-0 h-1bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                                    <div className="absolute top-[35%] left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                                                         <motion.div
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${progresso}%` }}
@@ -419,7 +419,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                     </div>
 
                                                     {/* Steps Nodes */}
-                                                    <div className="relative z-10 flex justify-between items-center h-16">
+                                                    <div className="relative z-10 flex justify-between items-center h-14 sm:h-16">
                                                         {[
                                                             { label: 'Ingestão', step: 10, icon: Upload },
                                                             { label: 'Cérebro SGN', step: 40, icon: Brain },
@@ -437,7 +437,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                                         } : {}}
                                                                         transition={{ repeat: Infinity, duration: 3 }}
                                                                         className={`
-                                                                            w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-700
+                                                                            w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 transition-all duration-700
                                                                             ${active
                                                                                 ? 'bg-blue-600 border-blue-500 text-white shadow-lg'
                                                                                 : 'bg-white dark:bg-gray-950 border-gray-100 dark:border-gray-800 text-gray-300'
@@ -460,7 +460,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                                 </div>
 
                                                 {/* Logs Imersivos (Console Mini) */}
-                                                <div className="bg-gray-950 rounded-2xl p-4 border border-white/5 font-mono text-xs sm:text-xs text-blue-400/80 space-y-1 overflow-hidden h-24 relative shadow-inner">
+                                                <div className="bg-gray-950 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 font-mono text-[10px] sm:text-xs text-blue-400/80 space-y-1 overflow-hidden h-20 sm:h-24 relative shadow-inner">
                                                     <div className="absolute top-2 right-4 flex gap-1">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
                                                         <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
@@ -495,7 +495,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                             </AnimatePresence>
 
                             {/* Ação Central Unificada - Container Premium */}
-                            <div className="flex flex-col items-center gap-6 pt-4">
+                            <div className="flex flex-col items-center gap-4 sm:gap-6 pt-2 sm:pt-4">
                                 <Button
                                     size="lg"
                                     onClick={executarAnalise}

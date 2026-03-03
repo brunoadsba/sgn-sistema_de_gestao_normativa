@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.3.6`
+- Versao atual (documental): `2.3.7`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -122,6 +122,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 85 | 2026-03-03 | **NEX UX/UI Hardening (Drawer Responsivo + Ações do Composer)**: chat consolidado como drawer lateral no desktop e modal no mobile; botão do header stateful (`NEX Aberto`), sugestões em grid com affordance, identidade visual unificada do agente, `Anexar` integrado a `/api/extrair-texto`, toggle contextual de `Modo livre`; `Modelo padrão` e `Voz` mantidos como "em breve". |
 | 86 | 2026-03-03 | **Chat NEX em Popup**: migração de modal/drawer para abertura em nova janela (`/chat`). Resolve sobreposição de background; layout dedicado sem header principal; scroll vertical corrigido com barra visível; padding ampliado em bolhas e sugestões; remoção de avatar Sparkles para UI mais limpa. E2E atualizados para fluxo popup. |
 | 87 | 2026-03-03 | **Vercel + Fallback IA**: migração PDF para `unpdf` (serverless); URL Z.AI corrigida para `api/paas/v4`; fallback bidirecional Groq↔Z.AI; retry com backoff na Z.AI para 429; Groq entra quando Z.AI falha (saldo/rate limit); ChatInterface exibe mensagem de erro real do servidor. |
+| 88 | 2026-03-03 | **Chat + Mobile**: Groq via fetch nativo (evita APIConnectionError no Vercel); Z.AI 429 aciona fallback imediato sem retries; tela inicial mobile compacta (AppShell, AnaliseCliente, stepper); placeholders de busca abreviados para evitar truncamento; cards lado a lado apenas em md: (768px+). |
 
 ## 9. Arquivo Historico Completo
 

@@ -164,9 +164,11 @@ curl -sS -X POST http://localhost:3001/api/ia/agente/especialista \
 Quando o chat em produção retorna 429 do Z.AI mas local funciona:
 
 1. **Configurar `AI_PROVIDER=groq`** no Vercel (Project Settings > Environment Variables > Production). Groq passa a ser o provedor principal; Z.AI só entra como fallback quando Groq falha.
-2. **Confirmar `GROQ_API_KEY`** definida para Production (não apenas Preview). O fallback Groq depende dela.
-3. **429 aciona fallback imediato**: o código falha na primeira 429 do Z.AI e tenta Groq sem retries. Se o erro persiste, Groq também está falhando (ex.: 503, connection error). Verificar logs do Vercel para o erro exato do Groq.
-4. **Groq instável no Vercel**: há relatos de 503/connection error ao chamar Groq de serverless. Alternativa: integração nativa Groq no Vercel (AI tab do dashboard).
+2. **Via CLI**: `printf 'groq' | npx vercel env add AI_PROVIDER production` (evitar `echo` por newline). Redeploy após alterar env.
+3. **Confirmar `GROQ_API_KEY`** definida para Production (não apenas Preview). O fallback Groq depende dela.
+4. **Groq via fetch nativo**: o chat usa `fetch` direto para a API Groq (não o SDK), evitando APIConnectionError/503 no serverless.
+5. **429 aciona fallback imediato**: o código falha na primeira 429 do Z.AI e tenta Groq sem retries. Se o erro persiste, Groq também está falhando. Verificar logs do Vercel.
+6. **Groq instável no Vercel**: há relatos de 503/connection error. Alternativa: integração nativa Groq no Vercel (AI tab do dashboard).
 
 ## 10. Governanca
 

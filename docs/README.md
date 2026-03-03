@@ -5,7 +5,7 @@ Este diretorio concentra a documentacao oficial do projeto.
 ## Snapshot
 
 - Atualizado em: `2026-03-03`
-- Versao documental: `2.3.6`
+- Versao documental: `2.3.7`
 - Modelo operacional: `local-only`, single-user
 - Pipeline oficial: `ci` em `.github/workflows/ci.yml`
 - Politica atual: sem deploy remoto oficial

@@ -84,16 +84,16 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* Busca + ações */}
-      <div className="flex flex-col gap-4 min-w-0">
-        <div className="relative w-full min-w-0 group">
-          <div className="absolute inset-0 bg-indigo-500/5 blur-xl group-focus-within:bg-indigo-500/10 transition-colors -z-10" />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors shrink-0" />
+      <div className="flex flex-col gap-4 min-w-0 w-full">
+        <div className="relative w-full min-w-0 overflow-visible group">
+          <div className="absolute inset-0 bg-indigo-500/5 blur-xl group-focus-within:bg-indigo-500/10 transition-colors -z-10 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors shrink-0 pointer-events-none" />
           <Input
             aria-label="Buscar norma regulamentadora"
-            placeholder="Buscar norma..."
+            placeholder="Buscar"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="h-12 sm:h-14 w-full min-w-0 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-xl sm:rounded-2xl shadow-xl text-sm sm:text-base dark:text-gray-100 placeholder:text-gray-400 placeholder:sm:text-base backdrop-blur-md transition-all pl-9 sm:pl-10"
+            className="block w-full min-w-0 h-12 sm:h-14 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-xl sm:rounded-2xl shadow-xl text-sm sm:text-base dark:text-gray-100 placeholder:text-gray-400 backdrop-blur-md transition-all pl-9 sm:pl-10 pr-3"
           />
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">

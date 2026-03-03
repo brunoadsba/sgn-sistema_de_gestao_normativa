@@ -47,7 +47,7 @@ export function ListaNormasDinamica({ normasIniciais }: ListaNormasDinamicaProps
                     <Search className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
                 </div>
                 <Input
-                    placeholder="Digite o código ou palavra-chave (ex: NR-01, EPI, CIPA)..."
+                    placeholder="Buscar por código ou palavra-chave"
                     value={textoBusca}
                     onChange={(e) => setTextoBusca(e.target.value)}
                     className="w-full h-12 sm:h-16 pl-10 sm:pl-14 pr-3 sm:pr-4 text-sm sm:text-lg bg-white/80 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 backdrop-blur-md border-2 border-gray-200 dark:border-gray-700 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 rounded-xl sm:rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-black/20 transition-all"

@@ -1,13 +1,26 @@
 # Changelog
 
+## [2.3.7] - 2026-03-03
+
+### Alterado
+
+- **Chat NEX via fetch nativo**: Groq passou a usar `fetch` direto em vez do SDK no chat, evitando problemas de conexão (APIConnectionError, 503) no Vercel serverless.
+- **Z.AI 429 fallback imediato**: em 429, o código falha na primeira tentativa e aciona fallback Groq sem retries (retries em rate limit não ajudam).
+- **Tela inicial mobile**: AppShell com `py-4` no main; AnaliseCliente com header compacto, espaçamentos reduzidos, stepper e botão responsivos; cards lado a lado apenas em `md:` (768px+).
+- **Placeholders de busca**: SeletorNormas "Buscar", ListaNormasDinamica "Buscar por código ou palavra-chave", HistoricoAnalisesCard "Buscar documento" — evitam truncamento em layouts estreitos.
+
+### Corrigido
+
+- **Placeholder truncado no input de normas**: "Buscar Norma Regulamentadora" cortado em mobile; substituído por "Buscar".
+- **Typo no stepper**: `h-1bg-gray-100` corrigido para `h-1 bg-gray-100`.
+
 ## [2.3.6] - 2026-03-03
 
 ### Alterado
 
 - **Extração de PDF no Vercel**: migração de `pdf-parse` para `unpdf` em `POST /api/extrair-texto` e `scripts/sync-normas-kb.ts`. Resolve `DOMMatrix is not defined` e `@napi-rs/canvas` no ambiente serverless. `unpdf` inclui build de PDF.js otimizado para edge/serverless.
-- **Chat NEX via fetch nativo**: Groq passou a usar `fetch` direto em vez do SDK no chat, evitando problemas de conexão (APIConnectionError, 503) no Vercel serverless.
 - **Fallback bidirecional no chat NEX**: Groq entra quando Z.AI falha (saldo insuficiente, 429, etc.). Fluxo: `AI_PROVIDER=groq` → Groq (retry) → Z.AI → Groq; `AI_PROVIDER=zai` → Z.AI → Groq.
-- **Retry com backoff na Z.AI** para 429 (rate limit). Mensagem amigável: "Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente."
+- **Retry com backoff na Z.AI** para erros não-429. Em 429, fallback imediato para Groq (sem retries).
 - **Retry no Groq** (1x, 1.5s) antes do fallback para Z.AI.
 - **URL base Z.AI**: default corrigido para `https://api.z.ai/api/paas/v4` (não `/v1` nem `/coding/`).
 - **ChatInterface**: exibe mensagem de erro real do servidor em respostas 4xx/5xx (não apenas "Erro HTTP N").

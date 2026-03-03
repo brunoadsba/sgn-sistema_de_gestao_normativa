@@ -129,7 +129,7 @@ export function HistoricoAnalisesCard({
           <Input
             value={buscaDocumento}
             onChange={(event) => onBuscaChange(event.target.value)}
-            placeholder="Buscar por nome do documento..."
+            placeholder="Buscar documento"
             className="border-gray-300 dark:border-gray-600"
           />
           <select

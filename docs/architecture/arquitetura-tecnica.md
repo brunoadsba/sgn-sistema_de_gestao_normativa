@@ -94,7 +94,7 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 6. `Modelo padrao` e `Voz` permanecem desabilitados (estado "em breve"), sem contrato backend.
 7. Respostas trafegam por SSE com fases `thinking`/`writing` no cliente.
 8. UI limpa: mensagens sem avatar; scroll vertical com barra visível; padding ampliado em bolhas e sugestões.
-9. **Fallback bidirecional de provedores**: `AI_PROVIDER=groq` → Groq (retry) → Z.AI → Groq; `AI_PROVIDER=zai` → Z.AI → Groq. Z.AI com retry/backoff para 429. Groq entra quando Z.AI falha (saldo, rate limit).
+9. **Fallback bidirecional de provedores**: `AI_PROVIDER=groq` → Groq (retry) → Z.AI → Groq; `AI_PROVIDER=zai` → Z.AI → Groq. Z.AI 429 aciona fallback imediato para Groq (sem retries). Groq via `fetch` nativo (não SDK) para evitar APIConnectionError no Vercel serverless.
 
 ## 7. Confiabilidade e Seguranca (implementado)
 
