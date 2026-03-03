@@ -64,6 +64,10 @@ async function streamGroq(messages: ChatMessage[]): Promise<ReadableStream<Uint8
   })
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 /** Z.AI e Ollama: resposta completa emitida como stream único */
 async function streamFallback(messages: ChatMessage[]): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder()
@@ -87,22 +91,51 @@ async function streamFallback(messages: ChatMessage[]): Promise<ReadableStream<U
   } else {
     const apiKey = env.ZAI_API_KEY || env.OPENAI_API_KEY
     if (!apiKey) throw new Error('ZAI_API_KEY ausente')
-    const res = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: env.ZAI_MODEL || 'glm-4.7',
-        messages,
-        temperature: 0,
-        top_p: 1,
-        max_tokens: 1500,
-        ...getZaiThinkingOptions(),
-      }),
-      signal: AbortSignal.timeout(env.ZAI_TIMEOUT_MS),
-    })
-    if (!res.ok) throw new Error(`Z.AI HTTP ${res.status}`)
-    const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> }
-    reply = data.choices?.[0]?.message?.content ?? 'Sem resposta do Z.AI.'
+
+    const maxAttempts = Math.max(2, env.ZAI_RETRY_ATTEMPTS)
+    let lastError: Error | null = null
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const res = await fetch(`${env.ZAI_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: env.ZAI_MODEL || 'glm-4.7',
+          messages,
+          temperature: 0,
+          top_p: 1,
+          max_tokens: 1500,
+          ...getZaiThinkingOptions(),
+        }),
+        signal: AbortSignal.timeout(env.ZAI_TIMEOUT_MS),
+      })
+
+      if (res.ok) {
+        const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> }
+        reply = data.choices?.[0]?.message?.content ?? 'Sem resposta do Z.AI.'
+        lastError = null
+        break
+      }
+
+      if (res.status === 429 && attempt < maxAttempts - 1) {
+        const delay = Math.min(env.ZAI_RETRY_BASE_MS * (2 ** attempt), env.ZAI_RETRY_MAX_MS)
+        iaLogger.warn({ attempt: attempt + 1, delay }, '[NEX-CHAT] Z.AI 429 — retry com backoff')
+        await sleep(delay)
+        lastError = new Error(
+          'Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente.'
+        )
+        continue
+      }
+
+      lastError = new Error(
+        res.status === 429
+          ? 'Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente.'
+          : `Z.AI HTTP ${res.status}`
+      )
+      break
+    }
+
+    if (lastError) throw lastError
   }
 
   return new ReadableStream({
@@ -153,22 +186,63 @@ export async function POST(req: NextRequest) {
       'X-Accel-Buffering': 'no',
     }
 
-    if (env.AI_PROVIDER === 'groq' || !env.AI_PROVIDER) {
+    if (env.AI_PROVIDER === 'ollama') {
+      const stream = await streamFallback(contextualizedMessages)
+      return new Response(stream, { headers: sseHeaders })
+    }
+
+    if (env.AI_PROVIDER === 'zai') {
+      try {
+        const stream = await streamFallback(contextualizedMessages)
+        return new Response(stream, { headers: sseHeaders })
+      } catch (zaiErr) {
+        iaLogger.warn({ error: toError(zaiErr).message }, '[NEX-CHAT] Z.AI falhou — fallback Groq')
+        try {
+          const stream = await streamGroq(contextualizedMessages)
+          return new Response(stream, { headers: sseHeaders })
+        } catch {
+          throw zaiErr
+        }
+      }
+    }
+
+    // groq ou default: Groq primeiro, Z.AI como fallback, Groq como fallback do fallback
+    let groqErr: Error | null = null
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const stream = await streamGroq(contextualizedMessages)
         return new Response(stream, { headers: sseHeaders })
       } catch (err) {
-        iaLogger.warn({ error: toError(err).message }, '[NEX-CHAT] Groq streaming falhou — fallback Z.AI')
-        const stream = await streamFallback(contextualizedMessages)
-        return new Response(stream, { headers: sseHeaders })
+        groqErr = toError(err)
+        if (attempt === 0) {
+          iaLogger.warn({ error: groqErr.message }, '[NEX-CHAT] Groq falhou — retry')
+          await sleep(1500)
+          continue
+        }
+        iaLogger.warn({ error: groqErr.message }, '[NEX-CHAT] Groq falhou — fallback Z.AI')
+        break
       }
     }
 
-    const stream = await streamFallback(contextualizedMessages)
-    return new Response(stream, { headers: sseHeaders })
+    try {
+      const stream = await streamFallback(contextualizedMessages)
+      return new Response(stream, { headers: sseHeaders })
+    } catch (zaiErr) {
+      iaLogger.warn({ error: toError(zaiErr).message }, '[NEX-CHAT] Z.AI falhou — fallback Groq')
+      try {
+        const stream = await streamGroq(contextualizedMessages)
+        return new Response(stream, { headers: sseHeaders })
+      } catch {
+        throw zaiErr
+      }
+    }
   } catch (error) {
     const err = toError(error)
     iaLogger.error({ error: err.message }, '[NEX-CHAT] Falha estrutural')
-    return createErrorResponse(`Erro interno ao consultar o assistente: ${err.message}`, 500)
+    const isRateLimit = err.message.includes('429') || err.message.includes('Limite de requisições')
+    return createErrorResponse(
+      err.message,
+      isRateLimit ? 429 : 500
+    )
   }
 }

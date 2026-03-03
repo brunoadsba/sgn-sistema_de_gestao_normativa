@@ -123,7 +123,7 @@ curl -sS -X POST http://localhost:3001/api/ia/agente/especialista \
 ### Falha de provedor IA
 
 1. Validar `AI_PROVIDER`.
-2. Validar credenciais (`GROQ_API_KEY`, `ZAI_API_KEY` ou `OPENAI_API_KEY`) e endpoint do Ollama.
+2. Validar credenciais (`GROQ_API_KEY`, `ZAI_API_KEY` ou `OPENAI_API_KEY`) e endpoint do Ollama. Chat NEX usa fallback bidirecional: Groq entra quando Z.AI falha (saldo, 429).
 3. Validar tuning de timeout/retry:
    - `GROQ_TIMEOUT_MS`, `GROQ_RETRY_ATTEMPTS`, `GROQ_RETRY_BASE_MS`, `GROQ_RETRY_MAX_MS`
    - `ZAI_TIMEOUT_MS`, `ZAI_RETRY_ATTEMPTS`, `ZAI_RETRY_BASE_MS`, `ZAI_RETRY_MAX_MS`, `ZAI_DISABLE_THINKING`

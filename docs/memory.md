@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.3.5`
+- Versao atual (documental): `2.3.6`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -54,11 +54,11 @@ Tabelas principais em `src/lib/db/schema.ts`:
 
 ## 4. Capacidades em uso
 
-1. Upload e extracao de texto (`PDF`, `DOCX`, `TXT`).
+1. Upload e extracao de texto (`PDF`, `DOCX`, `TXT`) via `unpdf` (serverless-compatible) e `mammoth`.
 2. Analise com IA e persistencia de jobs/resultados.
 3. Catalogo de normas com busca e detalhe por NR.
 4. Fluxo dedicado NR-6.
-5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento), streaming SSE nativo (Groq), fallback em bloco (Z.AI/Ollama), fases de resposta (`thinking`/`writing`), historico com TTL de 30 dias, abertura em popup (480x800) via botão no header ou Cmd/Ctrl+K, página `/chat` com layout dedicado, acao `Anexar` funcional e toggle contextual de `Modo livre`.
+5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento), streaming SSE nativo (Groq), fallback bidirecional Groq↔Z.AI (Groq entra quando Z.AI falha), retry com backoff na Z.AI para 429, fases de resposta (`thinking`/`writing`), historico com TTL de 30 dias, abertura em popup (480x800) via botão no header ou Cmd/Ctrl+K, página `/chat` com layout dedicado, acao `Anexar` funcional e toggle contextual de `Modo livre`.
 6. Exportacao em `CSV/JSON`.
 7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
 8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
@@ -81,7 +81,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 
 ## 7. Prioridades Imediatas
 
-1. Validar chat NEX modo livre com Z.AI em cenario de rede estavel.
+1. Validar chat NEX em cenários de fallback (Groq↔Z.AI) em produção.
 2. Expandir testes E2E para fluxos de analise completa com IA.
 3. Continuar 5S documental para evitar novo drift.
 
@@ -121,6 +121,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 84 | 2026-03-03 | **Modernização do Chat NEX**: Implementação de streaming SSE nativo (Groq) com fallback em bloco, fases de processamento ('thinking'/'writing'), indicador de digitação verbal animado, timestamps relativos automáticos, badge de modo no input e persistência de histórico com TTL de 30 dias. |
 | 85 | 2026-03-03 | **NEX UX/UI Hardening (Drawer Responsivo + Ações do Composer)**: chat consolidado como drawer lateral no desktop e modal no mobile; botão do header stateful (`NEX Aberto`), sugestões em grid com affordance, identidade visual unificada do agente, `Anexar` integrado a `/api/extrair-texto`, toggle contextual de `Modo livre`; `Modelo padrão` e `Voz` mantidos como "em breve". |
 | 86 | 2026-03-03 | **Chat NEX em Popup**: migração de modal/drawer para abertura em nova janela (`/chat`). Resolve sobreposição de background; layout dedicado sem header principal; scroll vertical corrigido com barra visível; padding ampliado em bolhas e sugestões; remoção de avatar Sparkles para UI mais limpa. E2E atualizados para fluxo popup. |
+| 87 | 2026-03-03 | **Vercel + Fallback IA**: migração PDF para `unpdf` (serverless); URL Z.AI corrigida para `api/paas/v4`; fallback bidirecional Groq↔Z.AI; retry com backoff na Z.AI para 429; Groq entra quando Z.AI falha (saldo/rate limit); ChatInterface exibe mensagem de erro real do servidor. |
 
 ## 9. Arquivo Historico Completo
 

@@ -5,7 +5,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 ## Snapshot Atual
 
 - Atualizado em: `2026-03-03`
-- Versão documental: `2.3.5`
+- Versão documental: `2.3.6`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - CI oficial: `.github/workflows/ci.yml`
@@ -15,7 +15,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Arquitetura: monolito Next.js (App Router) com TypeScript.
 - Persistencia: SQLite/LibSQL via Drizzle.
 - Provedores IA: `groq`, `zai`, `ollama` (selecionados por `AI_PROVIDER`).
-- Fluxo de chat: Streaming SSE nativo (Groq) com fallback em bloco determinístico.
+- Fluxo de chat: Streaming SSE nativo (Groq) com fallback bidirecional Groq↔Z.AI (Groq entra quando Z.AI falha).
 - UI do chat: abertura em nova janela (popup 480x800) via botão `Assistente NEX` no header. Página `/chat` com layout dedicado.
 - Fluxo de analise: assíncrono no endpoint (`202 Accepted`) com processamento em background no runtime da API.
 - Idempotencia: persistencia em banco (`idempotency_cache`) com fallback seguro para memoria quando schema estiver defasado.

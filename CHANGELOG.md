@@ -5,10 +5,16 @@
 ### Alterado
 
 - **Extração de PDF no Vercel**: migração de `pdf-parse` para `unpdf` em `POST /api/extrair-texto` e `scripts/sync-normas-kb.ts`. Resolve `DOMMatrix is not defined` e `@napi-rs/canvas` no ambiente serverless. `unpdf` inclui build de PDF.js otimizado para edge/serverless.
+- **Fallback bidirecional no chat NEX**: Groq entra quando Z.AI falha (saldo insuficiente, 429, etc.). Fluxo: `AI_PROVIDER=groq` → Groq (retry) → Z.AI → Groq; `AI_PROVIDER=zai` → Z.AI → Groq.
+- **Retry com backoff na Z.AI** para 429 (rate limit). Mensagem amigável: "Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente."
+- **Retry no Groq** (1x, 1.5s) antes do fallback para Z.AI.
+- **URL base Z.AI**: default corrigido para `https://api.z.ai/api/paas/v4` (não `/v1` nem `/coding/`).
+- **ChatInterface**: exibe mensagem de erro real do servidor em respostas 4xx/5xx (não apenas "Erro HTTP N").
 
 ### Corrigido
 
 - **405/500 em `/api/extrair-texto` no Vercel**: pdf-parse/pdfjs-dist dependia de APIs de browser inexistentes no serverless. `unpdf` funciona em Node.js, Vercel, Cloudflare Workers e browser.
+- **Chat falhando com Z.AI sem saldo**: Groq passa a ser usado como fallback quando Z.AI retorna 429 ou erro de saldo.
 
 ## [2.3.5] - 2026-03-03
 
