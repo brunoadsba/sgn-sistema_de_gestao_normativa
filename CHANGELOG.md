@@ -1,6 +1,31 @@
 # Changelog
 
-## [2.3.4] - 2026-03-02
+## [2.3.5] - 2026-03-03
+
+### Adicionado
+
+- **Streaming SSE nativo no Chat NEX**: rota `POST /api/chat-documento` reescrita com `stream: true` para o Groq SDK. Respostas agora chegam token a token (padrão ChatGPT/Claude). Providers Z.AI e Ollama recebem emissão em bloco único via `ReadableStream` com o mesmo protocolo SSE, garantindo compatibilidade sem bifurcação no cliente.
+- **Indicador verbal de processamento**: `ChatTypingIndicator` refatorado para aceitar `phase: 'thinking' | 'writing'`:
+  - **thinking**: ícone `BrainCircuit` pulsando + _"NEX está analisando o contexto..."_ com ellipsis animado (3 pontos sequenciais).
+  - **writing**: ícone `PencilLine` + _"Redigindo resposta..."_ com ellipsis.
+- **Estado de fase granular no chat**: `isTyping: boolean` substituído por `chatStatus: 'idle' | 'thinking' | 'writing'`. Fase `thinking` dura até 1,2 s ou até o primeiro token chegar; muda automaticamente para `writing` ao iniciar o stream.
+- **Botão de envio com loading**: `ArrowUp` substituído por `Loader2 animate-spin` enquanto `chatStatus !== 'idle'`.
+- **Timestamps relativos nas mensagens**: hora relativa (`"agora"`, `"há 2 min"`, `"há 1 h"`) exibida abaixo de cada mensagem de usuário e na toolbar hover do assistente. Atualiza automaticamente a cada 30 s via `setInterval`. Implementado com `Intl.RelativeTimeFormat` nativo — sem dependência externa.
+- **Badge de modo no input**: indicador `● Modo livre` / `● Grounded · [nome do arquivo]` na borda inferior da caixa de digitação, usando dados já disponíveis via `useChatContext()`.
+- **Persistência de histórico com TTL 30 dias**: substituição dos acessos diretos ao `localStorage` por utilitário `chat-storage.ts` com envelope `{ savedAt, messages }`. Históricos expirados são descartados silenciosamente na leitura.
+
+### Alterado
+
+- **`prompt-builder.ts` extraído**: builders de system prompt (`buildSystemPrompt`, `normalizarMensagem`) movidos da rota para módulo dedicado `src/app/api/chat-documento/prompt-builder.ts`, mantendo `route.ts` abaixo de 200 linhas (regra 5).
+- **`chat-utils.ts` expandido**: adicionado `formatRelativeTime(date)` para formatação de tempo relativo — reutilizável em qualquer componente da feature.
+- **Scroll automático durante streaming**: `scrollToBottom()` chamado a cada token recebido enquanto `isNearBottom = true`.
+
+### Qualidade
+
+- `npm run lint` ✅ (arquivos da feature)
+- Lint zero warnings em: `route.ts`, `prompt-builder.ts`, `ChatTypingIndicator.tsx`, `ChatInterface.tsx`, `ChatMessageBubble.tsx`, `chat-storage.ts`, `chat-utils.ts`
+
+
 
 ### Alterado
 

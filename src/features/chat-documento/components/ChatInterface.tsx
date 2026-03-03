@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react'
+import { ArrowUp, ArrowDown, Trash2, Loader2 } from 'lucide-react'
 import { AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ChatMessageBubble, type Message } from './ChatMessageBubble'
-import { ChatTypingIndicator } from './ChatTypingIndicator'
+import { ChatTypingIndicator, type TypingPhase } from './ChatTypingIndicator'
 import { ChatSuggestions } from './ChatSuggestions'
 import { cn } from '@/lib/utils'
 import { useChatContext } from '../context/ChatContext'
+import { loadChatHistory, saveChatHistory, clearChatHistory } from '../lib/chat-storage'
+import { updateLastAssistantMessage } from '../lib/chat-utils'
 
 const getWelcomeGrounded = (documentName?: string): Message => ({
     id: 'welcome',
@@ -36,40 +38,25 @@ export function ChatInterface() {
 
     const [messages, setMessages] = useState<Message[]>([welcomeMsg])
     const [input, setInput] = useState('')
-    const [isTyping, setIsTyping] = useState(false)
+    const [chatStatus, setChatStatus] = useState<'idle' | TypingPhase>('idle')
     const [showScrollBtn, setShowScrollBtn] = useState(false)
     const prevGroundedRef = useRef(isGrounded)
+    const thinkingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const prevContextoRef = useRef(contextoTela)
     const STORAGE_KEY = `sgn-chat-history-${isGrounded ? 'grounded' : 'free'}`
 
-    // Carregar histórico inicial do localStorage (apenas no cliente)
+    // Carregar histórico inicial do localStorage com TTL de 30 dias
     useEffect(() => {
-        try {
-            const saved = window.localStorage.getItem(STORAGE_KEY)
-            if (saved) {
-                const parsed = JSON.parse(saved)
-                // Reconstruir datas das strings JSON
-                const messagesWithDates = parsed.map((m: Message) => ({
-                    ...m,
-                    timestamp: new Date(m.timestamp)
-                }))
-                if (messagesWithDates.length > 0) {
-                    setMessages(messagesWithDates)
-                }
-            }
-        } catch (e) {
-            console.error('Falha ao restaurar histórico do chat:', e)
+        const saved = loadChatHistory(STORAGE_KEY)
+        if (saved.length > 0) {
+            setMessages(saved)
         }
     }, [STORAGE_KEY])
 
-    // Salvar histórico no localStorage sempre que 'messages' mudar
+    // Salvar histórico no localStorage (envelope com TTL = 30 dias)
     useEffect(() => {
-        try {
-            if (messages.length > 0) {
-                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-            }
-        } catch (e) {
-            console.error('Falha ao salvar histórico do chat:', e)
+        if (messages.length > 0) {
+            saveChatHistory(STORAGE_KEY, messages)
         }
     }, [messages, STORAGE_KEY])
 
@@ -107,7 +94,7 @@ export function ChatInterface() {
     useEffect(() => {
         if (isNearBottomRef.current) scrollToBottom()
         else setShowScrollBtn(true)
-    }, [messages, isTyping, scrollToBottom])
+    }, [messages, chatStatus, scrollToBottom])
 
     useEffect(() => {
         if (!textareaRef.current) return
@@ -118,7 +105,7 @@ export function ChatInterface() {
 
     const sendMessage = useCallback(async (text: string) => {
         const trimmed = text.trim()
-        if (!trimmed || isTyping) return
+        if (!trimmed || chatStatus !== 'idle') return
 
         const userMsg: Message = {
             id: Date.now().toString(),
@@ -130,8 +117,11 @@ export function ChatInterface() {
         const updatedMessages = [...messages, userMsg]
         setMessages(updatedMessages)
         setInput('')
-        setIsTyping(true)
+        setChatStatus('thinking')
         isNearBottomRef.current = true
+
+        // Após 1,2 s sem primeiro token, muda para 'writing'
+        thinkingTimerRef.current = setTimeout(() => setChatStatus('writing'), 1200)
 
         try {
             const res = await fetch('/api/chat-documento', {
@@ -143,20 +133,53 @@ export function ChatInterface() {
                 }),
             })
 
-            const data = await res.json()
-            const payload = data.data ?? data
-            if (data.success && payload.reply) {
-                const aiMsg: Message = {
-                    id: (Date.now() + 1).toString(),
-                    role: 'assistant',
-                    content: payload.reply,
-                    timestamp: new Date(),
+            if (!res.ok || !res.body) {
+                throw new Error(`Erro HTTP ${res.status}`)
+            }
+
+            // Primeiro token chegou — cancela o timer de thinking
+            if (thinkingTimerRef.current) {
+                clearTimeout(thinkingTimerRef.current)
+                thinkingTimerRef.current = null
+            }
+            setChatStatus('writing')
+
+            const reader = res.body.getReader()
+            const decoder = new TextDecoder()
+            let sseBuffer = ''
+            let partial = ''
+
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+
+                sseBuffer += decoder.decode(value, { stream: true })
+                const lines = sseBuffer.split('\n')
+                sseBuffer = lines.pop() ?? ''
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue
+                    const payload = line.slice(6).trim()
+                    if (payload === '[DONE]') break
+                    try {
+                        const { text: token } = JSON.parse(payload) as { text: string }
+                        partial += token
+                        setMessages(prev => updateLastAssistantMessage(prev, partial))
+                        if (isNearBottomRef.current) scrollToBottom()
+                    } catch {
+                        // chunk malformado — ignora
+                    }
                 }
-                setMessages(prev => [...prev, aiMsg])
-            } else {
-                throw new Error(data.message || data.error || 'Erro ao comunicar com a IA')
+            }
+
+            if (!partial) {
+                throw new Error('Resposta vazia recebida do assistente')
             }
         } catch (error) {
+            if (thinkingTimerRef.current) {
+                clearTimeout(thinkingTimerRef.current)
+                thinkingTimerRef.current = null
+            }
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
@@ -166,11 +189,13 @@ export function ChatInterface() {
             }
             setMessages(prev => [...prev, aiMsg])
         } finally {
-            setIsTyping(false)
+            setChatStatus('idle')
         }
-    }, [documentContext, isTyping, messages])
+
+    }, [documentContext, chatStatus, messages, scrollToBottom])
 
     const handleRetry = useCallback(() => {
+        if (chatStatus !== 'idle') return
         const lastUserIndex = messages.map(m => m.role).lastIndexOf('user')
         if (lastUserIndex === -1) return
 
@@ -179,11 +204,11 @@ export function ChatInterface() {
 
         setMessages(cleaned)
         setTimeout(() => sendMessage(lastUserContent), 50)
-    }, [messages, sendMessage])
+    }, [chatStatus, messages, sendMessage])
 
     const handleClearChat = () => {
         if (confirm('Tem certeza que deseja apagar o histórico dessa conversa?')) {
-            window.localStorage.removeItem(STORAGE_KEY)
+            clearChatHistory(STORAGE_KEY)
             setMessages([welcomeMsg])
             setInput('')
         }
@@ -191,8 +216,9 @@ export function ChatInterface() {
 
     const handleSend = () => sendMessage(input)
     const handleSuggestionSelect = (text: string) => sendMessage(text)
-    const showSuggestions = messages.length === 1 && !isTyping
-    const canSend = input.trim().length > 0 && !isTyping
+    const isProcessing = chatStatus !== 'idle'
+    const showSuggestions = messages.length === 1 && !isProcessing
+    const canSend = input.trim().length > 0 && !isProcessing
 
     return (
         <div className="flex flex-col h-full min-h-0 relative">
@@ -227,7 +253,9 @@ export function ChatInterface() {
                     ))}
                 </AnimatePresence>
 
-                {isTyping && <ChatTypingIndicator />}
+                {isProcessing && (
+                    <ChatTypingIndicator phase={chatStatus as TypingPhase} />
+                )}
 
                 {showSuggestions && (
                     <ChatSuggestions onSelect={handleSuggestionSelect} />
@@ -260,7 +288,7 @@ export function ChatInterface() {
                                 handleSend()
                             }
                         }}
-                        disabled={isTyping}
+                        disabled={isProcessing}
                         placeholder={isGrounded ? 'Pergunte sobre o documento...' : 'Pergunte sobre SST e NRs...'}
                         aria-label="Mensagem para o assistente"
                         className={cn(
@@ -274,18 +302,38 @@ export function ChatInterface() {
                         rows={1}
                     />
 
+                    {/* Badge de modo */}
+                    <div className="flex items-center px-4 pb-2 pt-0">
+                        <span className={cn(
+                            'inline-flex items-center gap-1 text-[11px] font-medium select-none',
+                            isGrounded
+                                ? 'text-indigo-500 dark:text-indigo-400'
+                                : 'text-gray-400 dark:text-gray-600'
+                        )}>
+                            <span className={cn(
+                                'w-1.5 h-1.5 rounded-full inline-block',
+                                isGrounded ? 'bg-indigo-500 dark:bg-indigo-400' : 'bg-gray-400 dark:bg-gray-600'
+                            )} />
+                            {isGrounded
+                                ? `Grounded${documentName ? ` · ${documentName.slice(0, 30)}${documentName.length > 30 ? '…' : ''}` : ''}`
+                                : 'Modo livre'}
+                        </span>
+                    </div>
+
                     <button
                         onClick={handleSend}
                         disabled={!canSend}
-                        aria-label="Enviar mensagem"
+                        aria-label={isProcessing ? 'Processando...' : 'Enviar mensagem'}
                         className={cn(
-                            'absolute right-2 bottom-2 p-1.5 rounded-lg transition-all',
+                            'absolute right-2 bottom-8 p-1.5 rounded-lg transition-all',
                             canSend
                                 ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm active:scale-90'
                                 : 'bg-gray-100 dark:bg-white/[0.06] text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         )}
                     >
-                        <ArrowUp className="w-4 h-4" />
+                        {isProcessing
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <ArrowUp className="w-4 h-4" />}
                     </button>
                 </div>
             </div>

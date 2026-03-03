@@ -118,6 +118,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 81 | 2026-03-01 | **UX/UI Consolidation Finalizada (Phase 2 e 3)**: empty states ilustrados, brand avatar no chat, persistência via `localStorage`, `GlobalNav` fixo no desktop, e testes E2E estabilizados com 45/45 testes passados no total. |
 | 82 | 2026-03-01 | **UX/UI Refinement & Layout Fixes**: Chat NEX migrado para o Header (GlobalNav) e transformado em Modal Centralizado imersivo com backdrop blur. Remoção de componentes redundantes na Home (`QuickActionsHome`). Correção de overflow vertical e corte de interface no chat para todas as resoluções. |
 | 83 | 2026-03-02 | **Limpeza de PDF + Compactação de UX + Fix scoreGeral**: PDF sem campos técnicos internos (ID, Analista, Versão, Confiança, Sessão, nome do arquivo). UX compactada (~50% menos espaço vertical). Bug `scoreGeral=0` corrigido em `jobs.ts` com guard `isFinite` + clamp `[0,100]`. Confiabilidade documentada como métrica interna independente do score. |
+| 84 | 2026-03-03 | **Modernização do Chat NEX**: Implementação de streaming SSE nativo (Groq) com fallback em bloco, fases de processamento ('thinking'/'writing'), indicador de digitação verbal animado, timestamps relativos automáticos, badge de modo no input e persistência de histórico com TTL de 30 dias. |
 
 ## 9. Arquivo Historico Completo
 

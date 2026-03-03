@@ -1,37 +1,68 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BrainCircuit } from 'lucide-react'
+import { BrainCircuit, PencilLine } from 'lucide-react'
 
-export function ChatTypingIndicator() {
+export type TypingPhase = 'thinking' | 'writing'
+
+interface ChatTypingIndicatorProps {
+    phase: TypingPhase
+}
+
+const PHASE_CONFIG = {
+    thinking: {
+        icon: BrainCircuit,
+        label: 'NEX está analisando o contexto',
+    },
+    writing: {
+        icon: PencilLine,
+        label: 'Redigindo resposta',
+    },
+} as const
+
+export function ChatTypingIndicator({ phase }: ChatTypingIndicatorProps) {
+    const { icon: Icon, label } = PHASE_CONFIG[phase]
+
     return (
-        <div className="flex gap-4 px-2 py-3 w-full" aria-live="polite">
+        <div className="flex gap-3 px-2 py-3 w-full" aria-live="polite" aria-label={label}>
+            {/* Avatar animado */}
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden">
-                <BrainCircuit className="w-5 h-5 text-white/90" />
+                <Icon className="w-5 h-5 text-white/90" />
                 <motion.div
                     animate={{ y: ['100%', '-100%'] }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-t from-transparent via-white/30 to-transparent"
+                    transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+                    className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent"
                 />
             </div>
 
-            <div className="flex-1 space-y-3 py-1.5 max-w-[85%]">
-                <motion.div
-                    animate={{ opacity: [0.4, 0.8, 0.4] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    className="h-2 bg-gray-200 dark:bg-gray-700/60 rounded-full w-[90%]"
-                />
-                <motion.div
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.2 }}
-                    className="h-2 bg-gray-200 dark:bg-gray-700/50 rounded-full w-full"
-                />
-                <motion.div
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.4 }}
-                    className="h-2 bg-gray-100 dark:bg-gray-800/60 rounded-full w-[60%]"
-                />
+            {/* Label verbal + cursor */}
+            <div className="flex items-center gap-1.5 py-1.5">
+                <span className="text-sm text-gray-500 dark:text-gray-400 select-none">
+                    {label}
+                </span>
+                <EllipsisAnimated />
             </div>
         </div>
+    )
+}
+
+/** Ellipsis animado — 3 pontos que aparecem sequencialmente */
+function EllipsisAnimated() {
+    return (
+        <span className="flex items-end gap-[2px] h-4 mb-[1px]" aria-hidden>
+            {[0, 0.25, 0.5].map((delay, i) => (
+                <motion.span
+                    key={i}
+                    className="w-[3px] h-[3px] rounded-full bg-indigo-400 dark:bg-indigo-500"
+                    animate={{ opacity: [0.2, 1, 0.2], y: [0, -2, 0] }}
+                    transition={{
+                        repeat: Infinity,
+                        duration: 1,
+                        delay,
+                        ease: 'easeInOut',
+                    }}
+                />
+            ))}
+        </span>
     )
 }

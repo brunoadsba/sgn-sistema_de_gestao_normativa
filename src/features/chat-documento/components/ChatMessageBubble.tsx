@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Copy, Check, AlertTriangle, RotateCcw, Bot } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { formatRelativeTime } from '../lib/chat-utils'
 
 export interface Message {
     id: string
@@ -34,16 +35,28 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageBubbleProps) 
         setTimeout(() => setCopied(false), 2000)
     }
 
+    // Atualiza o timestamp a cada 30 s para que "agora" vire "há 1 minuto" etc.
+    const [, setTick] = useState(0)
+    useEffect(() => {
+        const id = setInterval(() => setTick(t => t + 1), 30_000)
+        return () => clearInterval(id)
+    }, [])
+
+    const timeLabel = formatRelativeTime(message.timestamp)
+
     const motionProps = prefersReducedMotion
         ? {}
         : { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } }
 
     if (isUser) {
         return (
-            <motion.div {...motionProps} className="flex justify-end">
+            <motion.div {...motionProps} className="flex flex-col items-end gap-0.5">
                 <div className="max-w-[85%] px-4 py-2.5 bg-indigo-600 text-white rounded-2xl rounded-br-md text-sm leading-relaxed">
                     <p className="whitespace-pre-wrap break-words">{message.content}</p>
                 </div>
+                <span className="text-[11px] text-gray-400 dark:text-gray-600 pr-1 select-none">
+                    {timeLabel}
+                </span>
             </motion.div>
         )
     }
@@ -80,11 +93,15 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageBubbleProps) 
                     </div>
                 </div>
 
-                {/* Actions toolbar */}
+                {/* Actions toolbar — visível ao hover */}
                 <div className={cn(
                     'flex items-center gap-1 mt-2 transition-opacity duration-150',
                     hovered ? 'opacity-100' : 'opacity-0'
                 )}>
+                    <span className="text-[11px] text-gray-400 dark:text-gray-600 select-none mr-1">
+                        {timeLabel}
+                    </span>
+
                     {!isError && (
                         <button
                             onClick={handleCopy}
