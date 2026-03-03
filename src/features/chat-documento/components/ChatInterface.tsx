@@ -202,8 +202,14 @@ export function ChatInterface() {
                 }),
             })
 
-            if (!res.ok || !res.body) {
-                throw new Error(`Erro HTTP ${res.status}`)
+            if (!res.ok) {
+                const errPayload = await res.json().catch(() => ({})) as { error?: string; details?: string }
+                const msg = errPayload?.error || errPayload?.details || `Erro HTTP ${res.status}`
+                throw new Error(msg)
+            }
+
+            if (!res.body) {
+                throw new Error('Resposta sem corpo do servidor')
             }
 
             const reader = res.body.getReader()

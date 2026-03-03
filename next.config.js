@@ -18,8 +18,8 @@ const nextConfig = {
   // Módulos que não devem ser bundlados pelo webpack no server-side
   // better-sqlite3: módulo nativo Node.js
   // mammoth: leitura de DOCX, depende de Node.js fs
-  // pdf-parse: extração de texto de PDFs, depende de Node.js fs
-  serverExternalPackages: ['better-sqlite3', 'mammoth', 'pdf-parse'],
+  // unpdf: extração de texto de PDFs, serverless-compatible
+  serverExternalPackages: ['better-sqlite3', 'mammoth', 'unpdf'],
   
   // Security headers
   async headers() {

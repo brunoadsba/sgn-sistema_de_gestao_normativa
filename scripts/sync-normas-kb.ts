@@ -1,28 +1,19 @@
 import fs from 'fs'
 import path from 'path'
-import { PDFParse } from 'pdf-parse'
-import { pathToFileURL } from 'url'
-import { resolve } from 'path'
+import { extractText, getDocumentProxy } from 'unpdf'
 import mammoth from 'mammoth'
 import { getNormas } from '../src/lib/data/normas'
 
 const OUTPUT_DIR = path.join(process.cwd(), 'data', 'normas')
-
-PDFParse.setWorker(
-  pathToFileURL(
-    resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
-  ).href
-)
 
 function toFileName(codigo: string): string {
   return codigo.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9-]/g, '')
 }
 
 async function extrairTextoPdf(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: buffer })
-  const result = await parser.getText()
-  await parser.destroy()
-  return result.text.trim()
+  const pdf = await getDocumentProxy(new Uint8Array(buffer))
+  const { text } = await extractText(pdf, { mergePages: true })
+  return text.trim()
 }
 
 async function extrairConteudo(url: string): Promise<string> {

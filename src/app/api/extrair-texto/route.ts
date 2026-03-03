@@ -1,8 +1,6 @@
 import { NextRequest } from 'next/server'
 import mammoth from 'mammoth'
-import { PDFParse } from 'pdf-parse'
-import { pathToFileURL } from 'url'
-import { resolve } from 'path'
+import { extractText, getDocumentProxy } from 'unpdf'
 import { rateLimit } from '@/lib/security/rate-limit'
 import { createErrorResponse, createSuccessResponse } from '@/middlewares/validation'
 import { createRequestLogger } from '@/lib/logger'
@@ -10,15 +8,6 @@ import { createRequestLogger } from '@/lib/logger'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
-
-// Configura o worker com file:// URL para funcionar em Node.js server-side.
-// PDFParse.setWorker() sem argumento é no-op nesta versão — o path explícito é obrigatório.
-const workerSubPath = ['node_modules', 'pdfjs' + '-dist', 'legacy', 'build', 'pdf.worker.mjs'].join('/');
-PDFParse.setWorker(
-  pathToFileURL(
-    resolve(process.cwd(), workerSubPath)
-  ).href
-)
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -77,10 +66,10 @@ export async function POST(request: NextRequest) {
       if (isPDF) {
         logger.info('Processando PDF')
         const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        const parser = new PDFParse({ data: buffer })
-        const result = await parser.getText()
-        textoExtraido = result.text
+        const buffer = new Uint8Array(arrayBuffer)
+        const pdf = await getDocumentProxy(buffer)
+        const { text } = await extractText(pdf, { mergePages: true })
+        textoExtraido = text
         logger.info({ caracteres: textoExtraido.length }, 'PDF processado')
 
       } else if (isDOCX) {

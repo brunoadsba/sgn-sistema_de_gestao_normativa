@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.3.6] - 2026-03-03
+
+### Alterado
+
+- **Extração de PDF no Vercel**: migração de `pdf-parse` para `unpdf` em `POST /api/extrair-texto` e `scripts/sync-normas-kb.ts`. Resolve `DOMMatrix is not defined` e `@napi-rs/canvas` no ambiente serverless. `unpdf` inclui build de PDF.js otimizado para edge/serverless.
+
+### Corrigido
+
+- **405/500 em `/api/extrair-texto` no Vercel**: pdf-parse/pdfjs-dist dependia de APIs de browser inexistentes no serverless. `unpdf` funciona em Node.js, Vercel, Cloudflare Workers e browser.
+
 ## [2.3.5] - 2026-03-03
 
 ### Adicionado
