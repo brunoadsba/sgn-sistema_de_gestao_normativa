@@ -7,13 +7,20 @@ import { Button } from '@/components/ui/button'
 import { useQueryState } from 'nuqs'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { useChatContext } from '@/features/chat-documento/context/ChatContext'
 import { MessageCircle } from 'lucide-react'
 
+const NEX_POPUP_NAME = 'sgn-nex-assistente'
+const NEX_POPUP_FEATURES = 'width=480,height=800,scrollbars=yes,resizable=yes'
+
+function openNexPopup() {
+    const url = '/chat'
+    const win = window.open(url, NEX_POPUP_NAME, NEX_POPUP_FEATURES)
+    if (win) win.focus()
+}
+
 export function GlobalNav() {
-    const [isOpen, setIsOpen] = useState(false)
+    const [menuOpen, setMenuOpen] = useState(false)
     const pathname = usePathname()
-    const { openChat } = useChatContext()
 
     const [mostrarHistorico, setMostrarHistorico] = useQueryState('hist_vis', {
         defaultValue: 'false',
@@ -39,7 +46,7 @@ export function GlobalNav() {
 
     const toggleHistory = () => {
         setMostrarHistorico(mostrarHistorico === 'true' ? 'false' : 'true')
-        setIsOpen(false)
+        setMenuOpen(false)
     }
 
     const linkClasses = (active: boolean) =>
@@ -69,8 +76,8 @@ export function GlobalNav() {
                 )}
 
                 <button
-                    onClick={openChat}
-                    className="ml-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow"
+                    onClick={openNexPopup}
+                    className="ml-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                     <MessageCircle className="h-4 w-4" />
                     Assistente NEX
@@ -82,18 +89,18 @@ export function GlobalNav() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => setMenuOpen(!menuOpen)}
                     className="h-10 w-10 rounded-lg lg:hidden"
                     aria-label="Menu de navegacao"
                 >
-                    {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                    {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
 
-                {isOpen && (
+                {menuOpen && (
                     <>
                         <div
                             className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-                            onClick={() => setIsOpen(false)}
+                            onClick={() => setMenuOpen(false)}
                         />
                         <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                             <div className="px-2 space-y-1">
@@ -101,7 +108,7 @@ export function GlobalNav() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        onClick={() => setIsOpen(false)}
+                                        onClick={() => setMenuOpen(false)}
                                         className={cn(
                                             'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                                             item.active
@@ -131,10 +138,10 @@ export function GlobalNav() {
 
                                 <button
                                     onClick={() => {
-                                        openChat();
-                                        setIsOpen(false);
+                                        openNexPopup()
+                                        setMenuOpen(false)
                                     }}
-                                    className="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-colors bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                    className="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
                                 >
                                     <MessageCircle className="h-4 w-4" />
                                     Assistente NEX

@@ -16,7 +16,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Persistencia: SQLite/LibSQL via Drizzle.
 - Provedores IA: `groq`, `zai`, `ollama` (selecionados por `AI_PROVIDER`).
 - Fluxo de chat: Streaming SSE nativo (Groq) com fallback em bloco determinístico.
-- UI do chat: drawer lateral no desktop (empurra o conteúdo) e modal/full-screen no mobile (com overlay).
+- UI do chat: abertura em nova janela (popup 480x800) via botão `Assistente NEX` no header. Página `/chat` com layout dedicado.
 - Fluxo de analise: assíncrono no endpoint (`202 Accepted`) com processamento em background no runtime da API.
 - Idempotencia: persistencia em banco (`idempotency_cache`) com fallback seguro para memoria quando schema estiver defasado.
 - Observabilidade: Pino + Sentry.

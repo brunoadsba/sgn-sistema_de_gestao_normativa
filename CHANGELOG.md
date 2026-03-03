@@ -16,6 +16,9 @@
 
 ### Alterado
 
+- **Chat NEX em popup**: migração de modal/drawer para abertura em nova janela (`/chat`, 480x800). Resolve sobreposição de background; `GlobalNav` usa `window.open`; `ChatContext` simplificado (apenas `openChat`).
+- **Layout dedicado da página `/chat`**: `AppShell` oculta header/main em `/chat`; página usa viewport inteiro com gradiente e header próprio (título + Fechar/Voltar).
+- **UX do chat**: padding ampliado em bolhas (usuário `px-5 py-3.5`, assistente `px-5 py-4`) e sugestões (`px-4 py-3.5`, `gap-3`); scroll vertical corrigido com barra visível (`chat-messages-scroll`); remoção de avatar Sparkles.
 - **`prompt-builder.ts` extraído**: builders de system prompt (`buildSystemPrompt`, `normalizarMensagem`) movidos da rota para módulo dedicado `src/app/api/chat-documento/prompt-builder.ts`, mantendo `route.ts` abaixo de 200 linhas (regra 5).
 - **`chat-utils.ts` expandido**: adicionado `formatRelativeTime(date)` para formatação de tempo relativo — reutilizável em qualquer componente da feature.
 - **Scroll automático durante streaming**: `scrollToBottom()` chamado a cada token recebido enquanto `isNearBottom = true`.
@@ -28,7 +31,7 @@
 ### Documentacao
 
 - **Alinhamento do nucleo tecnico canonico**: `docs/memory.md`, `docs/architecture/arquitetura-tecnica.md` e `docs/operations/operacao-local.md` atualizados para snapshot `2.3.5` com data `2026-03-03`, mantendo consistencia com `README.md` (modelo local-only, chat SSE e referencia E2E consolidada em `45/45`).
-- **Atualizacao do estado real do Chat NEX (UX/UI Hardening)**: `README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/memory.md` e `src/features/chat-documento/.context.md` alinhados ao comportamento atual (drawer desktop + modal mobile, `Anexar` funcional via `/api/extrair-texto`, `Modo livre` contextual e botoes `Modelo padrao`/`Voz` em `em breve`).
+- **Atualizacao do estado real do Chat NEX (Popup + UX)**: `README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/memory.md` e `src/features/chat-documento/.context.md` alinhados ao comportamento atual (abertura em popup `/chat`, layout dedicado, scroll corrigido, padding ampliado, avatar removido).
 
 
 

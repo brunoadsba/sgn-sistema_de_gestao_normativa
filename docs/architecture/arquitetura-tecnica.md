@@ -28,7 +28,7 @@ O modelo operacional previsto e local-only/single-user.
 - `src/features/analise/components/AnaliseCliente.tsx`: upload, configuracao e fluxo de analise.
 - `src/features/normas/components/ListaNormasDinamica.tsx`: catalogo de normas com busca.
 - `src/features/chat-documento/components/ChatInterface.tsx`: NEX contextual (streaming, composer, anexo e modo livre/grounded).
-- `src/features/chat-documento/components/ChatSidePanel.tsx`: shell responsivo do NEX (drawer desktop + modal mobile).
+- `src/app/chat/page.tsx`: página standalone do NEX em `/chat`, aberta em popup ou navegação direta.
 - `src/features/analise/components/ResultadoAnalise.tsx`: dashboard final + matriz de gaps tabular (UI).
 - `src/components/report/ReportDocument.tsx`: template técnico PDF programático.
 - `src/components/report/ReportPreview.tsx`: preview/toolbar de exportação PDF.
@@ -86,13 +86,14 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 
 ## 6. Fluxo de Chat NEX (estado atual)
 
-1. Abertura via `GlobalNav` (botao stateful `Assistente NEX`/`NEX Aberto`).
-2. Desktop (`>=1024px`): painel lateral fixo a direita, empurrando o conteudo principal.
-3. Mobile (`<1024px`): modal/full-screen com overlay e foco exclusivo.
+1. Abertura via `GlobalNav` (botão `Assistente NEX`) ou atalho Cmd/Ctrl+K: abre `/chat` em nova janela (popup 480x800).
+2. Página `/chat` com layout dedicado: sem header principal quando em rota de chat; viewport completo.
+3. Popup reutiliza a mesma janela (`window.open` com nome fixo); navegação direta exibe botão "Voltar" para `/`.
 4. `Anexar` no composer chama `POST /api/extrair-texto`, atualiza `documentContext` e ativa modo grounded.
 5. `Modo livre` funciona como toggle contextual quando existe documento carregado.
 6. `Modelo padrao` e `Voz` permanecem desabilitados (estado "em breve"), sem contrato backend.
 7. Respostas trafegam por SSE com fases `thinking`/`writing` no cliente.
+8. UI limpa: mensagens sem avatar; scroll vertical com barra visível; padding ampliado em bolhas e sugestões.
 
 ## 7. Confiabilidade e Seguranca (implementado)
 

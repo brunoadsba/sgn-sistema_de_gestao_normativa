@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import path from 'path'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -7,78 +6,36 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
-test.describe('Chat NEX - painel lateral', () => {
-  test('painel de chat abre e fecha via botao', async ({ page }) => {
-    test.setTimeout(180_000)
+test.describe('Chat NEX - popup', () => {
+  test('botao abre nova janela com chat', async ({ page, context }) => {
     await page.goto('/')
 
-    const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 15_000 })
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      page.getByRole('button', { name: /assistente nex/i }).first().click(),
+    ])
 
-    await page.waitForTimeout(3_000)
+    await expect(popup).toHaveURL(/\/chat/)
+    await expect(popup.getByRole('textbox', { name: /mensagem para o assistente/i })).toBeVisible({ timeout: 5_000 })
 
-    const analyzeBtn = page.getByRole('button', { name: /analisar conformidade/i })
-    if (!(await analyzeBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-
-    await analyzeBtn.click()
-
-    await expect(
-      page.getByText(/score|conformidade|gaps|resultado/i).first()
-    ).toBeVisible({ timeout: 120_000 })
-
-    const chatBtn = page.getByRole('button', { name: /assistente nex/i }).first()
-    if (!(await chatBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-
-    await chatBtn.click()
-
-    await expect(page.getByText(/NEX/i).first()).toBeVisible({ timeout: 5_000 })
-
-    const closeBtn = page.getByLabel(/fechar assistente/i)
-    if (await closeBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
-      await closeBtn.click()
-    }
+    const closeBtn = popup.getByLabel(/fechar janela/i)
+    await closeBtn.click()
+    await expect.poll(() => popup.isClosed()).toBe(true)
   })
 
-  test('chat fecha com tecla Escape', async ({ page }) => {
-    test.setTimeout(180_000)
+  test('composer exibe estados corretos dos controles', async ({ page, context }) => {
     await page.goto('/')
 
-    const fileInput = page.locator('input[type="file"]')
-    await fileInput.setInputFiles(path.resolve(__dirname, 'fixtures/sample-document.txt'))
-    await expect(page.getByText(/sample-document/i).first()).toBeVisible({ timeout: 15_000 })
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      page.getByRole('button', { name: /assistente nex/i }).first().click(),
+    ])
 
-    await page.waitForTimeout(3_000)
-
-    const analyzeBtn = page.getByRole('button', { name: /analisar conformidade/i })
-    if (!(await analyzeBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-
-    await analyzeBtn.click()
-
-    await expect(
-      page.getByText(/score|conformidade|gaps|resultado/i).first()
-    ).toBeVisible({ timeout: 120_000 })
-
-    const chatBtn = page.getByRole('button', { name: /assistente nex/i }).first()
-    if (!(await chatBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
-      test.skip()
-      return
-    }
-
-    await chatBtn.click()
-    await expect(page.getByText(/NEX/i).first()).toBeVisible({ timeout: 5_000 })
-
-    await page.keyboard.press('Escape')
-    await page.waitForTimeout(500)
+    await expect(popup).toHaveURL(/\/chat/)
+    await expect(popup.getByTestId('chat-action-attach')).toHaveAttribute('aria-disabled', 'false')
+    await expect(popup.getByTestId('chat-action-model')).toHaveAttribute('aria-disabled', 'true')
+    await expect(popup.getByTestId('chat-action-voice')).toHaveAttribute('aria-disabled', 'true')
+    await expect(popup.getByTestId('chat-action-mode')).toBeDisabled()
   })
 })
 

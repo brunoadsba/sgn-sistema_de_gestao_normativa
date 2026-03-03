@@ -41,17 +41,15 @@ export function ChatSuggestions({ onSelect }: { onSelect: (text: string) => void
     }
 
     return (
-        <div className="grid grid-cols-2 gap-2 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4">
             {suggestions.map((text) => (
                 <button
                     key={text}
                     onClick={() => onSelect(text)}
-                    className="group text-left px-3 py-2.5 text-[13px] leading-snug text-gray-600 dark:text-gray-400 bg-white dark:bg-white/[0.03] border border-gray-200/60 dark:border-white/[0.06] rounded-xl hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/[0.06] transition-all"
+                    className="group inline-flex w-full items-start justify-between gap-3 text-left px-4 py-3.5 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 bg-white dark:bg-[#0f1520] border border-slate-200/90 dark:border-white/[0.12] rounded-xl shadow-sm hover:border-sgn-primary-300 dark:hover:border-sgn-primary-500/45 hover:bg-sgn-primary-50/70 dark:hover:bg-sgn-primary-500/[0.15] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sgn-primary-300/70 dark:focus-visible:ring-sgn-primary-500/60 transition-all"
                 >
-                    <div className="flex items-start justify-between gap-2">
-                        <span>{text}</span>
-                        <ArrowUpRight className="w-3 h-3 mt-0.5 shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-indigo-500 transition-colors" />
-                    </div>
+                    <span className="flex-1 min-w-0">{text}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-300 dark:text-slate-500 group-hover:text-sgn-primary-500 transition-colors" />
                 </button>
             ))}
         </div>

@@ -3,11 +3,18 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
+const NEX_POPUP_NAME = 'sgn-nex-assistente'
+const NEX_POPUP_FEATURES = 'width=480,height=800,scrollbars=yes,resizable=yes'
+
+function openNexPopup() {
+    if (typeof window === 'undefined') return
+    const url = '/chat'
+    const win = window.open(url, NEX_POPUP_NAME, NEX_POPUP_FEATURES)
+    if (win) win.focus()
+}
+
 interface ChatContextType {
-    isOpen: boolean
-    toggleChat: () => void
     openChat: () => void
-    closeChat: () => void
 
     documentContext: string | null | undefined
     setDocumentContext: (context: string | null | undefined) => void
@@ -21,48 +28,37 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-    const [isOpen, setIsOpen] = useState(false)
     const [documentContext, setDocumentContext] = useState<string | null | undefined>(null)
     const [documentName, setDocumentName] = useState<string | undefined>(undefined)
     const pathname = usePathname()
 
-    // Determina contexto de tela com base no pathname
     const contextoTela = pathname === '/'
         ? 'Análise de Documento'
         : pathname.startsWith('/normas')
             ? 'Catálogo de Normas'
             : pathname.startsWith('/nr6')
                 ? 'Análise NR-6'
+            : pathname === '/chat'
+                ? 'Chat NEX'
                 : 'SGN'
 
-    const toggleChat = useCallback(() => setIsOpen(prev => !prev), [])
-    const openChat = useCallback(() => setIsOpen(true), [])
-    const closeChat = useCallback(() => setIsOpen(false), [])
+    const openChat = useCallback(openNexPopup, [])
 
-    // Atalho global Cmd+K
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Cmd+K (Mac) ou Ctrl+K (Windows)
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault()
-                toggleChat()
-            }
-            if (e.key === 'Escape') {
-                closeChat()
+                openNexPopup()
             }
         }
-
         document.addEventListener('keydown', handleKeyDown)
         return () => document.removeEventListener('keydown', handleKeyDown)
-    }, [toggleChat, closeChat])
+    }, [])
 
     return (
         <ChatContext.Provider
             value={{
-                isOpen,
-                toggleChat,
                 openChat,
-                closeChat,
                 documentContext,
                 setDocumentContext,
                 documentName,

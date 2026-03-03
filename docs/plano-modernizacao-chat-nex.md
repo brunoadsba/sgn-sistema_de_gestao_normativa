@@ -3,6 +3,7 @@
 > Criado em: 2026-03-03
 > Feature: `src/features/chat-documento`
 > Status: `concluído` — todas as 3 fases entregues em 2026-03-03
+> Pós-conclusão: migração para popup (`/chat`) em 2026-03-03 — drawer/modal substituído por nova janela (480x800)
 
 ---
 

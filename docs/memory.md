@@ -58,7 +58,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. Analise com IA e persistencia de jobs/resultados.
 3. Catalogo de normas com busca e detalhe por NR.
 4. Fluxo dedicado NR-6.
-5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento), streaming SSE nativo (Groq), fallback em bloco (Z.AI/Ollama), fases de resposta (`thinking`/`writing`), historico com TTL de 30 dias, drawer lateral no desktop + modal no mobile, acao `Anexar` funcional e toggle contextual de `Modo livre`.
+5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento), streaming SSE nativo (Groq), fallback em bloco (Z.AI/Ollama), fases de resposta (`thinking`/`writing`), historico com TTL de 30 dias, abertura em popup (480x800) via botão no header ou Cmd/Ctrl+K, página `/chat` com layout dedicado, acao `Anexar` funcional e toggle contextual de `Modo livre`.
 6. Exportacao em `CSV/JSON`.
 7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
 8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
@@ -120,6 +120,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 83 | 2026-03-02 | **Limpeza de PDF + Compactação de UX + Fix scoreGeral**: PDF sem campos técnicos internos (ID, Analista, Versão, Confiança, Sessão, nome do arquivo). UX compactada (~50% menos espaço vertical). Bug `scoreGeral=0` corrigido em `jobs.ts` com guard `isFinite` + clamp `[0,100]`. Confiabilidade documentada como métrica interna independente do score. |
 | 84 | 2026-03-03 | **Modernização do Chat NEX**: Implementação de streaming SSE nativo (Groq) com fallback em bloco, fases de processamento ('thinking'/'writing'), indicador de digitação verbal animado, timestamps relativos automáticos, badge de modo no input e persistência de histórico com TTL de 30 dias. |
 | 85 | 2026-03-03 | **NEX UX/UI Hardening (Drawer Responsivo + Ações do Composer)**: chat consolidado como drawer lateral no desktop e modal no mobile; botão do header stateful (`NEX Aberto`), sugestões em grid com affordance, identidade visual unificada do agente, `Anexar` integrado a `/api/extrair-texto`, toggle contextual de `Modo livre`; `Modelo padrão` e `Voz` mantidos como "em breve". |
+| 86 | 2026-03-03 | **Chat NEX em Popup**: migração de modal/drawer para abertura em nova janela (`/chat`). Resolve sobreposição de background; layout dedicado sem header principal; scroll vertical corrigido com barra visível; padding ampliado em bolhas e sugestões; remoção de avatar Sparkles para UI mais limpa. E2E atualizados para fluxo popup. |
 
 ## 9. Arquivo Historico Completo
 
