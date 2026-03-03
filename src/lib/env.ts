@@ -15,7 +15,7 @@ const envSchema = z.object({
   GROQ_MODEL_NR6: z.string().default('meta-llama/llama-4-scout-17b-16e-instruct'),
   AI_PROVIDER: z.enum(['groq', 'ollama', 'zai']).default('groq'),
   ZAI_API_KEY: z.string().optional(),
-  ZAI_BASE_URL: z.string().url().default('https://api.z.ai/v1'),
+  ZAI_BASE_URL: z.string().url().default('https://api.z.ai/api/paas/v4'),
   ZAI_MODEL: z.string().default('glm-4.7'),
   ZAI_DISABLE_THINKING: z.enum(['true', 'false']).default('true'),
   ZAI_TIMEOUT_MS: z.coerce.number().int().positive().default(90000),
