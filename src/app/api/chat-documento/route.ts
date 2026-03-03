@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { groq } from '@/lib/ia/groq'
 import { iaLogger } from '@/lib/logger'
 import { env } from '@/lib/env'
 import { rateLimit } from '@/lib/security/rate-limit'
@@ -13,6 +12,7 @@ import type { ChatCompletionMessageParam } from 'groq-sdk/resources/chat/complet
 export const maxDuration = 60
 export const runtime = 'nodejs'
 
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const SSE_DONE = 'data: [DONE]\n\n'
 
 const ChatDocumentoSchema = z.object({
@@ -33,28 +33,63 @@ function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
-/** Streaming nativo via Groq SDK */
+/** Groq via fetch nativo (evita problemas do SDK no Vercel serverless) */
 async function streamGroq(messages: ChatMessage[]): Promise<ReadableStream<Uint8Array>> {
   const encoder = new TextEncoder()
-  const groqStream = await groq.chat.completions.create({
-    messages,
-    model: env.GROQ_MODEL,
-    temperature: 0,
-    top_p: 1,
-    seed: 42,
-    max_tokens: 1500,
-    stream: true,
+  const res = await fetch(GROQ_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      messages,
+      model: env.GROQ_MODEL,
+      temperature: 0,
+      top_p: 1,
+      seed: 42,
+      max_tokens: 1500,
+      stream: true,
+    }),
+    signal: AbortSignal.timeout(env.GROQ_TIMEOUT_MS),
   })
+
+  if (!res.ok) {
+    const errBody = await res.text()
+    throw new Error(`Groq HTTP ${res.status}: ${errBody.slice(0, 200)}`)
+  }
+
+  const reader = res.body?.getReader()
+  if (!reader) throw new Error('Groq: sem body na resposta')
 
   return new ReadableStream({
     async start(controller) {
+      const decoder = new TextDecoder()
+      let buffer = ''
       try {
-        for await (const chunk of groqStream) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (text) controller.enqueue(encoder.encode(sseChunk(text)))
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+              try {
+                const parsed = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> }
+                const text = parsed.choices?.[0]?.delta?.content ?? ''
+                if (text) controller.enqueue(encoder.encode(sseChunk(text)))
+              } catch {
+                // linha não-JSON, ignorar
+              }
+            }
+          }
         }
         controller.enqueue(encoder.encode(SSE_DONE))
-      } catch {
+      } catch (err) {
+        iaLogger.warn({ error: toError(err).message }, '[NEX-CHAT] Groq stream erro')
         controller.enqueue(encoder.encode(sseChunk('[Erro durante streaming]')))
         controller.enqueue(encoder.encode(SSE_DONE))
       } finally {
@@ -117,21 +152,23 @@ async function streamFallback(messages: ChatMessage[]): Promise<ReadableStream<U
         break
       }
 
-      if (res.status === 429 && attempt < maxAttempts - 1) {
-        const delay = Math.min(env.ZAI_RETRY_BASE_MS * (2 ** attempt), env.ZAI_RETRY_MAX_MS)
-        iaLogger.warn({ attempt: attempt + 1, delay }, '[NEX-CHAT] Z.AI 429 — retry com backoff')
-        await sleep(delay)
+      // 429: falhar imediatamente para acionar fallback Groq (retries não ajudam em rate limit)
+      if (res.status === 429) {
+        iaLogger.warn('[NEX-CHAT] Z.AI 429 — fallback imediato para Groq')
         lastError = new Error(
           'Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente.'
         )
+        break
+      }
+
+      if (attempt < maxAttempts - 1) {
+        const delay = Math.min(env.ZAI_RETRY_BASE_MS * (2 ** attempt), env.ZAI_RETRY_MAX_MS)
+        iaLogger.warn({ attempt: attempt + 1, delay }, '[NEX-CHAT] Z.AI HTTP %s — retry', res.status)
+        await sleep(delay)
         continue
       }
 
-      lastError = new Error(
-        res.status === 429
-          ? 'Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente.'
-          : `Z.AI HTTP ${res.status}`
-      )
+      lastError = new Error(`Z.AI HTTP ${res.status}`)
       break
     }
 

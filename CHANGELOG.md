@@ -5,6 +5,7 @@
 ### Alterado
 
 - **Extração de PDF no Vercel**: migração de `pdf-parse` para `unpdf` em `POST /api/extrair-texto` e `scripts/sync-normas-kb.ts`. Resolve `DOMMatrix is not defined` e `@napi-rs/canvas` no ambiente serverless. `unpdf` inclui build de PDF.js otimizado para edge/serverless.
+- **Chat NEX via fetch nativo**: Groq passou a usar `fetch` direto em vez do SDK no chat, evitando problemas de conexão (APIConnectionError, 503) no Vercel serverless.
 - **Fallback bidirecional no chat NEX**: Groq entra quando Z.AI falha (saldo insuficiente, 429, etc.). Fluxo: `AI_PROVIDER=groq` → Groq (retry) → Z.AI → Groq; `AI_PROVIDER=zai` → Z.AI → Groq.
 - **Retry com backoff na Z.AI** para 429 (rate limit). Mensagem amigável: "Limite de requisições da API Z.AI atingido. Aguarde alguns minutos e tente novamente."
 - **Retry no Groq** (1x, 1.5s) antes do fallback para Z.AI.

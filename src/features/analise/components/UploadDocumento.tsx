@@ -88,7 +88,7 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           onDragLeave={handleDragLeave}
           onClick={() => !desabilitado && fileInputRef.current?.click()}
           className={`
-            relative rounded-2xl border-2 border-dashed p-8 sm:p-10 text-center transition-all duration-500 overflow-hidden group
+            relative rounded-xl sm:rounded-2xl border-2 border-dashed p-6 sm:p-10 text-center transition-all duration-500 overflow-hidden group
             ${desabilitado ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             ${dragging
               ? 'border-blue-500 bg-blue-500/10 scale-[1.02] shadow-[0_0_30px_rgba(59,130,246,0.2)]'
@@ -100,35 +100,37 @@ export function UploadDocumento({ arquivo, onArquivoChange, desabilitado }: Uplo
           {/* Background Decorative Glow */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 blur-[100px] rounded-full group-hover:bg-blue-500/20 transition-colors" />
 
-          <div className="relative flex flex-col items-center gap-6">
+          <div className="relative flex flex-col items-center gap-4 sm:gap-6">
             <div className={`
-                p-5 rounded-2xl transition-all duration-500 
+                p-4 sm:p-5 rounded-xl sm:rounded-2xl transition-all duration-500 
                 ${dragging
                 ? 'bg-blue-600 shadow-blue-500/40 rotate-0'
                 : 'bg-white/10 border border-white/10 group-hover:rotate-6 group-hover:scale-110 shadow-lg'
               }
             `}>
-              <Upload className={`h-8 w-8 ${dragging ? 'text-white animate-bounce' : 'text-blue-400/80'}`} />
+              <Upload className={`h-7 w-7 sm:h-8 sm:w-8 ${dragging ? 'text-white animate-bounce' : 'text-blue-400/80'}`} />
             </div>
-            <div className="space-y-2">
-              <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+            <div className="space-y-1.5 sm:space-y-2">
+              <p className="text-base sm:text-xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
                 {dragging ? 'Solte para Iniciar' : 'Arraste o documento aqui'}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Arraste ou clique para buscar <span className="mx-2 opacity-30">•</span> <span className="font-mono text-xs bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT (Max 4.5MB em nuvem)</span>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium flex flex-col sm:flex-row sm:items-center sm:gap-1 sm:flex-wrap justify-center gap-0.5">
+                <span>Arraste ou clique para buscar</span>
+                <span className="hidden sm:inline opacity-30">•</span>
+                <span className="font-mono text-[10px] sm:text-xs bg-white/10 px-2 py-0.5 rounded-full uppercase">PDF, DOCX, TXT (máx 4.5MB)</span>
               </p>
             </div>
           </div>
 
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-2xl animate-in fade-in zoom-in-95">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 bg-indigo-500/10 rounded-lg">
-              <FileText className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center justify-between gap-3 sm:gap-4 p-3 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-xl sm:rounded-2xl animate-in fade-in zoom-in-95">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="p-1.5 sm:p-2 bg-indigo-500/10 rounded-lg shrink-0">
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[150px] sm:max-w-xs" title={arquivo.name}>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 truncate" title={arquivo.name}>
                 {arquivo.name}
               </p>
               <p className="text-xs font-medium text-indigo-500/70 uppercase">

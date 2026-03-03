@@ -84,16 +84,16 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* Busca + ações */}
-      <div className="flex flex-col gap-4">
-        <div className="relative w-full group">
+      <div className="flex flex-col gap-4 min-w-0">
+        <div className="relative w-full min-w-0 group">
           <div className="absolute inset-0 bg-indigo-500/5 blur-xl group-focus-within:bg-indigo-500/10 transition-colors -z-10" />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-indigo-400/70 group-focus-within:text-indigo-500 transition-colors shrink-0" />
           <Input
             aria-label="Buscar norma regulamentadora"
-            placeholder="Buscar Norma Regulamentadora"
+            placeholder="Buscar norma..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="h-14 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-2xl shadow-xl text-base dark:text-gray-100 placeholder:text-gray-400 backdrop-blur-md transition-all pl-10"
+            className="h-12 sm:h-14 w-full min-w-0 bg-white/10 dark:bg-white/5 border-white/20 dark:border-white/10 focus-visible:ring-indigo-500/50 rounded-xl sm:rounded-2xl shadow-xl text-sm sm:text-base dark:text-gray-100 placeholder:text-gray-400 placeholder:sm:text-base backdrop-blur-md transition-all pl-9 sm:pl-10"
           />
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
@@ -101,7 +101,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             variant="secondary"
             size="sm"
             onClick={selecionarTodas}
-            className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl h-8 px-4 text-xs font-semibold uppercase tracking-wide transition-all"
+            className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-lg sm:rounded-xl h-9 sm:h-8 px-3 sm:px-4 text-xs font-semibold uppercase tracking-wide transition-all"
           >
             Todas
           </Button>
@@ -110,7 +110,7 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
             size="sm"
             onClick={limparSelecao}
             disabled={selecionadas.length === 0}
-            className="text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl h-8 px-4 text-xs font-semibold uppercase tracking-wide transition-all"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-lg sm:rounded-xl h-9 sm:h-8 px-3 sm:px-4 text-xs font-semibold uppercase tracking-wide transition-all"
           >
             Limpar
           </Button>
@@ -144,13 +144,13 @@ export function SeletorNormas({ normas, selecionadas, onSelecaoChange, carregand
       <div className="flex-1 overflow-y-auto pr-2 -mr-2 scrollbar-none">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="lista-normas" className="border-none">
-            <AccordionTrigger className="flex w-full items-center justify-between p-4 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/10 hover:no-underline group transition-all">
-              <div className="flex items-center gap-3">
-                <div className="bg-indigo-500/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                  <CheckSquare className="h-5 w-5 text-indigo-400" />
+            <AccordionTrigger className="flex w-full items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 hover:border-indigo-500/30 hover:bg-white/10 hover:no-underline group transition-all">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="bg-indigo-500/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                  <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-400" />
                 </div>
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-tight">
-                  {filtro ? 'Resultados Encontrados' : 'Catálogo de Normas'}
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-tight truncate">
+                  {filtro ? 'Resultados' : 'Catálogo de Normas'}
                 </span>
               </div>
             </AccordionTrigger>

@@ -278,16 +278,16 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
     }
 
     return (
-        <div className={`container mx-auto px-3 sm:px-4 transition-all duration-500 ${mostrarHistorico ? 'max-w-7xl' : 'max-w-5xl'}`}>
+        <div className={`container mx-auto px-4 sm:px-6 transition-all duration-500 ${mostrarHistorico ? 'max-w-7xl' : 'max-w-5xl'}`}>
             {/* Header */}
-            <div className="relative mb-8 sm:mb-12">
+            <div className="relative mb-6 sm:mb-12">
                 <div className="text-center relative">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-sgn-primary-500/10 blur-[80px] -z-10 rounded-full"></div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-3 sm:mb-4 pb-2 leading-normal">
+                    <h1 className="text-2xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-indigo-900 to-gray-900 dark:from-gray-100 dark:via-indigo-300 dark:to-gray-100 tracking-tight mb-2 sm:mb-4 pb-2 leading-tight sm:leading-normal">
                         Análise de Conformidade
                     </h1>
-                    <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                        Faça upload do seu documento SST e deixe nossa IA identificar gaps e gerar recomendações precisas instantaneamente.
+                    <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-1">
+                        Faça upload do seu documento SST e deixe nossa IA identificar gaps e gerar recomendações precisas.
                     </p>
                 </div>
             </div>
@@ -308,18 +308,18 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
                                         transition={{ duration: 0.4 }}
-                                        className="flex flex-col sm:flex-row gap-8 items-stretch"
+                                        className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-stretch"
                                     >
                                         {/* Esquerda - Upload */}
                                         <div className="flex-1 min-w-0">
                                             <Card className="h-full glass-mora shadow-blue-900/5">
-                                                <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">1</div>
-                                                        <CardTitle className="text-lg lg:text-xl dark:text-gray-100">Envio do Documento</CardTitle>
+                                                <CardHeader className="pb-3 sm:pb-4 border-b border-gray-100/50 dark:border-gray-700/40 px-4 sm:px-6">
+                                                    <div className="flex items-center gap-2 sm:gap-3">
+                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm sm:text-base">1</div>
+                                                        <CardTitle className="text-base sm:text-lg lg:text-xl dark:text-gray-100">Envio do Documento</CardTitle>
                                                     </div>
                                                 </CardHeader>
-                                                <CardContent className="pt-6">
+                                                <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
                                                     <UploadDocumento
                                                         arquivo={arquivo}
                                                         onArquivoChange={(f) => {
@@ -336,13 +336,13 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                         {/* Direita - Normas */}
                                         <div className="flex-1 min-w-0">
                                             <Card className="h-full glass-mora shadow-indigo-900/5">
-                                                <CardHeader className="pb-4 border-b border-gray-100/50 dark:border-gray-700/40">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">2</div>
-                                                        <CardTitle className="text-lg lg:text-xl dark:text-gray-100">Normas Aplicáveis</CardTitle>
+                                                <CardHeader className="pb-3 sm:pb-4 border-b border-gray-100/50 dark:border-gray-700/40 px-4 sm:px-6">
+                                                    <div className="flex items-center gap-2 sm:gap-3">
+                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm sm:text-base">2</div>
+                                                        <CardTitle className="text-base sm:text-lg lg:text-xl dark:text-gray-100">Normas Aplicáveis</CardTitle>
                                                     </div>
                                                 </CardHeader>
-                                                <CardContent className="pt-6 h-[calc(100%-5rem)]">
+                                                <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6 h-[calc(100%-4.5rem)] sm:h-[calc(100%-5rem)]">
                                                     <SeletorNormas
                                                         normas={normasIniciais}
                                                         selecionadas={normasSelecionadas}
@@ -501,7 +501,7 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                     onClick={executarAnalise}
                                     disabled={!arquivo || analisando || sugerindoNrs}
                                     className={`
-                                        h-16 sm:h-20 px-12 rounded-3xl font-black text-lg sm:text-xl transition-all duration-500 group relative overflow-hidden
+                                        h-14 sm:h-20 px-6 sm:px-12 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl transition-all duration-500 group relative overflow-hidden w-full sm:w-auto max-w-md sm:max-w-none
                                         ${!arquivo
                                             ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 cursor-not-allowed border-2 border-dashed border-gray-200 dark:border-gray-700'
                                             : normasSelecionadas.length === 0
@@ -527,8 +527,9 @@ export default function AnaliseCliente({ normasIniciais }: AnaliseClienteProps) 
                                             </>
                                         ) : !arquivo ? (
                                             <>
-                                                <Upload className="w-6 h-6 opacity-50 group-hover:-translate-y-1 transition-transform" />
-                                                <span>Faça o upload do documento para iniciar</span>
+                                                <Upload className="w-5 h-5 sm:w-6 sm:h-6 opacity-50 group-hover:-translate-y-1 transition-transform shrink-0" />
+                                                <span className="sm:hidden">Enviar documento</span>
+                                                <span className="hidden sm:inline">Faça o upload do documento para iniciar</span>
                                             </>
                                         ) : normasSelecionadas.length === 0 ? (
                                             <>
