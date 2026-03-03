@@ -25,6 +25,11 @@
 - `npm run lint` ✅ (arquivos da feature)
 - Lint zero warnings em: `route.ts`, `prompt-builder.ts`, `ChatTypingIndicator.tsx`, `ChatInterface.tsx`, `ChatMessageBubble.tsx`, `chat-storage.ts`, `chat-utils.ts`
 
+### Documentacao
+
+- **Alinhamento do nucleo tecnico canonico**: `docs/memory.md`, `docs/architecture/arquitetura-tecnica.md` e `docs/operations/operacao-local.md` atualizados para snapshot `2.3.5` com data `2026-03-03`, mantendo consistencia com `README.md` (modelo local-only, chat SSE e referencia E2E consolidada em `45/45`).
+- **Atualizacao do estado real do Chat NEX (UX/UI Hardening)**: `README.md`, `docs/architecture/arquitetura-tecnica.md`, `docs/memory.md` e `src/features/chat-documento/.context.md` alinhados ao comportamento atual (drawer desktop + modal mobile, `Anexar` funcional via `/api/extrair-texto`, `Modo livre` contextual e botoes `Modelo padrao`/`Voz` em `em breve`).
+
 
 
 ### Alterado

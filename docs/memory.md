@@ -1,10 +1,10 @@
 # SGN - Memoria Operacional
 
-> Atualizado em: 2026-03-02
+> Atualizado em: 2026-03-03
 
 ## 1. Snapshot
 
-- Versao atual (documental): `2.3.4`
+- Versao atual (documental): `2.3.5`
 - Modelo operacional: `local-only`, single-user
 - Branch principal: `master`
 - Pipeline oficial: `.github/workflows/ci.yml`
@@ -58,7 +58,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 2. Analise com IA e persistencia de jobs/resultados.
 3. Catalogo de normas com busca e detalhe por NR.
 4. Fluxo dedicado NR-6.
-5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento) - corrigido problema da tela do chat.
+5. Assistente NEX com dois modos: livre (SST geral) e grounded (restrito ao documento), streaming SSE nativo (Groq), fallback em bloco (Z.AI/Ollama), fases de resposta (`thinking`/`writing`), historico com TTL de 30 dias, drawer lateral no desktop + modal no mobile, acao `Anexar` funcional e toggle contextual de `Modo livre`.
 6. Exportacao em `CSV/JSON`.
 7. Exportacao de relatório em PDF híbrido (`dom` e `react-pdf` via `/api/reports/generate`).
 8. Matriz de gaps da UI em tabela técnica com rastreabilidade por norma/status.
@@ -71,13 +71,13 @@ Tabelas principais em `src/lib/db/schema.ts`:
 3. Idempotencia atual foi normalizada para persistencia em banco (`idempotency_cache`), com fallback em memoria apenas para compatibilidade quando schema ainda nao foi sincronizado.
 4. Existem artefatos legados de deploy/producao coexistindo com o direcionamento local-only.
 
-## 6. Qualidade Atual (medicao em 2026-02-28)
+## 6. Qualidade Atual (medicao em 2026-03-03)
 
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou (`next build --webpack`) apos migracao para fonte local/self-host.
 4. `npm run test:ci`: passou (`54/54`).
-5. `npm run test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
+5. `npm run test:e2e`: passou (45 cenarios, 45 passados).
 
 ## 7. Prioridades Imediatas
 
@@ -119,6 +119,7 @@ Tabelas principais em `src/lib/db/schema.ts`:
 | 82 | 2026-03-01 | **UX/UI Refinement & Layout Fixes**: Chat NEX migrado para o Header (GlobalNav) e transformado em Modal Centralizado imersivo com backdrop blur. Remoção de componentes redundantes na Home (`QuickActionsHome`). Correção de overflow vertical e corte de interface no chat para todas as resoluções. |
 | 83 | 2026-03-02 | **Limpeza de PDF + Compactação de UX + Fix scoreGeral**: PDF sem campos técnicos internos (ID, Analista, Versão, Confiança, Sessão, nome do arquivo). UX compactada (~50% menos espaço vertical). Bug `scoreGeral=0` corrigido em `jobs.ts` com guard `isFinite` + clamp `[0,100]`. Confiabilidade documentada como métrica interna independente do score. |
 | 84 | 2026-03-03 | **Modernização do Chat NEX**: Implementação de streaming SSE nativo (Groq) com fallback em bloco, fases de processamento ('thinking'/'writing'), indicador de digitação verbal animado, timestamps relativos automáticos, badge de modo no input e persistência de histórico com TTL de 30 dias. |
+| 85 | 2026-03-03 | **NEX UX/UI Hardening (Drawer Responsivo + Ações do Composer)**: chat consolidado como drawer lateral no desktop e modal no mobile; botão do header stateful (`NEX Aberto`), sugestões em grid com affordance, identidade visual unificada do agente, `Anexar` integrado a `/api/extrair-texto`, toggle contextual de `Modo livre`; `Modelo padrão` e `Voz` mantidos como "em breve". |
 
 ## 9. Arquivo Historico Completo
 

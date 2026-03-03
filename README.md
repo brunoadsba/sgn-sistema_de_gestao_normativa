@@ -16,6 +16,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Persistencia: SQLite/LibSQL via Drizzle.
 - Provedores IA: `groq`, `zai`, `ollama` (selecionados por `AI_PROVIDER`).
 - Fluxo de chat: Streaming SSE nativo (Groq) com fallback em bloco determinístico.
+- UI do chat: drawer lateral no desktop (empurra o conteúdo) e modal/full-screen no mobile (com overlay).
 - Fluxo de analise: assíncrono no endpoint (`202 Accepted`) com processamento em background no runtime da API.
 - Idempotencia: persistencia em banco (`idempotency_cache`) com fallback seguro para memoria quando schema estiver defasado.
 - Observabilidade: Pino + Sentry.
@@ -26,7 +27,7 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 - Ordenação normativa: sugestão e seleção de NRs em ordem crescente numérica de forma determinística.
 - Determinismo de IA: providers configurados com `temperature=0`, `top_p=1` e `seed=42` para scores reprodutíveis.
 
- Qualidade observada em `2026-03-03`:
+Qualidade observada em `2026-03-03`:
 
 - `npx tsc --noEmit`: passou.
 - `npm run lint`: passou.
@@ -39,10 +40,11 @@ Plataforma local para analise de conformidade em SST (Seguranca e Saude no Traba
 1. Analise de conformidade com upload de `PDF`, `DOCX`, `TXT`.
 2. Catalogo de NRs com busca e pagina de detalhe.
 3. Analise dedicada para NR-6.
-4. Assistente NEX com modo livre e grounded, agora com **Streaming SSE**, indicadores de processamento e persistência de 30 dias.
-5. Exportacao de dados em `CSV/JSON`.
-6. Health check em `GET /api/health`.
-7. Testes E2E com Playwright (45 cenarios, 45 passados).
+4. Assistente NEX com modo livre e grounded, **Streaming SSE**, indicadores de processamento e persistência de 30 dias.
+5. Anexo contextual no chat via `Anexar` (extração por `/api/extrair-texto`) e toggle de `Modo livre` contextual quando há documento carregado.
+6. Exportacao de dados em `CSV/JSON`.
+7. Health check em `GET /api/health`.
+8. Testes E2E com Playwright (45 cenarios, 45 passados).
 
 
 ## Endpoints API Ativos

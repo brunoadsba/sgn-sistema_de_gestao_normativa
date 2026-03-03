@@ -1,6 +1,6 @@
 # SGN - Arquitetura Tecnica
 
-> Atualizado em: 2026-02-28
+> Atualizado em: 2026-03-03
 
 ## 1. Resumo
 
@@ -27,7 +27,8 @@ O modelo operacional previsto e local-only/single-user.
 - `src/app/page.tsx`: entrada da analise.
 - `src/features/analise/components/AnaliseCliente.tsx`: upload, configuracao e fluxo de analise.
 - `src/features/normas/components/ListaNormasDinamica.tsx`: catalogo de normas com busca.
-- `src/features/chat-documento/components/ChatInterface.tsx`: NEX contextual.
+- `src/features/chat-documento/components/ChatInterface.tsx`: NEX contextual (streaming, composer, anexo e modo livre/grounded).
+- `src/features/chat-documento/components/ChatSidePanel.tsx`: shell responsivo do NEX (drawer desktop + modal mobile).
 - `src/features/analise/components/ResultadoAnalise.tsx`: dashboard final + matriz de gaps tabular (UI).
 - `src/components/report/ReportDocument.tsx`: template técnico PDF programático.
 - `src/components/report/ReportPreview.tsx`: preview/toolbar de exportação PDF.
@@ -83,7 +84,17 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 | Estrategia incremental | chunking com consolidacao |
 | Porta padrao | 3001 |
 
-## 6. Confiabilidade e Seguranca (implementado)
+## 6. Fluxo de Chat NEX (estado atual)
+
+1. Abertura via `GlobalNav` (botao stateful `Assistente NEX`/`NEX Aberto`).
+2. Desktop (`>=1024px`): painel lateral fixo a direita, empurrando o conteudo principal.
+3. Mobile (`<1024px`): modal/full-screen com overlay e foco exclusivo.
+4. `Anexar` no composer chama `POST /api/extrair-texto`, atualiza `documentContext` e ativa modo grounded.
+5. `Modo livre` funciona como toggle contextual quando existe documento carregado.
+6. `Modelo padrao` e `Voz` permanecem desabilitados (estado "em breve"), sem contrato backend.
+7. Respostas trafegam por SSE com fases `thinking`/`writing` no cliente.
+
+## 7. Confiabilidade e Seguranca (implementado)
 
 1. Validacao de entrada com Zod.
 2. Estrutura de erro/sucesso padronizada nas APIs.
@@ -95,27 +106,27 @@ Tabelas declaradas em `src/lib/db/schema.ts`:
 8. Modelos de IA configuraveis via variaveis de ambiente (`GROQ_MODEL`, `GROQ_MODEL_NR6`).
 9. Persistencia de analise decomposta em modulos (`jobs`, `consultas`, `revisao`, `export`).
 
-## 7. Observacoes de Drift Tecnico
+## 8. Observacoes de Drift Tecnico
 
 1. Historicos antigos citam arquitetura com worker dedicado externo; no estado atual o contrato canônico e processamento no runtime da rota de analise.
 2. Historicos antigos citam ausencia do polling, mas a rota `GET /api/ia/jobs/[id]` esta ativa no codigo atual.
 3. Artefatos legados de deploy/producao foram reduzidos com remocao de `harbor-tasks/**`; permanecem referencias historicas apenas em `docs/archive`.
 
-## 8. Qualidade Atual (2026-02-28)
+## 9. Qualidade Atual (2026-03-03)
 
 1. `npx tsc --noEmit`: passou.
 2. `npm run lint`: passou.
 3. `npm run build`: passou com `next build --webpack` apos migracao de fonte para self-host.
 4. `npm run test:ci`: passou (`54/54`).
-5. `npm run test:e2e`: passou (47 cenarios, 45 passados, 2 pulados).
+5. `npm run test:e2e`: passou (45 cenarios, 45 passados).
 
-## 9. Debito Tecnico Priorizado
+## 10. Debito Tecnico Priorizado
 
 1. Validar chat NEX modo livre com Z.AI em cenario de rede estavel.
 2. Expandir testes E2E para fluxos de analise completa com IA.
 3. Manter revisao periodica de seguranca para limites/rate-limit em cenarios de carga real.
 
-## 10. Documentos Relacionados
+## 11. Documentos Relacionados
 
 - `docs/operations/operacao-local.md`
 - `docs/operations/pop-analise-conformidade-sst.md`
